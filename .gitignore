@@ -1,0 +1,7 @@
+*.bak
+.vs/
+bin/
+obj/
+dist/
+.pre-commit-config.yaml
+.selid-hooks/
