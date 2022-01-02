@@ -60,6 +60,7 @@ namespace BundleBouncer
 
         /**
          * Stolen from Behemoth (with permission)
+         * Not used right now.
          */
         private static unsafe void Hook(MethodBase target, string detour)
         {
@@ -79,13 +80,9 @@ namespace BundleBouncer
                 if (AvatarShitList.IsCrasher(av.id))
                 {
                     Logging.Info($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
-                    // This scares me a bit, as I don't know how it'd handle a zero-pointer return.
-                    //   return IntPtr.Zero;
-                    //} else {
-                    //    return dgAttemptAvatarDownload(hiddenStructReturn, thisPtr, pApiAvatar, pMulticastDelegate, param_3, nativeMethodInfo);
-                    //}
+                    
                     av.assetUrl = "http://0.0.0.0/doesnt-exist.asset"; // TODO: Make configurable, or point to big blaring CRASHER avatar?
-                    av.version = int.MaxValue;
+                    av.version = int.MaxValue; // Ensure this doesn't get overwritten. :3c
                 }
                 return dgAttemptAvatarDownload(hiddenStructReturn, thisPtr, pApiAvatar, pMulticastDelegate, param_3, nativeMethodInfo);
             }
