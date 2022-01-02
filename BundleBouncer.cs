@@ -8,6 +8,9 @@ using MelonLoader;
 using VRC.Core;
 using VRChatUtilityKit.Utilities;
 using System.IO;
+using System.Reflection;
+using UnhollowerBaseLib;
+using System.Runtime.InteropServices;
 
 namespace BundleBouncer
 {
@@ -23,12 +26,6 @@ namespace BundleBouncer
             Logging.LI = LoggerInstance;
             Instance = this;
 
-            // Thanks be to the skiddies, from whomst I have "borrowed" this from.
-            foreach (var methodInfo in typeof(AssetBundleDownloadManager).GetMethods().Where(p => p.GetParameters().Length == 1 && p.GetParameters().First().ParameterType == typeof(ApiAvatar) && p.ReturnType == typeof(void)))
-            {
-                HarmonyInstance.Patch(methodInfo, MelonUtils.ToNewHarmonyMethod(typeof(BundleBouncer).GetMethod(nameof(OnAvatarAssetBundleDownloadAttempt), System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static)));
-            }
-
             if(!Directory.Exists(UserDataDir)) {
                 Directory.CreateDirectory(UserDataDir);
                 Logging.Info($"Created {UserDataDir}");
@@ -41,22 +38,72 @@ namespace BundleBouncer
             if(AvatarShitList.UserShitList.Count > 0) {
                 Logging.Info($"Loaded {AvatarShitList.UserShitList.Count} entries from {UserAvatarShitListFile}");
             }
+
+            unsafe
+            {
+                // God I hate pointers.
+                var originalMethodPointer = *(IntPtr*)(IntPtr)UnhollowerUtils
+                    .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(typeof(AssetBundleDownloadManager).GetMethod(
+                        nameof(AssetBundleDownloadManager.Method_Internal_UniTask_1_InterfacePublicAbstractIDisposableGaObGaUnique_ApiAvatar_MulticastDelegateNInternalSealedVoUnUnique_Boolean_0)))
+                    .GetValue(null);
+
+                MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), typeof(BundleBouncer).GetMethod(nameof(OnAttemptAvatarDownload), BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer());
+
+                dgAttemptAvatarDownload = Marshal.GetDelegateForFunctionPointer<AttemptAvatarDownloadDelegate>(originalMethodPointer);
+                Logging.Info($"Hooked AssetBundleManager.");
+            }
+        }
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
+
+        private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
+
+        /**
+         * Stolen from Behemoth (with permission)
+         */
+        private static unsafe void Hook(MethodBase target, string detour)
+        {
+            var originalMethodPointer = *(IntPtr*)UnhollowerSupport.MethodBaseToIl2CppMethodInfoPointer(target);
+            var detourPointer = typeof(BundleBouncer).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
+            MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
+            Logging.Info($"Hooked {target.Name} to {detour}");
         }
 
-        static bool OnAvatarAssetBundleDownloadAttempt(ApiAvatar __0)
+        // I have no idea what I'm doing
+        static unsafe IntPtr OnAttemptAvatarDownload(IntPtr hiddenStructReturn, IntPtr thisPtr, IntPtr pApiAvatar, IntPtr pMulticastDelegate, bool param_3, IntPtr nativeMethodInfo)
         {
-            if(__0==null)
+            using (var ctx = new AttemptAvatarDownloadContext(pApiAvatar == IntPtr.Zero ? null : new ApiAvatar(pApiAvatar)))
             {
-                Logging.Warning("ApiAvatar was null...?!");
-                return true; // Apparently worked before...
+                var av = AttemptAvatarDownloadContext.apiAvatar;
+                Logging.Info($"Attempting to download avatar {av.id} ({av.name})...");
+                if (AvatarShitList.IsCrasher(av.id))
+                {
+                    Logging.Info($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
+                    // This scares me a bit, as I don't know how it'd handle a zero-pointer return.
+                    //   return IntPtr.Zero;
+                    //} else {
+                    //    return dgAttemptAvatarDownload(hiddenStructReturn, thisPtr, pApiAvatar, pMulticastDelegate, param_3, nativeMethodInfo);
+                    //}
+                    av.assetUrl = "http://0.0.0.0/doesnt-exist.asset"; // TODO: Make configurable, or point to big blaring CRASHER avatar?
+                    av.version = int.MaxValue;
+                }
+                return dgAttemptAvatarDownload(hiddenStructReturn, thisPtr, pApiAvatar, pMulticastDelegate, param_3, nativeMethodInfo);
             }
-            Logging.Info($"Attempting to download avatar {__0.id} ({__0.name})...");
-            if (AvatarShitList.IsCrasher(__0.id))
+        }
+
+        private struct AttemptAvatarDownloadContext : IDisposable
+        {
+            internal static ApiAvatar apiAvatar;
+
+            public AttemptAvatarDownloadContext(ApiAvatar iApiAvatar)
             {
-                Logging.Info($"Crasher blocked: {__0.id} ({__0.name}) -> {__0.unityPackageUrl} (via nullroute)");
-                __0.unityPackageUrl = "https://0.0.0.0/badavi.unityasset"; // nullroute, should trigger an error avatar.
+                apiAvatar = iApiAvatar;
             }
-            return true;
+
+            public void Dispose()
+            {
+                apiAvatar = null;
+            }
         }
     }
 }

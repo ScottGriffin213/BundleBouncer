@@ -20,6 +20,7 @@ namespace BundleBouncer.Data
             
             // avIDs of crashers hashed so people can't just pull them from the binary.
             string avhash = Utilities.Hash.SHA256String(avID).ToUpperInvariant();
+            //Logging.Info($"  {avID} -> {avhash}");
 
             // The following is a bunch of generated if-trees created by putting
             // a bunch of avID SHA256s into a trie (https://en.wikipedia.org/wiki/Trie) and optimizing it.

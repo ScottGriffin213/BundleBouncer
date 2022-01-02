@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using MelonLoader;
 
@@ -18,3 +19,4 @@ using MelonLoader;
 [assembly: Guid("E22130A0-1166-448B-B4D9-B4E3AC7E305E")]
 [assembly: MelonInfo(typeof(BundleBouncer.BundleBouncer), "BundleBouncer", "1.0.1160", "Scott Griffin")]
 [assembly: MelonGame("VRChat", "VRChat")]
+[assembly: MelonColor(ConsoleColor.Red)]
