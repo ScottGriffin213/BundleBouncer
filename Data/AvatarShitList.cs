@@ -4,23 +4,26 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BundleBouncer.Data 
+namespace BundleBouncer.Data
 {
-    public class AvatarShitList {
+    public class AvatarShitList
+    {
         // Loaded from UserData/BundleBouncer/Avatars.txt in BundleBouncer.OnApplicationStart()
         public static HashSet<string> UserShitList;
 
-        public static bool IsCrasher(string avID) {
+        public static bool IsCrasher(string avID)
+        {
             // No fun allowed.
             avID = avID.ToLowerInvariant();
 
-            if(avID.StartsWith("local:"))
+            if (avID.StartsWith("local:"))
             {
                 // Local test avatar, bypasses rules.
                 return false;
             }
 
-            if(!avID.StartsWith("avtr_")) {
+            if (!avID.StartsWith("avtr_"))
+            {
                 // Handles kaj's weird invalid bullshit.
                 // Will probably also trap some very old avs but IDGAF.
                 // FIXME: Whitelist any needed avIDs.
@@ -577,7 +580,7 @@ namespace BundleBouncer.Data
 
 
             // Check against user shitlist
-            if(UserShitList.Contains(avID))
+            if (UserShitList.Contains(avID))
                 return true;
 
             return false;
