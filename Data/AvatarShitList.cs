@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace BundleBouncer.Data 
 {
@@ -11,16 +14,27 @@ namespace BundleBouncer.Data
             // No fun allowed.
             avID = avID.ToLowerInvariant();
 
+            if(avID.StartsWith("local:"))
+            {
+                // Local test avatar, bypasses rules.
+                return false;
+            }
+
             if(!avID.StartsWith("avtr_")) {
                 // Handles kaj's weird invalid bullshit.
                 // Will probably also trap some very old avs but IDGAF.
                 // FIXME: Whitelist any needed avIDs.
                 return true;
             }
-            
+
             // avIDs of crashers hashed so people can't just pull them from the binary.
-            string avhash = Utilities.Hash.SHA256String(avID).ToUpperInvariant();
-            //Logging.Info($"  {avID} -> {avhash}");
+            string avhash;
+            using (SHA256 hash = SHA256Managed.Create())
+            {
+                avhash = String.Concat(hash
+                  .ComputeHash(Encoding.UTF8.GetBytes(avID))
+                  .Select(item => item.ToString("X2")));
+            }
 
             // The following is a bunch of generated if-trees created by putting
             // a bunch of avID SHA256s into a trie (https://en.wikipedia.org/wiki/Trie) and optimizing it.
@@ -268,6 +282,10 @@ namespace BundleBouncer.Data
                     {
                         return true;
                     }
+                }
+                else if(avhash[1]=='3' && avhash[2]=='9' && avhash[3]=='6' && avhash[4]=='8' && avhash[5]=='2' && avhash[6]=='2' && avhash[7]=='7' && avhash[8]=='1' && avhash[9]=='A' && avhash[10]=='A' && avhash[11]=='C' && avhash[12]=='6' && avhash[13]=='E' && avhash[14]=='5' && avhash[15]=='7' && avhash[16]=='A' && avhash[17]=='7' && avhash[18]=='6' && avhash[19]=='9' && avhash[20]=='E' && avhash[21]=='F' && avhash[22]=='1' && avhash[23]=='3' && avhash[24]=='1' && avhash[25]=='3' && avhash[26]=='2' && avhash[27]=='5' && avhash[28]=='D' && avhash[29]=='0' && avhash[30]=='C' && avhash[31]=='5' && avhash[32]=='6' && avhash[33]=='1' && avhash[34]=='2' && avhash[35]=='2' && avhash[36]=='0' && avhash[37]=='9' && avhash[38]=='9' && avhash[39]=='B' && avhash[40]=='D' && avhash[41]=='1' && avhash[42]=='6' && avhash[43]=='6' && avhash[44]=='6' && avhash[45]=='B' && avhash[46]=='F' && avhash[47]=='F' && avhash[48]=='8' && avhash[49]=='6' && avhash[50]=='A' && avhash[51]=='C' && avhash[52]=='1' && avhash[53]=='5' && avhash[54]=='B' && avhash[55]=='5' && avhash[56]=='6' && avhash[57]=='7' && avhash[58]=='8' && avhash[59]=='C' && avhash[60]=='0' && avhash[61]=='5' && avhash[62]=='4' && avhash[63]=='F')
+                {
+                    return true;
                 }
                 else if(avhash[1]=='5' && avhash[2]=='5' && avhash[3]=='2' && avhash[4]=='1' && avhash[5]=='3' && avhash[6]=='3' && avhash[7]=='3' && avhash[8]=='B' && avhash[9]=='1' && avhash[10]=='A' && avhash[11]=='7' && avhash[12]=='5' && avhash[13]=='6' && avhash[14]=='1' && avhash[15]=='4' && avhash[16]=='D' && avhash[17]=='5' && avhash[18]=='D' && avhash[19]=='C' && avhash[20]=='5' && avhash[21]=='1' && avhash[22]=='1' && avhash[23]=='E' && avhash[24]=='E' && avhash[25]=='8' && avhash[26]=='2' && avhash[27]=='5' && avhash[28]=='E' && avhash[29]=='2' && avhash[30]=='2' && avhash[31]=='B' && avhash[32]=='5' && avhash[33]=='B' && avhash[34]=='6' && avhash[35]=='8' && avhash[36]=='5' && avhash[37]=='B' && avhash[38]=='F' && avhash[39]=='7' && avhash[40]=='9' && avhash[41]=='3' && avhash[42]=='3' && avhash[43]=='F' && avhash[44]=='A' && avhash[45]=='C' && avhash[46]=='B' && avhash[47]=='F' && avhash[48]=='C' && avhash[49]=='6' && avhash[50]=='A' && avhash[51]=='2' && avhash[52]=='6' && avhash[53]=='D' && avhash[54]=='0' && avhash[55]=='9' && avhash[56]=='7' && avhash[57]=='3' && avhash[58]=='9' && avhash[59]=='F' && avhash[60]=='1' && avhash[61]=='B' && avhash[62]=='3' && avhash[63]=='0')
                 {

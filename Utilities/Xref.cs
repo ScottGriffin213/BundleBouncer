@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace BundleBouncer.Utilities
 {
-    class Xref
+    public class Xref
     {
         // This method is practically stolen from https://github.com/BenjaminZehowlt/DynamicBonesSafety/blob/master/DynamicBonesSafetyMod.cs
         // And stolen again https://github.com/loukylor/VRC-Mods/blob/e4cd8aaeea877595782f8cd0f0ddf50ff75557ca/PlayerList/Utilities/Xref.cs#L9
