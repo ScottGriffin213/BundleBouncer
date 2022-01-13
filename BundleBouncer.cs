@@ -9,22 +9,52 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using UnhollowerBaseLib;
+using UnityEngine;
+using UnityEngine.Networking;
+using VRC;
 using VRC.Core;
+using VRChatUtilityKit.Utilities;
 
 namespace BundleBouncer
 {
     public class BundleBouncer : MelonMod
     {
-        public BundleBouncer Instance { get; private set; }
+        /// <summary>
+        /// Singleton reference.
+        /// </summary>
+        public static BundleBouncer Instance { get; private set; }
 
+        /// <summary>
+        /// Only used when we find an event previously unknown to us transmitting avatar IDs.
+        /// </summary>
         public static HashSet<byte> writtenSamples = new HashSet<byte>();
 
-        public string UserDataDir { get { return "UserData/BundleBouncer"; } }
-        public string UserAvatarShitListFile { get { return Path.Combine(UserDataDir, "Avatars.txt"); } }
+        /// <summary>
+        /// Where to put logs and data files
+        /// </summary>
+        public string UserDataDir { get { return Path.Combine("UserData", "BundleBouncer"); } }
+        public string LogDir { get { return Path.Combine(UserDataDir, "Logs"); } }
+        public string OldShitListFile { get { return Path.Combine(UserDataDir, "Avatars.txt"); } }
+        public string UserAvatarShitListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
+        public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
+
+        /// <summary>
+        /// Previous users of exploitave assetbundles.
+        /// </summary>
+        public static HashSet<string> KnownSkiddies = new HashSet<string>();
+
+        /// <summary>
+        /// Current cache of known skiddies in the current scene, as VRCPlayers.
+        /// </summary>
+        public static HashSet<Player> DetectedSkiddies = new HashSet<Player>();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
         private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
+
+        public static string AvatarOfShameURL = ""; // TODO: Make one
+
+        static HighlightsFXStandalone shitterHighlighter;
 
         public override void OnApplicationStart()
         {
@@ -36,10 +66,40 @@ namespace BundleBouncer
                 Directory.CreateDirectory(UserDataDir);
                 Logging.Info($"Created {UserDataDir}");
             }
+            
+            if (!Directory.Exists(LogDir))
+            {
+                Directory.CreateDirectory(LogDir);
+                Logging.Info($"Created {LogDir}");
+            }
+
+            if(File.Exists(OldShitListFile))
+            {
+                if(File.Exists(UserAvatarShitListFile))
+                {
+                    Logging.Warning($"Both the new ({UserAvatarShitListFile}) and old ({OldShitListFile}) avatar blacklists are present.  Merge them and get rid of the old one.");
+                } else {
+                    Logging.Warning($"Moving {OldShitListFile} to {UserAvatarShitListFile}...");
+                    File.Move(OldShitListFile, UserAvatarShitListFile);
+                }
+            }
+
             if (!File.Exists(UserAvatarShitListFile))
             {
                 File.WriteAllLines(UserAvatarShitListFile, new string[] { "# Add avatar IDs below this line, but without the #.", "" });
                 Logging.Info($"Created {UserAvatarShitListFile}");
+            }
+
+            if(!File.Exists(PlayerShitlistFile))
+            {
+                File.WriteAllText(PlayerShitlistFile, "[]");
+                Logging.Info($"Created {PlayerShitlistFile}");
+            }
+
+            LoadPlayerShitlist();
+            if (KnownSkiddies.Count > 0)
+            {
+                Logging.Info($"Loaded {KnownSkiddies.Count} entries from {PlayerShitlistFile}");
             }
 
             AvatarShitList.UserShitList = File.ReadAllLines(UserAvatarShitListFile).Select(x => x.Trim().ToLowerInvariant()).Where(x => x != "" && !x.StartsWith("#")).ToHashSet();
@@ -68,6 +128,24 @@ namespace BundleBouncer
                     typeof(BundleBouncer).GetMethod(nameof(Detour),
                     BindingFlags.NonPublic | BindingFlags.Static)
                 ), null, null, null, null);
+
+            NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
+            NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
+        }
+
+        private void NetworkEvents_OnPlayerLeft(Player player)
+        {
+            DoffAvatarOfShame(player);
+        }
+
+        private void NetworkEvents_OnPlayerJoined(Player player)
+        {
+            if(DetectedSkiddies.Contains(player))
+            {
+                DonAvatarOfShame(player);
+            } else {
+                DoffAvatarOfShame(player);
+            }
         }
 
         /**
@@ -80,6 +158,86 @@ namespace BundleBouncer
             var detourPointer = typeof(BundleBouncer).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
             MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
             Logging.Info($"Hooked {target.Name} to {detour}");
+        }
+
+        public static void AddToSkiddieShitlist(string usrID) { 
+            // Try to find VRCPlayer
+            var match = GetPlayers().Where(x => x.prop_APIUser_0.id == usrID).FirstOrDefault();
+            if (match == null)
+            {
+                return;
+            }
+
+            DetectedSkiddies.Add(match);
+            KnownSkiddies.Add(usrID);
+            DonAvatarOfShame(match);
+            SavePlayerShitlist();
+        }
+
+        private static void SavePlayerShitlist()
+        {
+            File.WriteAllText(Instance.PlayerShitlistFile, JsonConvert.SerializeObject(KnownSkiddies));
+        }
+
+        private static void LoadPlayerShitlist()
+        {
+            KnownSkiddies = JsonConvert.DeserializeObject<HashSet<string>>(File.ReadAllText(Instance.PlayerShitlistFile));
+        }
+
+
+        private static void DonAvatarOfShame(Player player)
+        {
+            if (player is null)
+            {
+                throw new ArgumentNullException(nameof(player));
+            }
+            /*
+            if(s_BoothCat == null)
+            {
+                LoadAvatarOfShame();
+            }
+            */
+            var shameTF = player.transform.Find("_BB_SHAME");
+            if (shameTF == null)
+            {
+                var selectRegion = player.transform.Find("SelectRegion");
+                if (BundleBouncer.shitterHighlighter == null) {
+                    BundleBouncer.shitterHighlighter = HighlightsFX.field_Private_Static_HighlightsFX_0.gameObject.AddComponent<HighlightsFXStandalone>();
+                    shitterHighlighter.highlightColor = Color.red;
+                    shitterHighlighter.enabled = true;
+                }
+                shitterHighlighter.field_Protected_HashSet_1_Renderer_0.AddIfNotPresent(selectRegion.GetComponent<Renderer>());
+            }
+        }
+
+        private static void DoffAvatarOfShame(Player player)
+        {
+            if (player is null)
+            {
+                throw new ArgumentNullException(nameof(player));
+            }
+            if (player.transform == null)
+                return; // ????
+            var selectRegion = player.transform.Find("SelectRegion");
+            if (selectRegion != null)
+            {
+                var renderer = selectRegion.GetComponent<Renderer>();
+                if(shitterHighlighter!=null)
+                    if(shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Contains(renderer))
+                        shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Remove(renderer);
+            }
+        }
+
+        private static Player[] GetPlayers()
+        {
+            var players = PlayerManager.field_Private_Static_PlayerManager_0.field_Private_List_1_Player_0;
+            if (players == null)
+                return new Player[0];
+            else {
+                lock (players) {
+                    return players.ToArray();
+                }
+            }
         }
 
         private static bool HasProp(dynamic thing, string key)

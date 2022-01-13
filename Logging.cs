@@ -38,7 +38,7 @@ namespace BundleBouncer
         public static void Gottem(string msg)
         {
             Info($"{ANSI_RED}{msg}{ANSI_RESET}");
-            File.AppendAllText(BLOCKLOG, $"[{GetTimeStamp()}] {msg}");
+            File.AppendAllText(BLOCKLOG, $"[{GetTimeStamp()}] {msg}\n");
         }
     }
 }

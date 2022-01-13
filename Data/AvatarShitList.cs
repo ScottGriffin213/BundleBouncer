@@ -484,6 +484,10 @@ namespace BundleBouncer.Data
                     return true;
                 }
             }
+            else if(avhash[0]==58 && avhash[1]==36 && avhash[2]==152 && avhash[3]==68 && avhash[4]==51 && avhash[5]==89 && avhash[6]==1 && avhash[7]==3 && avhash[8]==206 && avhash[9]==52 && avhash[10]==8 && avhash[11]==90 && avhash[12]==21 && avhash[13]==123 && avhash[14]==244 && avhash[15]==33 && avhash[16]==125 && avhash[17]==23 && avhash[18]==113 && avhash[19]==11 && avhash[20]==239 && avhash[21]==49 && avhash[22]==3 && avhash[23]==14 && avhash[24]==107 && avhash[25]==58 && avhash[26]==208 && avhash[27]==182 && avhash[28]==87 && avhash[29]==86 && avhash[30]==166 && avhash[31]==131)
+            {
+                return true;
+            }
             else if(avhash[0]==64 && avhash[1]==33 && avhash[2]==190 && avhash[3]==239 && avhash[4]==166 && avhash[5]==161 && avhash[6]==34 && avhash[7]==142 && avhash[8]==115 && avhash[9]==93 && avhash[10]==176 && avhash[11]==187 && avhash[12]==34 && avhash[13]==19 && avhash[14]==228 && avhash[15]==181 && avhash[16]==214 && avhash[17]==140 && avhash[18]==97 && avhash[19]==242 && avhash[20]==170 && avhash[21]==170 && avhash[22]==175 && avhash[23]==30 && avhash[24]==187 && avhash[25]==67 && avhash[26]==104 && avhash[27]==62 && avhash[28]==201 && avhash[29]==193 && avhash[30]==212 && avhash[31]==96)
             {
                 return true;
