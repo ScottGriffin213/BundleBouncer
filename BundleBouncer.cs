@@ -3,6 +3,7 @@ using ExitGames.Client.Photon;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,7 @@ using System.Security.Cryptography;
 using UnhollowerBaseLib;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 using VRC;
 using VRC.Core;
 using VRChatUtilityKit.Utilities;
@@ -190,6 +192,62 @@ namespace BundleBouncer
         private void NetworkEvents_OnPlayerLeft(Player player)
         {
             DoffAvatarOfShame(player);
+        }
+
+        public static IEnumerator CreatePopupV2(string text, byte[] imageBytes = null, float time = 5f)
+        {
+            GameObject g = GameObject.Instantiate(GameObject.Find("UserInterface/MenuContent/Popups/InputPopup/"), GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud/").transform);
+            g.transform.localScale = new Vector3(0f, 0.5f, 0.5f);
+            g.transform.localPosition = new Vector3(0f, -400f, 0f);
+            g.GetComponent<VRCUiPopupInput>().enabled = false;
+            g.GetComponent<CanvasGroup>().enabled = false;
+            g.transform.Find("InputField").gameObject.SetActive(false);
+            g.transform.Find("Keyboard").gameObject.SetActive(false);
+            g.transform.Find("ButtonLeft").gameObject.SetActive(false);
+            g.transform.Find("ButtonRight").gameObject.SetActive(false);
+            g.transform.Find("ButtonCenter").gameObject.SetActive(false);
+            g.transform.Find("PasswordVisibilityToggle").localPosition = new Vector3(-420f, 200f, 0);
+            g.transform.Find("Darkness").localPosition = new Vector3(0f, 200f, 0f);
+            g.transform.Find("Darkness").localScale = new Vector3(1f, 0.1f, 0.5f);
+            g.transform.Find("TitleText").localPosition = new Vector3(0f, 200f, 0f);
+            g.transform.Find("TitleText").GetComponent<Text>().supportRichText = true;
+            g.transform.Find("TitleText").GetComponent<Text>().text = text;
+            g.transform.Find("Rectangle").gameObject.SetActive(false);
+            g.transform.Find("CharactersRemainingText").gameObject.SetActive(false);
+            g.transform.Find("PasswordVisibilityToggle").GetComponent<Image>().sprite = LoadSpriteFromBytes(imageBytes);
+            g.SetActive(true);
+            if (g.transform.Find("ButtonPaste") != null) g.transform.Find("ButtonPaste").gameObject.SetActive(false);
+
+            while (g.transform.localScale.x < 0.5f && g != null)
+            {
+                yield return new WaitForSeconds(0.02f);
+                g.transform.localScale = new Vector3(g.transform.localScale.x + 0.05f, g.transform.localScale.y, g.transform.localScale.z);
+                if (g.transform.localScale.x > 0.5f)
+                    yield return null;
+            }
+
+            yield return new WaitForSeconds(time);
+            while (g.transform.localScale.x > 0f && g != null)
+            {
+                yield return new WaitForSeconds(0.02f);
+                g.transform.localScale = new Vector3(g.transform.localScale.x - 0.05f, g.transform.localScale.y, g.transform.localScale.z);
+                if (g.transform.localScale.x == 0f || g.transform.localScale.x < 0f)
+                {
+                    GameObject.Destroy(g);
+                    yield break;
+                }
+            }
+
+            yield break;
+        }
+        public static Sprite LoadSpriteFromBytes(byte[] bytes)
+        {
+            Texture2D tex = new Texture2D(512, 512);
+            if (!Il2CppImageConversionManager.LoadImage(tex, bytes)) return null;
+
+            Sprite sprite = Sprite.CreateSprite(tex, new Rect(0.0f, 0.0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100.0f, 0, 0, new Vector4(), false);
+            sprite.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+            return sprite;
         }
 
         private void NetworkEvents_OnPlayerJoined(Player player)

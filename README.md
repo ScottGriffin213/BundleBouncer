@@ -76,10 +76,15 @@ TODO: Discord
 
 ## License
 
-The public source code is MIT-licensed. Feel free to send Merge Requests (MRs) and report issues!
+The public source code (which is contained in this repository) is MIT-licensed. Feel free to send Merge Requests (MRs) and report issues!
 
-The full buildsystem and avatar dataset is proprietary. Copyright &copy;2021-2022 "Scott Griffin". All rights reserved.
+The full buildsystem and avatar dataset is proprietary for security reasons. Copyright &copy;2021-2022 "Scott Griffin". All rights reserved.
 
+
+## Contributors
+
+* Scott Griffin
+* null
 ## Credits
 
 * [AdvancedSafety](https://github.com/knah/VRCMods/tree/master/AdvancedSafety) by Knah - IL2CPP interface code
