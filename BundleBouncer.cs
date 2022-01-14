@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using UnhollowerBaseLib;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -39,7 +40,7 @@ namespace BundleBouncer
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
 
         /// <summary>
-        /// Previous users of exploitave assetbundles.
+        /// Previous users of exploitive assetbundles.
         /// </summary>
         public static HashSet<string> KnownSkiddies = new HashSet<string>();
 
@@ -52,9 +53,26 @@ namespace BundleBouncer
         private delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
         private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
 
+        //public static extern AssetBundle LoadFromFile(string path, [UnityEngine.Internal.DefaultValue("0")] uint crc, [UnityEngine.Internal.DefaultValue("0")] ulong offset);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr LoadFromFileDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, string file, int crc, ulong offset, IntPtr nativeMethodInfo);
+        private static LoadFromFileDelegate dgLoadFromFile;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr LoadFromFileAsyncDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, string file, int crc, ulong offset, IntPtr nativeMethodInfo);
+        private static LoadFromFileAsyncDelegate dgLoadFromFileAsync;
+
         public static string AvatarOfShameURL = ""; // TODO: Make one
 
         static HighlightsFXStandalone shitterHighlighter;
+
+        /// <summary>
+        /// Mostly for logging and datastream tracking.
+        /// </summary>
+        static Dictionary<string, AssetInfo> assetInfo = new Dictionary<string, AssetInfo>();
+
+
+        private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
 
         public override void OnApplicationStart()
         {
@@ -121,6 +139,32 @@ namespace BundleBouncer
                 dgAttemptAvatarDownload = Marshal.GetDelegateForFunctionPointer<AttemptAvatarDownloadDelegate>(originalMethodPointer);
                 Logging.Info($"Hooked AssetBundleDownloadManager.");
             }
+            // This is going to be dangerous as fuck, buckle up sweetheart.
+            //AssetBundle.LoadFromFile
+            unsafe
+            {
+                var method = typeof(AssetBundle).GetMethods().Where(x => x.Name == "LoadFromFile_Internal").First();
+
+                dgLoadFromFile = Marshal.GetDelegateForFunctionPointer<LoadFromFileDelegate>(Hook(method, nameof(OnLoadFromFile)));
+            }
+            /*
+            unsafe
+            {
+                var method = typeof(AssetBundle).GetMethods().Where(x => x.Name == "LoadFromFileAsync" && x.GetParameters().Length == 3).First();
+
+                //dgLoadFromFileAsync = Marshal.GetDelegateForFunctionPointer<LoadFromFileAsyncDelegate>(Hook(method, nameof(OnLoadFromFileAsync)));
+                HarmonyInstance.Patch(method, typeof(BundleBouncer).GetMethod(nameof(OnLoadFromFileAsync_3), BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+            }
+            unsafe
+            {
+                var method = typeof(AssetBundle).GetMethods().Where(x => x.Name == "LoadFromFileAsync" && x.GetParameters().Length == 1).First();
+
+                //dgLoadFromFileAsync = Marshal.GetDelegateForFunctionPointer<LoadFromFileAsyncDelegate>(Hook(method, nameof(OnLoadFromFileAsync)));
+                HarmonyInstance.Patch(method, typeof(BundleBouncer).GetMethod(nameof(OnLoadFromFileAsync_1), BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+            }
+            */
+
+
 
             HarmonyInstance.Patch(
                 typeof(VRCNetworkingClient).GetMethod("OnEvent"),
@@ -131,6 +175,16 @@ namespace BundleBouncer
 
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
+            NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;
+        }
+
+        private void NetworkEvents_OnInstanceChanged(ApiWorld arg1, ApiWorldInstance arg2)
+        {
+            // Clear asset tracking.
+            assetInfo.Clear();
+            DetectedSkiddies.Clear();
+            if(shitterHighlighter != null && shitterHighlighter.field_Protected_HashSet_1_Renderer_0!=null)
+            shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Clear();
         }
 
         private void NetworkEvents_OnPlayerLeft(Player player)
@@ -150,14 +204,14 @@ namespace BundleBouncer
 
         /**
          * Stolen from Behemoth (with permission)
-         * Not used right now.
          */
-        private static unsafe void Hook(MethodBase target, string detour)
+        private static unsafe IntPtr Hook(MethodBase target, string detour)
         {
             var originalMethodPointer = *(IntPtr*)UnhollowerSupport.MethodBaseToIl2CppMethodInfoPointer(target);
             var detourPointer = typeof(BundleBouncer).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
             MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
             Logging.Info($"Hooked {target.Name} to {detour}");
+            return originalMethodPointer;
         }
 
         public static void AddToSkiddieShitlist(string usrID) { 
@@ -253,13 +307,101 @@ namespace BundleBouncer
             return thing.GetType().GetProperty(key) != null;
         }
 
+        private static unsafe IntPtr OnLoadFromFile(IntPtr retvalPtr, IntPtr thisPtr, string path, int crc, ulong offset, IntPtr nativeMethodInfo)
+        {
+            byte[] hash;
+            using(var sha256 = new SHA256Managed())
+            {
+                using(var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                return IntPtr.Zero; // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+            }
+            return dgLoadFromFile(retvalPtr, thisPtr, path, crc, offset, nativeMethodInfo);
+        }
+        /*
+        private static unsafe IntPtr OnLoadFromFileAsync(IntPtr retvalPtr, IntPtr thisPtr, string path, int crc, ulong offset, IntPtr nativeMethodInfo)
+        {
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                return IntPtr.Zero; // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+            }
+            return dgLoadFromFileAsync(retvalPtr, thisPtr, path, crc, offset, nativeMethodInfo);
+        }
+        */
+        private static bool OnLoadFromFileAsync_1(string __0, ref AssetBundleCreateRequest __result)
+        {
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(__0))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {__0} (SHA256: {hashstr}) via AssetBundle.LoadFromFileAsync(1)...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {__0} (SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                __result.InvokeCompletionEvent();
+                return false;
+            }
+            return true;
+        }
+        private static bool OnLoadFromFileAsync_3(string __0, int __1, ulong __2, ref AssetBundleCreateRequest __result)
+        {
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(__0))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {__0} (CRC: {__1}, Offset: {__2}, SHA256: {hashstr}) via AssetBundle.LoadFromFileAsync(3)...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {__0} (CRC: {__1}, Offset: {__2}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                __result.InvokeCompletionEvent();
+                return false;
+            }
+            return true;
+
+        }
+
         // I have no idea what I'm doing
         static unsafe IntPtr OnAttemptAvatarDownload(IntPtr hiddenStructReturn, IntPtr thisPtr, IntPtr pApiAvatar, IntPtr pMulticastDelegate, bool param_3, IntPtr nativeMethodInfo)
         {
             using (var ctx = new AttemptAvatarDownloadContext(pApiAvatar == IntPtr.Zero ? null : new ApiAvatar(pApiAvatar)))
             {
                 var av = AttemptAvatarDownloadContext.apiAvatar;
-                Logging.Info($"Attempting to download avatar {av.id} ({av.name})...");
+                Logging.Info($"Attempting to download avatar {av.id} ({av.name}) via AssetBundleDownloadManager...");
                 if (AvatarShitList.IsCrasher(av.id))
                 {
                     Logging.Gottem($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
@@ -359,13 +501,53 @@ namespace BundleBouncer
             string avID = avdata["id"];
             string avName = avdata["name"];
             string fbstr = is_fallback ? "fallback" : "main";
+            foreach(dynamic up in avdata["unityPackages"])
+            {
+                addAssetURL(up["assetUrl"].ToString(), avID, user);
+            }
             Logging.Info($"Attempting to download {fbstr} avatar {avID} ({avName} via E{code})...");
             if (AvatarShitList.IsCrasher(avID))
             {
-                Logging.Gottem($"Crasher from {user} blocked: {avID} ({avName}) (E{code})");
+                AddToSkiddieShitlist(user);
+                var player = GetPlayers().Where(x => x.field_Private_APIUser_0.id == user).FirstOrDefault();
+                if (player != null)
+                {
+                    Logging.Gottem($"Crasher from {player.field_Private_APIUser_0.displayName} ({user}) blocked: {avID} ({avName}) (via event {code})");
+                } else
+                {
+                    Logging.Gottem($"Crasher from {user} blocked: {avID} ({avName}) (via event {code})");
+                }
                 return false;
             }
             return true;
         }
+
+        private static void addAssetURL(string avURL, string avID, string user)
+        {
+            Uri parts = new Uri(avURL);
+            string fileID = parts.AbsolutePath.Split('/').Where(x => x.StartsWith("file_")).First();
+            avIDsByFileSubURL[$"file/{fileID}"] = avID;
+            if (!assetInfo.ContainsKey(avURL))
+                assetInfo[avURL] = new AssetInfo(avURL, avID, null);
+            if(!assetInfo[avURL].UsedBy.Contains(user))
+                assetInfo[avURL].UsedBy.Add(user);
+        }
+    }
+
+    internal class AssetInfo
+    {
+        public string URL;
+        public string ID;
+        public string Hash;
+        public HashSet<string> UsedBy = new HashSet<string>();
+
+        public AssetInfo(string avURL, string avID, string avHash)
+        {
+            this.URL = avURL;
+            this.ID = avID;
+            this.Hash = avHash;
+        }
+
+
     }
 }

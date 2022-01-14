@@ -589,5 +589,25 @@ namespace BundleBouncer.Data
 
             return false;
         }
+
+
+
+        internal static bool IsBundleACrasher(byte[] hash)
+        {
+            if(hash[0]==190 && hash[1]==24 && hash[2]==140 && hash[3]==196 && hash[4]==194 && hash[5]==105 && hash[6]==40 && hash[7]==41 && hash[8]==74 && hash[9]==89 && hash[10]==63 && hash[11]==188 && hash[12]==17 && hash[13]==141 && hash[14]==142 && hash[15]==111 && hash[16]==40 && hash[17]==124 && hash[18]==89 && hash[19]==24 && hash[20]==215 && hash[21]==91 && hash[22]==209 && hash[23]==85 && hash[24]==187 && hash[25]==200 && hash[26]==70 && hash[27]==12 && hash[28]==175 && hash[29]==26 && hash[30]==206 && hash[31]==25)
+            {
+                return true;
+            }
+            else if(hash[0]==201 && hash[1]==81 && hash[2]==218 && hash[3]==52 && hash[4]==8 && hash[5]==145 && hash[6]==254 && hash[7]==14 && hash[8]==185 && hash[9]==110 && hash[10]==204 && hash[11]==141 && hash[12]==159 && hash[13]==97 && hash[14]==221 && hash[15]==126 && hash[16]==238 && hash[17]==214 && hash[18]==241 && hash[19]==161 && hash[20]==246 && hash[21]==164 && hash[22]==211 && hash[23]==151 && hash[24]==77 && hash[25]==72 && hash[26]==80 && hash[27]==112 && hash[28]==211 && hash[29]==35 && hash[30]==5 && hash[31]==47)
+            {
+                return true;
+            }
+            else if(hash[0]==37 && hash[1]==160 && hash[2]==61 && hash[3]==33 && hash[4]==196 && hash[5]==130 && hash[6]==127 && hash[7]==64 && hash[8]==88 && hash[9]==68 && hash[10]==197 && hash[11]==0 && hash[12]==19 && hash[13]==198 && hash[14]==66 && hash[15]==89 && hash[16]==67 && hash[17]==232 && hash[18]==64 && hash[19]==185 && hash[20]==242 && hash[21]==29 && hash[22]==177 && hash[23]==255 && hash[24]==194 && hash[25]==44 && hash[26]==200 && hash[27]==24 && hash[28]==243 && hash[29]==197 && hash[30]==82 && hash[31]==112)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }
