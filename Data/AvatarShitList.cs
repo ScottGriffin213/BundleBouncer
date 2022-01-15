@@ -231,10 +231,6 @@ namespace BundleBouncer.Data
             {
                 return true;
             }
-            else if(avhash[0]==184 && avhash[1]==243 && avhash[2]==182 && avhash[3]==202 && avhash[4]==79 && avhash[5]==109 && avhash[6]==144 && avhash[7]==132 && avhash[8]==223 && avhash[9]==203 && avhash[10]==173 && avhash[11]==194 && avhash[12]==215 && avhash[13]==106 && avhash[14]==139 && avhash[15]==24 && avhash[16]==228 && avhash[17]==114 && avhash[18]==206 && avhash[19]==249 && avhash[20]==116 && avhash[21]==66 && avhash[22]==21 && avhash[23]==139 && avhash[24]==217 && avhash[25]==74 && avhash[26]==215 && avhash[27]==232 && avhash[28]==252 && avhash[29]==21 && avhash[30]==51 && avhash[31]==229)
-            {
-                return true;
-            }
             else if(avhash[0]==185 && avhash[1]==31 && avhash[2]==203 && avhash[3]==133 && avhash[4]==81 && avhash[5]==222 && avhash[6]==49 && avhash[7]==106 && avhash[8]==43 && avhash[9]==41 && avhash[10]==12 && avhash[11]==119 && avhash[12]==242 && avhash[13]==206 && avhash[14]==3 && avhash[15]==107 && avhash[16]==195 && avhash[17]==255 && avhash[18]==254 && avhash[19]==255 && avhash[20]==82 && avhash[21]==30 && avhash[22]==55 && avhash[23]==218 && avhash[24]==237 && avhash[25]==226 && avhash[26]==120 && avhash[27]==68 && avhash[28]==13 && avhash[29]==43 && avhash[30]==89 && avhash[31]==146)
             {
                 return true;
@@ -256,11 +252,7 @@ namespace BundleBouncer.Data
             }
             else if(avhash[0]==197)
             {
-                if(avhash[1]==155 && avhash[2]==22 && avhash[3]==156 && avhash[4]==239 && avhash[5]==213 && avhash[6]==144 && avhash[7]==180 && avhash[8]==231 && avhash[9]==11 && avhash[10]==239 && avhash[11]==113 && avhash[12]==131 && avhash[13]==252 && avhash[14]==204 && avhash[15]==147 && avhash[16]==235 && avhash[17]==50 && avhash[18]==90 && avhash[19]==8 && avhash[20]==14 && avhash[21]==127 && avhash[22]==124 && avhash[23]==41 && avhash[24]==231 && avhash[25]==0 && avhash[26]==142 && avhash[27]==219 && avhash[28]==91 && avhash[29]==154 && avhash[30]==200 && avhash[31]==231)
-                {
-                    return true;
-                }
-                else if(avhash[1]==160 && avhash[2]==37 && avhash[3]==23 && avhash[4]==138 && avhash[5]==230 && avhash[6]==102 && avhash[7]==141 && avhash[8]==202 && avhash[9]==216 && avhash[10]==173 && avhash[11]==212 && avhash[12]==74 && avhash[13]==118 && avhash[14]==169 && avhash[15]==157 && avhash[16]==79 && avhash[17]==182 && avhash[18]==158 && avhash[19]==144 && avhash[20]==86 && avhash[21]==15 && avhash[22]==10 && avhash[23]==132 && avhash[24]==141 && avhash[25]==144 && avhash[26]==238 && avhash[27]==34 && avhash[28]==170 && avhash[29]==195 && avhash[30]==213 && avhash[31]==244)
+                if(avhash[1]==160 && avhash[2]==37 && avhash[3]==23 && avhash[4]==138 && avhash[5]==230 && avhash[6]==102 && avhash[7]==141 && avhash[8]==202 && avhash[9]==216 && avhash[10]==173 && avhash[11]==212 && avhash[12]==74 && avhash[13]==118 && avhash[14]==169 && avhash[15]==157 && avhash[16]==79 && avhash[17]==182 && avhash[18]==158 && avhash[19]==144 && avhash[20]==86 && avhash[21]==15 && avhash[22]==10 && avhash[23]==132 && avhash[24]==141 && avhash[25]==144 && avhash[26]==238 && avhash[27]==34 && avhash[28]==170 && avhash[29]==195 && avhash[30]==213 && avhash[31]==244)
                 {
                     return true;
                 }
@@ -322,10 +314,6 @@ namespace BundleBouncer.Data
                     return true;
                 }
             }
-            else if(avhash[0]==213 && avhash[1]==9 && avhash[2]==203 && avhash[3]==38 && avhash[4]==175 && avhash[5]==123 && avhash[6]==210 && avhash[7]==159 && avhash[8]==209 && avhash[9]==154 && avhash[10]==38 && avhash[11]==11 && avhash[12]==177 && avhash[13]==124 && avhash[14]==89 && avhash[15]==25 && avhash[16]==64 && avhash[17]==140 && avhash[18]==159 && avhash[19]==74 && avhash[20]==204 && avhash[21]==56 && avhash[22]==76 && avhash[23]==209 && avhash[24]==166 && avhash[25]==152 && avhash[26]==196 && avhash[27]==76 && avhash[28]==160 && avhash[29]==9 && avhash[30]==63 && avhash[31]==58)
-            {
-                return true;
-            }
             else if(avhash[0]==215 && avhash[1]==224 && avhash[2]==50 && avhash[3]==55 && avhash[4]==7 && avhash[5]==210 && avhash[6]==236 && avhash[7]==39 && avhash[8]==128 && avhash[9]==210 && avhash[10]==212 && avhash[11]==106 && avhash[12]==141 && avhash[13]==114 && avhash[14]==206 && avhash[15]==135 && avhash[16]==152 && avhash[17]==90 && avhash[18]==64 && avhash[19]==121 && avhash[20]==52 && avhash[21]==154 && avhash[22]==224 && avhash[23]==242 && avhash[24]==77 && avhash[25]==103 && avhash[26]==140 && avhash[27]==189 && avhash[28]==148 && avhash[29]==2 && avhash[30]==194 && avhash[31]==193)
             {
                 return true;
@@ -359,10 +347,6 @@ namespace BundleBouncer.Data
                 {
                     return true;
                 }
-            }
-            else if(avhash[0]==223 && avhash[1]==75 && avhash[2]==60 && avhash[3]==201 && avhash[4]==53 && avhash[5]==184 && avhash[6]==151 && avhash[7]==234 && avhash[8]==89 && avhash[9]==12 && avhash[10]==146 && avhash[11]==35 && avhash[12]==49 && avhash[13]==189 && avhash[14]==226 && avhash[15]==77 && avhash[16]==166 && avhash[17]==24 && avhash[18]==173 && avhash[19]==88 && avhash[20]==255 && avhash[21]==72 && avhash[22]==67 && avhash[23]==26 && avhash[24]==220 && avhash[25]==199 && avhash[26]==154 && avhash[27]==39 && avhash[28]==154 && avhash[29]==222 && avhash[30]==167 && avhash[31]==19)
-            {
-                return true;
             }
             else if(avhash[0]==225 && avhash[1]==63 && avhash[2]==231 && avhash[3]==56 && avhash[4]==152 && avhash[5]==169 && avhash[6]==56 && avhash[7]==241 && avhash[8]==151 && avhash[9]==134 && avhash[10]==42 && avhash[11]==207 && avhash[12]==167 && avhash[13]==61 && avhash[14]==97 && avhash[15]==13 && avhash[16]==7 && avhash[17]==154 && avhash[18]==8 && avhash[19]==46 && avhash[20]==139 && avhash[21]==202 && avhash[22]==73 && avhash[23]==124 && avhash[24]==254 && avhash[25]==64 && avhash[26]==124 && avhash[27]==32 && avhash[28]==41 && avhash[29]==54 && avhash[30]==197 && avhash[31]==65)
             {
@@ -439,10 +423,6 @@ namespace BundleBouncer.Data
                 return true;
             }
             else if(avhash[0]==4 && avhash[1]==211 && avhash[2]==188 && avhash[3]==42 && avhash[4]==123 && avhash[5]==229 && avhash[6]==6 && avhash[7]==242 && avhash[8]==9 && avhash[9]==62 && avhash[10]==139 && avhash[11]==86 && avhash[12]==150 && avhash[13]==194 && avhash[14]==125 && avhash[15]==23 && avhash[16]==167 && avhash[17]==12 && avhash[18]==128 && avhash[19]==233 && avhash[20]==6 && avhash[21]==36 && avhash[22]==172 && avhash[23]==88 && avhash[24]==165 && avhash[25]==29 && avhash[26]==89 && avhash[27]==90 && avhash[28]==169 && avhash[29]==205 && avhash[30]==0 && avhash[31]==139)
-            {
-                return true;
-            }
-            else if(avhash[0]==41 && avhash[1]==61 && avhash[2]==42 && avhash[3]==68 && avhash[4]==236 && avhash[5]==71 && avhash[6]==190 && avhash[7]==237 && avhash[8]==39 && avhash[9]==93 && avhash[10]==44 && avhash[11]==87 && avhash[12]==156 && avhash[13]==70 && avhash[14]==249 && avhash[15]==59 && avhash[16]==218 && avhash[17]==251 && avhash[18]==106 && avhash[19]==178 && avhash[20]==106 && avhash[21]==55 && avhash[22]==95 && avhash[23]==224 && avhash[24]==24 && avhash[25]==66 && avhash[26]==250 && avhash[27]==60 && avhash[28]==80 && avhash[29]==60 && avhash[30]==131 && avhash[31]==63)
             {
                 return true;
             }
