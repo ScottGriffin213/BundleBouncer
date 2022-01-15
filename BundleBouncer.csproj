@@ -6,6 +6,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="images\png\BundleBouncer-512.png" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Accessibility">
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Accessibility.dll</HintPath>
       <Private>false</Private>
@@ -970,5 +973,9 @@
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\WindowsBase.dll</HintPath>
       <Private>false</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="images\png\BundleBouncer-512.png" />
+    <EmbeddedResource Include="images\png\BundleBouncer-512.png" />
   </ItemGroup>
 </Project>

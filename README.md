@@ -85,6 +85,7 @@ The full buildsystem and avatar dataset is proprietary for security reasons. Cop
 
 * Scott Griffin
 * null
+
 ## Credits
 
 * [AdvancedSafety](https://github.com/knah/VRCMods/tree/master/AdvancedSafety) by Knah - IL2CPP interface code

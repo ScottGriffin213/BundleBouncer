@@ -1,4 +1,5 @@
 ﻿using BundleBouncer.Data;
+using BundleBouncer.Utilities;
 using ExitGames.Client.Photon;
 using MelonLoader;
 using Newtonsoft.Json;
@@ -12,7 +13,6 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using UnhollowerBaseLib;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 using VRC;
 using VRC.Core;
@@ -86,19 +86,21 @@ namespace BundleBouncer
                 Directory.CreateDirectory(UserDataDir);
                 Logging.Info($"Created {UserDataDir}");
             }
-            
+
             if (!Directory.Exists(LogDir))
             {
                 Directory.CreateDirectory(LogDir);
                 Logging.Info($"Created {LogDir}");
             }
 
-            if(File.Exists(OldShitListFile))
+            if (File.Exists(OldShitListFile))
             {
-                if(File.Exists(UserAvatarShitListFile))
+                if (File.Exists(UserAvatarShitListFile))
                 {
                     Logging.Warning($"Both the new ({UserAvatarShitListFile}) and old ({OldShitListFile}) avatar blacklists are present.  Merge them and get rid of the old one.");
-                } else {
+                }
+                else
+                {
                     Logging.Warning($"Moving {OldShitListFile} to {UserAvatarShitListFile}...");
                     File.Move(OldShitListFile, UserAvatarShitListFile);
                 }
@@ -110,7 +112,7 @@ namespace BundleBouncer
                 Logging.Info($"Created {UserAvatarShitListFile}");
             }
 
-            if(!File.Exists(PlayerShitlistFile))
+            if (!File.Exists(PlayerShitlistFile))
             {
                 File.WriteAllText(PlayerShitlistFile, "[]");
                 Logging.Info($"Created {PlayerShitlistFile}");
@@ -185,8 +187,8 @@ namespace BundleBouncer
             // Clear asset tracking.
             assetInfo.Clear();
             DetectedSkiddies.Clear();
-            if(shitterHighlighter != null && shitterHighlighter.field_Protected_HashSet_1_Renderer_0!=null)
-            shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Clear();
+            if (shitterHighlighter != null && shitterHighlighter.field_Protected_HashSet_1_Renderer_0 != null)
+                shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Clear();
         }
 
         private void NetworkEvents_OnPlayerLeft(Player player)
@@ -194,68 +196,14 @@ namespace BundleBouncer
             DoffAvatarOfShame(player);
         }
 
-        public static IEnumerator CreatePopupV2(string text, byte[] imageBytes = null, float time = 5f)
-        {
-            GameObject g = GameObject.Instantiate(GameObject.Find("UserInterface/MenuContent/Popups/InputPopup/"), GameObject.Find("UserInterface/UnscaledUI/HudContent/Hud/").transform);
-            g.transform.localScale = new Vector3(0f, 0.5f, 0.5f);
-            g.transform.localPosition = new Vector3(0f, -400f, 0f);
-            g.GetComponent<VRCUiPopupInput>().enabled = false;
-            g.GetComponent<CanvasGroup>().enabled = false;
-            g.transform.Find("InputField").gameObject.SetActive(false);
-            g.transform.Find("Keyboard").gameObject.SetActive(false);
-            g.transform.Find("ButtonLeft").gameObject.SetActive(false);
-            g.transform.Find("ButtonRight").gameObject.SetActive(false);
-            g.transform.Find("ButtonCenter").gameObject.SetActive(false);
-            g.transform.Find("PasswordVisibilityToggle").localPosition = new Vector3(-420f, 200f, 0);
-            g.transform.Find("Darkness").localPosition = new Vector3(0f, 200f, 0f);
-            g.transform.Find("Darkness").localScale = new Vector3(1f, 0.1f, 0.5f);
-            g.transform.Find("TitleText").localPosition = new Vector3(0f, 200f, 0f);
-            g.transform.Find("TitleText").GetComponent<Text>().supportRichText = true;
-            g.transform.Find("TitleText").GetComponent<Text>().text = text;
-            g.transform.Find("Rectangle").gameObject.SetActive(false);
-            g.transform.Find("CharactersRemainingText").gameObject.SetActive(false);
-            g.transform.Find("PasswordVisibilityToggle").GetComponent<Image>().sprite = LoadSpriteFromBytes(imageBytes);
-            g.SetActive(true);
-            if (g.transform.Find("ButtonPaste") != null) g.transform.Find("ButtonPaste").gameObject.SetActive(false);
-
-            while (g.transform.localScale.x < 0.5f && g != null)
-            {
-                yield return new WaitForSeconds(0.02f);
-                g.transform.localScale = new Vector3(g.transform.localScale.x + 0.05f, g.transform.localScale.y, g.transform.localScale.z);
-                if (g.transform.localScale.x > 0.5f)
-                    yield return null;
-            }
-
-            yield return new WaitForSeconds(time);
-            while (g.transform.localScale.x > 0f && g != null)
-            {
-                yield return new WaitForSeconds(0.02f);
-                g.transform.localScale = new Vector3(g.transform.localScale.x - 0.05f, g.transform.localScale.y, g.transform.localScale.z);
-                if (g.transform.localScale.x == 0f || g.transform.localScale.x < 0f)
-                {
-                    GameObject.Destroy(g);
-                    yield break;
-                }
-            }
-
-            yield break;
-        }
-        public static Sprite LoadSpriteFromBytes(byte[] bytes)
-        {
-            Texture2D tex = new Texture2D(512, 512);
-            if (!Il2CppImageConversionManager.LoadImage(tex, bytes)) return null;
-
-            Sprite sprite = Sprite.CreateSprite(tex, new Rect(0.0f, 0.0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100.0f, 0, 0, new Vector4(), false);
-            sprite.hideFlags |= HideFlags.DontUnloadUnusedAsset;
-            return sprite;
-        }
-
         private void NetworkEvents_OnPlayerJoined(Player player)
         {
-            if(DetectedSkiddies.Contains(player))
+            if (DetectedSkiddies.Contains(player))
             {
                 DonAvatarOfShame(player);
-            } else {
+            }
+            else
+            {
                 DoffAvatarOfShame(player);
             }
         }
@@ -272,7 +220,8 @@ namespace BundleBouncer
             return originalMethodPointer;
         }
 
-        public static void AddToSkiddieShitlist(string usrID) { 
+        public static void AddToSkiddieShitlist(string usrID)
+        {
             // Try to find VRCPlayer
             var match = GetPlayers().Where(x => x.prop_APIUser_0.id == usrID).FirstOrDefault();
             if (match == null)
@@ -313,7 +262,8 @@ namespace BundleBouncer
             if (shameTF == null)
             {
                 var selectRegion = player.transform.Find("SelectRegion");
-                if (BundleBouncer.shitterHighlighter == null) {
+                if (BundleBouncer.shitterHighlighter == null)
+                {
                     BundleBouncer.shitterHighlighter = HighlightsFX.field_Private_Static_HighlightsFX_0.gameObject.AddComponent<HighlightsFXStandalone>();
                     shitterHighlighter.highlightColor = Color.red;
                     shitterHighlighter.enabled = true;
@@ -334,8 +284,8 @@ namespace BundleBouncer
             if (selectRegion != null)
             {
                 var renderer = selectRegion.GetComponent<Renderer>();
-                if(shitterHighlighter!=null)
-                    if(shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Contains(renderer))
+                if (shitterHighlighter != null)
+                    if (shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Contains(renderer))
                         shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Remove(renderer);
             }
         }
@@ -345,8 +295,10 @@ namespace BundleBouncer
             var players = PlayerManager.field_Private_Static_PlayerManager_0.field_Private_List_1_Player_0;
             if (players == null)
                 return new Player[0];
-            else {
-                lock (players) {
+            else
+            {
+                lock (players)
+                {
                     return players.ToArray();
                 }
             }
@@ -368,9 +320,9 @@ namespace BundleBouncer
         private static unsafe IntPtr OnLoadFromFile(IntPtr retvalPtr, IntPtr thisPtr, string path, int crc, ulong offset, IntPtr nativeMethodInfo)
         {
             byte[] hash;
-            using(var sha256 = new SHA256Managed())
+            using (var sha256 = new SHA256Managed())
             {
-                using(var stream = File.OpenRead(path))
+                using (var stream = File.OpenRead(path))
                 {
                     stream.Position = 0;
                     hash = sha256.ComputeHash(stream);
@@ -537,7 +489,7 @@ namespace BundleBouncer
                                 string customProps = JsonConvert.SerializeObject(Serialize.FromIL2CPPToManaged<object>(__0.Parameters));
                                 if (!customProps.Contains("avtr_"))
                                     break;
-                                
+
                                 writtenSamples.Add(__0.Code);
                                 File.WriteAllText(Path.Combine("UserData", "BundleBouncer", $"{__0.Code}.json"), customProps);
                                 Logging.Info($"Captured event {__0.Code} that appears to have sent an avatar ID.  Please notify the author via email.");
@@ -559,7 +511,7 @@ namespace BundleBouncer
             string avID = avdata["id"];
             string avName = avdata["name"];
             string fbstr = is_fallback ? "fallback" : "main";
-            foreach(dynamic up in avdata["unityPackages"])
+            foreach (dynamic up in avdata["unityPackages"])
             {
                 addAssetURL(up["assetUrl"].ToString(), avID, user);
             }
@@ -571,7 +523,9 @@ namespace BundleBouncer
                 if (player != null)
                 {
                     Logging.Gottem($"Crasher from {player.field_Private_APIUser_0.displayName} ({user}) blocked: {avID} ({avName}) (via event {code})");
-                } else
+                    BBUI.NotifyUser($"Crasher from {player.field_Private_APIUser_0.displayName} blocked!");
+                }
+                else
                 {
                     Logging.Gottem($"Crasher from {user} blocked: {avID} ({avName}) (via event {code})");
                 }
@@ -587,7 +541,7 @@ namespace BundleBouncer
             avIDsByFileSubURL[$"file/{fileID}"] = avID;
             if (!assetInfo.ContainsKey(avURL))
                 assetInfo[avURL] = new AssetInfo(avURL, avID, null);
-            if(!assetInfo[avURL].UsedBy.Contains(user))
+            if (!assetInfo[avURL].UsedBy.Contains(user))
                 assetInfo[avURL].UsedBy.Add(user);
         }
     }
