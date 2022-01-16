@@ -55,6 +55,7 @@ namespace BundleBouncer
         private delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
         private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
 
+        /*
         //public static extern AssetBundle LoadFromFile(string path, [UnityEngine.Internal.DefaultValue("0")] uint crc, [UnityEngine.Internal.DefaultValue("0")] ulong offset);
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr LoadFromFileDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, string file, int crc, ulong offset, IntPtr nativeMethodInfo);
@@ -63,8 +64,12 @@ namespace BundleBouncer
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr LoadFromFileAsyncDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, string file, int crc, ulong offset, IntPtr nativeMethodInfo);
         private static LoadFromFileAsyncDelegate dgLoadFromFileAsync;
+        */
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr LoadFromFile1Delegate(IntPtr retPtr, IntPtr thisPtr, string file, IntPtr nativeMethodInfo);
+        private static LoadFromFile1Delegate origLoadFromFile_1;
 
-        public static string AvatarOfShameURL = ""; // TODO: Make one
+        //public static string AvatarOfShameURL = ""; // TODO: Make one
 
         static HighlightsFXStandalone shitterHighlighter;
 
@@ -75,6 +80,12 @@ namespace BundleBouncer
 
 
         private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
+        private static Dictionary<string, Tuple<IntPtr, IntPtr>> ourOriginalPointers = new Dictionary<string, Tuple<IntPtr, IntPtr>>();
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate IntPtr LoadFromFileAsync_InternalDelegate(IntPtr path, uint crc, ulong offset);
+        private static LoadFromFileAsync_InternalDelegate origLoadFromFileAsync_Internal;
+
 
         public override void OnApplicationStart()
         {
@@ -145,29 +156,35 @@ namespace BundleBouncer
             }
             // This is going to be dangerous as fuck, buckle up sweetheart.
             //AssetBundle.LoadFromFile
+            /*
             unsafe
             {
                 var method = typeof(AssetBundle).GetMethods().Where(x => x.Name == "LoadFromFile_Internal").First();
 
                 dgLoadFromFile = Marshal.GetDelegateForFunctionPointer<LoadFromFileDelegate>(Hook(method, nameof(OnLoadFromFile)));
             }
-            /*
-            unsafe
-            {
-                var method = typeof(AssetBundle).GetMethods().Where(x => x.Name == "LoadFromFileAsync" && x.GetParameters().Length == 3).First();
-
-                //dgLoadFromFileAsync = Marshal.GetDelegateForFunctionPointer<LoadFromFileAsyncDelegate>(Hook(method, nameof(OnLoadFromFileAsync)));
-                HarmonyInstance.Patch(method, typeof(BundleBouncer).GetMethod(nameof(OnLoadFromFileAsync_3), BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
-            }
-            unsafe
-            {
-                var method = typeof(AssetBundle).GetMethods().Where(x => x.Name == "LoadFromFileAsync" && x.GetParameters().Length == 1).First();
-
-                //dgLoadFromFileAsync = Marshal.GetDelegateForFunctionPointer<LoadFromFileAsyncDelegate>(Hook(method, nameof(OnLoadFromFileAsync)));
-                HarmonyInstance.Patch(method, typeof(BundleBouncer).GetMethod(nameof(OnLoadFromFileAsync_1), BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
-            }
             */
-
+            foreach (var method in typeof(AssetBundle).GetMethods(BindingFlags.Static | BindingFlags.Public))
+            {
+                switch (method.Name)
+                {
+                    //public unsafe static AssetBundle LoadFromFile(string path)
+                    case "LoadFromFile":
+                        switch(method.GetParameters().Length)
+                        {
+                            case 1: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_1)); break;
+                            //case 2: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_2)); break;
+                            //case 3: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_3)); break;
+                        }
+                        break;
+                    //public static AssetBundle LoadFromFile_Internal(string path, uint crc, ulong offset);
+                    case "LoadFromFile_Internal":
+                        StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_Internal));
+                        break;
+                }
+            }
+            // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
+            PatchICall("UnityEngine.AssetBundle::LoadFromFileAsync_Internal", out origLoadFromFileAsync_Internal, "OnLoadFromFileAsync_Internal");
 
 
             HarmonyInstance.Patch(
@@ -180,6 +197,22 @@ namespace BundleBouncer
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
             NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;
+        }
+
+        private void StaticHarmony(MethodInfo hookee, string hooker)
+        {
+            string psig = String.Join(",", hookee.GetParameters().Select(x => x.ParameterType.ToString()));
+            string sig = $"{hookee.DeclaringType}.{hookee.Name}({psig})";
+            try
+            {
+                HarmonyInstance.Patch(hookee, typeof(BundleBouncer).GetMethod(hooker, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                Logging.Info($"Patched {sig} to {hooker} (static)");
+            }
+            catch (Exception e)
+            {
+                Logging.Error($"Unable to patch {sig} (static):");
+                Logging.Error(e.ToString());
+            }
         }
 
         private void NetworkEvents_OnInstanceChanged(ApiWorld arg1, ApiWorldInstance arg2)
@@ -209,10 +242,34 @@ namespace BundleBouncer
         }
 
         /**
+         * From Knah's fabulous Finitizer.
+         * https://github.com/knah/VRCMods/blob/9ad060a8aa05c1454696f2625ad6a857fec1fed6/Finitizer/FinitizerMod.cs#L106
+         */
+        private static unsafe void PatchICall<T>(string name, out T original, string patchName) where T : MulticastDelegate
+        {
+            var originalPointer = IL2CPP.il2cpp_resolve_icall(name);
+            if (originalPointer == IntPtr.Zero)
+            {
+                Logging.Warning($"ICall {name} was not found, not patching");
+                original = null;
+                return;
+            }
+
+            var target = typeof(BundleBouncer).GetMethod(patchName, BindingFlags.Static | BindingFlags.NonPublic);
+            var functionPointer = target.MethodHandle.GetFunctionPointer();
+
+            MelonUtils.NativeHookAttach((IntPtr)(&originalPointer), functionPointer);
+            ourOriginalPointers[name] = new Tuple<IntPtr, IntPtr>(originalPointer, functionPointer);
+            original = Marshal.GetDelegateForFunctionPointer<T>(originalPointer);
+        }
+
+        /**
          * Stolen from Behemoth (with permission)
          */
         private static unsafe IntPtr Hook(MethodBase target, string detour)
         {
+            string psig = String.Join(",", target.GetParameters().Select(x => x.ParameterType.ToString()));
+            string sig = $"{target.DeclaringType}.{target.Name}({psig})";
             var originalMethodPointer = *(IntPtr*)UnhollowerSupport.MethodBaseToIl2CppMethodInfoPointer(target);
             var detourPointer = typeof(BundleBouncer).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
             MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
@@ -258,18 +315,14 @@ namespace BundleBouncer
                 LoadAvatarOfShame();
             }
             */
-            var shameTF = player.transform.Find("_BB_SHAME");
-            if (shameTF == null)
+            var selectRegion = player.transform.Find("SelectRegion");
+            if (BundleBouncer.shitterHighlighter == null)
             {
-                var selectRegion = player.transform.Find("SelectRegion");
-                if (BundleBouncer.shitterHighlighter == null)
-                {
-                    BundleBouncer.shitterHighlighter = HighlightsFX.field_Private_Static_HighlightsFX_0.gameObject.AddComponent<HighlightsFXStandalone>();
-                    shitterHighlighter.highlightColor = Color.red;
-                    shitterHighlighter.enabled = true;
-                }
-                shitterHighlighter.field_Protected_HashSet_1_Renderer_0.AddIfNotPresent(selectRegion.GetComponent<Renderer>());
+                BundleBouncer.shitterHighlighter = HighlightsFX.field_Private_Static_HighlightsFX_0.gameObject.AddComponent<HighlightsFXStandalone>();
+                shitterHighlighter.highlightColor = Color.red;
+                shitterHighlighter.enabled = true;
             }
+            shitterHighlighter.field_Protected_HashSet_1_Renderer_0.AddIfNotPresent(selectRegion.GetComponent<Renderer>());
         }
 
         private static void DoffAvatarOfShame(Player player)
@@ -317,92 +370,155 @@ namespace BundleBouncer
             return thing.GetType().GetProperty(key) != null;
         }
 
-        private static unsafe IntPtr OnLoadFromFile(IntPtr retvalPtr, IntPtr thisPtr, string path, int crc, ulong offset, IntPtr nativeMethodInfo)
+        private static bool OnLoadFromFile_1(string __0, ref AssetBundle __result)
         {
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
-            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
-            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
-            if (AvatarShitList.IsBundleACrasher(hash))
-            {
-                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
-                return IntPtr.Zero; // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
-            }
-            return dgLoadFromFile(retvalPtr, thisPtr, path, crc, offset, nativeMethodInfo);
-        }
-        /*
-        private static unsafe IntPtr OnLoadFromFileAsync(IntPtr retvalPtr, IntPtr thisPtr, string path, int crc, ulong offset, IntPtr nativeMethodInfo)
-        {
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
-            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
-            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
-            if (AvatarShitList.IsBundleACrasher(hash))
-            {
-                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
-                return IntPtr.Zero; // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
-            }
-            return dgLoadFromFileAsync(retvalPtr, thisPtr, path, crc, offset, nativeMethodInfo);
-        }
-        */
-        private static bool OnLoadFromFileAsync_1(string __0, ref AssetBundleCreateRequest __result)
-        {
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(__0))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
-            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
-            Logging.Info($"Attempting to load assetbundle {__0} (SHA256: {hashstr}) via AssetBundle.LoadFromFileAsync(1)...");
-            if (AvatarShitList.IsBundleACrasher(hash))
-            {
-                Logging.Gottem($"Crasher blocked: {__0} (SHA256: {hashstr})");
-                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
-                __result.InvokeCompletionEvent();
-                return false;
-            }
-            return true;
-        }
-        private static bool OnLoadFromFileAsync_3(string __0, int __1, ulong __2, ref AssetBundleCreateRequest __result)
-        {
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(__0))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
-            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
-            Logging.Info($"Attempting to load assetbundle {__0} (CRC: {__1}, Offset: {__2}, SHA256: {hashstr}) via AssetBundle.LoadFromFileAsync(3)...");
-            if (AvatarShitList.IsBundleACrasher(hash))
-            {
-                Logging.Gottem($"Crasher blocked: {__0} (CRC: {__1}, Offset: {__2}, SHA256: {hashstr})");
-                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
-                __result.InvokeCompletionEvent();
-                return false;
-            }
-            return true;
+            string path = __0;
 
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (SHA256: {hashstr}) via AssetBundle.LoadFromFile(string)...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                __result = null;
+                return false;
+            }
+            return true;
+        }
+
+        private static bool OnLoadFromFile_2(string __0, uint __1, ref AssetBundle __result)
+        {
+            string path = __0;
+            uint crc = __1;
+
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                __result = null;
+                return false;
+            }
+            return true;
+        }
+
+        private static bool OnLoadFromFile_3(string __0, uint __1, ulong __2, ref AssetBundle __result)
+        {
+            string path = __0;
+            uint crc = __1;
+            ulong offset = __2;
+
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                __result = null;
+                return false;
+            }
+            return true;
+        }
+
+        private static bool OnLoadFromFile_Internal(string __0, int __1, ulong __2, ref AssetBundle __result)
+        {
+            string path = __0;
+            int crc = __1;
+            ulong offset = __2;
+
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile_Internal...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                __result = null;
+                return false;
+            }
+            return true;
+        }
+
+        private static IntPtr OnLoadFromFile_1_Native(IntPtr retPtr, IntPtr thisPtr, string path, IntPtr nativeMethodInfo)
+        {
+            //string path = IL2CPP.Il2CppStringToManaged(_path);
+
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (SHA256: {hashstr}) via AssetBundle.LoadFromFile(string)...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (SHA256: {hashstr})");
+                return IntPtr.Zero; // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+            }
+            return origLoadFromFile_1(retPtr, thisPtr, path, nativeMethodInfo);
+        }
+
+        private static unsafe IntPtr OnLoadFromFileAsync_Internal(IntPtr _path, uint crc, ulong offset)
+        {
+            string path = IL2CPP.Il2CppStringToManaged(_path);
+
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFileAsync_Internal...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                return IntPtr.Zero; // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+            }
+            return origLoadFromFileAsync_Internal(_path, crc, offset);
         }
 
         // I have no idea what I'm doing
@@ -423,6 +539,12 @@ namespace BundleBouncer
                 }
                 return dgAttemptAvatarDownload(hiddenStructReturn, thisPtr, pApiAvatar, pMulticastDelegate, param_3, nativeMethodInfo);
             }
+        }
+
+        private static string GetFileIDFrom(string unityPackageUrl)
+        {
+
+            throw new NotImplementedException();
         }
 
         private struct AttemptAvatarDownloadContext : IDisposable
@@ -491,8 +613,9 @@ namespace BundleBouncer
                                     break;
 
                                 writtenSamples.Add(__0.Code);
-                                File.WriteAllText(Path.Combine("UserData", "BundleBouncer", $"{__0.Code}.json"), customProps);
-                                Logging.Info($"Captured event {__0.Code} that appears to have sent an avatar ID.  Please notify the author via email.");
+                                var path = Path.Combine("UserData", "BundleBouncer", $"{__0.Code}.json");
+                                File.WriteAllText(path, customProps);
+                                Logging.Info($"Captured event {__0.Code} that appears to have sent an avatar ID.  Please notify the author via email, and attach {path}.");
                                 //dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
                             }
                         }
@@ -528,6 +651,7 @@ namespace BundleBouncer
                 else
                 {
                     Logging.Gottem($"Crasher from {user} blocked: {avID} ({avName}) (via event {code})");
+                    BBUI.NotifyUser($"Crasher from {user} blocked!");
                 }
                 return false;
             }

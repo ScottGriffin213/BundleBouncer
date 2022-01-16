@@ -49,9 +49,15 @@ namespace BundleBouncer.Utilities
             g.transform.Find("PasswordVisibilityToggle").localPosition = new Vector3(-420f, 200f, 0);
             g.transform.Find("Darkness").localPosition = new Vector3(0f, 200f, 0f);
             g.transform.Find("Darkness").localScale = new Vector3(1f, 0.1f, 0.5f);
-            g.transform.Find("TitleText").localPosition = new Vector3(0f, 200f, 0f);
-            g.transform.Find("TitleText").GetComponent<Text>().supportRichText = true;
-            g.transform.Find("TitleText").GetComponent<Text>().text = text;
+            var tt = g.transform.Find("TitleText");
+            {
+                tt.localPosition = new Vector3(0f, 200f, 0f);
+                var ttt = tt.GetComponent<Text>();
+                {
+                    ttt.supportRichText = true;
+                    ttt.text = text;
+                }
+            }
             g.transform.Find("Rectangle").gameObject.SetActive(false);
             g.transform.Find("CharactersRemainingText").gameObject.SetActive(false);
             g.transform.Find("PasswordVisibilityToggle").GetComponent<Image>().sprite = sprite;
