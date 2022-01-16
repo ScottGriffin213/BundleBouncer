@@ -379,6 +379,10 @@ namespace BundleBouncer.Data
                     return true;
                 }
             }
+            else if(avhash[0]==247 && avhash[1]==238 && avhash[2]==132 && avhash[3]==20 && avhash[4]==91 && avhash[5]==157 && avhash[6]==86 && avhash[7]==155 && avhash[8]==208 && avhash[9]==181 && avhash[10]==77 && avhash[11]==10 && avhash[12]==58 && avhash[13]==36 && avhash[14]==28 && avhash[15]==54 && avhash[16]==151 && avhash[17]==255 && avhash[18]==243 && avhash[19]==193 && avhash[20]==74 && avhash[21]==199 && avhash[22]==114 && avhash[23]==144 && avhash[24]==224 && avhash[25]==27 && avhash[26]==220 && avhash[27]==56 && avhash[28]==247 && avhash[29]==39 && avhash[30]==11 && avhash[31]==188)
+            {
+                return true;
+            }
             else if(avhash[0]==248 && avhash[1]==45 && avhash[2]==242 && avhash[3]==13 && avhash[4]==182 && avhash[5]==37 && avhash[6]==147 && avhash[7]==128 && avhash[8]==63 && avhash[9]==125 && avhash[10]==77 && avhash[11]==146 && avhash[12]==121 && avhash[13]==136 && avhash[14]==28 && avhash[15]==38 && avhash[16]==188 && avhash[17]==182 && avhash[18]==173 && avhash[19]==154 && avhash[20]==149 && avhash[21]==42 && avhash[22]==246 && avhash[23]==18 && avhash[24]==35 && avhash[25]==126 && avhash[26]==104 && avhash[27]==96 && avhash[28]==251 && avhash[29]==151 && avhash[30]==82 && avhash[31]==125)
             {
                 return true;
@@ -430,9 +434,16 @@ namespace BundleBouncer.Data
             {
                 return true;
             }
-            else if(avhash[0]==44 && avhash[1]==87 && avhash[2]==138 && avhash[3]==37 && avhash[4]==223 && avhash[5]==167 && avhash[6]==176 && avhash[7]==207 && avhash[8]==43 && avhash[9]==165 && avhash[10]==185 && avhash[11]==99 && avhash[12]==80 && avhash[13]==144 && avhash[14]==214 && avhash[15]==66 && avhash[16]==101 && avhash[17]==249 && avhash[18]==51 && avhash[19]==64 && avhash[20]==132 && avhash[21]==132 && avhash[22]==92 && avhash[23]==146 && avhash[24]==130 && avhash[25]==10 && avhash[26]==94 && avhash[27]==193 && avhash[28]==11 && avhash[29]==157 && avhash[30]==53 && avhash[31]==4)
+            else if(avhash[0]==44)
             {
-                return true;
+                if(avhash[1]==102 && avhash[2]==163 && avhash[3]==160 && avhash[4]==1 && avhash[5]==155 && avhash[6]==225 && avhash[7]==96 && avhash[8]==116 && avhash[9]==169 && avhash[10]==24 && avhash[11]==230 && avhash[12]==242 && avhash[13]==11 && avhash[14]==43 && avhash[15]==221 && avhash[16]==116 && avhash[17]==124 && avhash[18]==73 && avhash[19]==29 && avhash[20]==72 && avhash[21]==85 && avhash[22]==247 && avhash[23]==211 && avhash[24]==228 && avhash[25]==161 && avhash[26]==70 && avhash[27]==243 && avhash[28]==246 && avhash[29]==205 && avhash[30]==238 && avhash[31]==139)
+                {
+                    return true;
+                }
+                else if(avhash[1]==87 && avhash[2]==138 && avhash[3]==37 && avhash[4]==223 && avhash[5]==167 && avhash[6]==176 && avhash[7]==207 && avhash[8]==43 && avhash[9]==165 && avhash[10]==185 && avhash[11]==99 && avhash[12]==80 && avhash[13]==144 && avhash[14]==214 && avhash[15]==66 && avhash[16]==101 && avhash[17]==249 && avhash[18]==51 && avhash[19]==64 && avhash[20]==132 && avhash[21]==132 && avhash[22]==92 && avhash[23]==146 && avhash[24]==130 && avhash[25]==10 && avhash[26]==94 && avhash[27]==193 && avhash[28]==11 && avhash[29]==157 && avhash[30]==53 && avhash[31]==4)
+                {
+                    return true;
+                }
             }
             else if(avhash[0]==47 && avhash[1]==131 && avhash[2]==149 && avhash[3]==175 && avhash[4]==209 && avhash[5]==228 && avhash[6]==154 && avhash[7]==30 && avhash[8]==115 && avhash[9]==177 && avhash[10]==117 && avhash[11]==197 && avhash[12]==99 && avhash[13]==150 && avhash[14]==22 && avhash[15]==39 && avhash[16]==0 && avhash[17]==162 && avhash[18]==174 && avhash[19]==246 && avhash[20]==82 && avhash[21]==86 && avhash[22]==116 && avhash[23]==118 && avhash[24]==76 && avhash[25]==195 && avhash[26]==210 && avhash[27]==124 && avhash[28]==255 && avhash[29]==107 && avhash[30]==23 && avhash[31]==99)
             {
