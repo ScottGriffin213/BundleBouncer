@@ -1,8 +1,8 @@
 *.bak
-.vs/
-bin/
-obj/
-dist/
+.check-identity
 .pre-commit-config.yaml
 .selid-hooks/
-.check-identity
+.vs/
+bin/
+dist/
+obj/

@@ -14,7 +14,8 @@ namespace BundleBouncer
 
         static readonly string BLOCKLOG = Path.Combine("UserData", "BundleBouncer", "Blocks.log");
 
-        internal static void Startup() {
+        internal static void Startup()
+        {
             File.WriteAllText(BLOCKLOG, $"BundleBouncer BlockLog started @ {GetTimeStamp()}\n");
         }
 

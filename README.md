@@ -1,26 +1,27 @@
 # BundleBouncer
 
-This project is a quick and dirty avatar ID blocker, designed to prevent corrupted assetbundles from crashing your game by preventing them from being downloaded at all.  It currently relies on known avatar IDs, but we're working on bigger and better things.
+This project is a quick and dirty avatar ID blocker, designed to prevent corrupted assetbundles from crashing your game by preventing them from being downloaded at all, or at the very least blocking them from being loaded.  It currently relies on known avatar IDs and bundle hashes, but we're working on automated detection and reporting.
 
-I know there are clients out there with this featureset, but I'm tired of basic safety features like this being locked up behind invite-only Discords and Patreons.
+We know there are clients out there with some of this featureset, but we're tired of basic safety features like this being locked up behind invite-only Discords and Patreons.
 
 Quit being dicks.  You know who you are.
+
+## Notes
+
+* **Using ANY mods can get you banned from VRChat.** Don't talk about using mods, and don't be obvious around people you don't trust.
+* Some C# files in this project are generated from sets of data not included in this repository (to prevent skiddies getting access to all the bad avatars we know of), so **the files seen here are _not_ a complete representation of the codebase**.
+  * However, the files in this project **are** representative of everything in the DLL. Compiling this code *should* result in a DLL mostly identical to the one released as a binary (beyond some compiler gibberish).
+* For security, malicious avatar IDs are [hashed](https://en.wikipedia.org/wiki/Cryptographic_hash_function) and mildly obfuscated so skiddies can't easily grab a list of them.
+* **We will not be releasing this on VRCMG yet, since they require manual reviews and would result in horrendously outdated definitions.**  We may end up splitting the definitions into another DLL, but it'll be a while before the infrastructure is ready.
+* **ONLY** grab this DLL from [https://github.com/ScottGriffin213/BundleBouncer/releases/latest](https://github.com/ScottGriffin213/BundleBouncer/releases/latest) or the mirror at [https://gitgud.io/Scottinator/BundleBouncer/-/releases](https://gitgud.io/Scottinator/BundleBouncer/-/releases)! Forks can contain dangerous code, so review any files from forks using dnSpy before installing them. Tip:  If they're obfuscating the code, there's something they don't want you to see.
 
 ## Installing
 
 * Install [VRChatUtilityKit](https://github.com/SleepyVRC/Mods#vrchatutilitykit)
 * Install DLL from Releases into MelonLoader `Mods/` directory
 
-## Notes
-
-* **Using ANY mods can get you banned from VRChat.** Don't talk about using mods, and don't be obvious around people you don't trust.
-* Some C# files in this project are generated from sets of data not included in this repository, so **the files seen here are not a complete representation of the codebase**.
-  * However, the files in this project **are** representative of everything in the DLL. Compiling this code *should* result in one mostly identical to the one released as a binary (beyond some compiler gibberish).
-* For security, malicious avatar IDs are [hashed](https://en.wikipedia.org/wiki/Cryptographic_hash_function) and mildly obfuscated so skiddies can't easily grab a list of them.
-* **We will not be releasing this on VRCMG, since they require manual reviews and would result in horrendously outdated definitions.**  We may end up splitting the definitions into another DLL, but it'll be a while before the infrastructure is ready.
-* **ONLY** grab this DLL from [https://github.com/ScottGriffin213/BundleBouncer/releases/latest](https://github.com/ScottGriffin213/BundleBouncer/releases/latest)! Forks can contain dangerous code, so review any files from forks using dnSpy before installing them. Tip:  If they're obfuscating the code, there's something they don't want you to see.
-
 ## Adding an Avatar ID
+NOTE: There are a bunch of avatars that are automatically blocked by the mod.
 
 1. Open or create `VRChat\UserData\BundleBouncer\Avatars.txt` in your favorite text editor that isn't Word or Wordpad.
 2. Add the avatar ID (usually of format `avtr_<gibberish>`) to a new line.
@@ -63,7 +64,8 @@ Please send any crasher, lagger, or otherwise malicious avatar IDs to `scgriffin
 
 Include the following:
 
-* Asset ID
+* Asset ID (avtr_ or file_)
+* SHA256 of assetbundle, if known
 * Avatar Name, if available
 * Pictures, if available
 * Description of malicious behaviour
@@ -80,17 +82,18 @@ The public source code (which is contained in this repository) is MIT-licensed. 
 
 The full buildsystem and avatar dataset is proprietary for security reasons. Copyright &copy;2021-2022 "Scott Griffin". All rights reserved.
 
-
 ## Contributors
 
-* Scott Griffin
+* "Scott Griffin"
 * null
 
 ## Credits
 
 * [AdvancedSafety](https://github.com/knah/VRCMods/tree/master/AdvancedSafety) by Knah - IL2CPP interface code
+* [Finitizer](https://github.com/knah/VRCMods/tree/master/Finitizer) by Knah - IL2CPP icall hooking code
 * Behemoth - More help with IL2CPP
 * Benji, Requi - Handholding, ideas, help with backend particulars
 * Various skiddies - Outright stole and modified code for some sketchier API calls.
 * Jewordi - Testing, ideas, being a bro
 * StackOverflow - Code outsourcing
+* VRCMG Discord - Putting up with my dumb questions

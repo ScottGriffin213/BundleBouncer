@@ -4,7 +4,6 @@ using ExitGames.Client.Photon;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +13,6 @@ using System.Security.Cryptography;
 using UnhollowerBaseLib;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.UI;
 using VRC;
 using VRC.Core;
 using VRChatUtilityKit.Utilities;
@@ -52,36 +50,15 @@ namespace BundleBouncer
         /// </summary>
         public static HashSet<Player> DetectedSkiddies = new HashSet<Player>();
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
-        private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
-
-        /*
-        //public static extern AssetBundle LoadFromFile(string path, [UnityEngine.Internal.DefaultValue("0")] uint crc, [UnityEngine.Internal.DefaultValue("0")] ulong offset);
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr LoadFromFileDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, string file, int crc, ulong offset, IntPtr nativeMethodInfo);
-        private static LoadFromFileDelegate dgLoadFromFile;
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr LoadFromFileAsyncDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, string file, int crc, ulong offset, IntPtr nativeMethodInfo);
-        private static LoadFromFileAsyncDelegate dgLoadFromFileAsync;
-        */
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr LoadFromFile1Delegate(IntPtr retPtr, IntPtr thisPtr, string file, IntPtr nativeMethodInfo);
-        private static LoadFromFile1Delegate origLoadFromFile_1;
-
         //public static string AvatarOfShameURL = ""; // TODO: Make one
 
+        // Red ESP pill
         static HighlightsFXStandalone shitterHighlighter;
 
-        /// <summary>
-        /// Mostly for logging and datastream tracking.
-        /// </summary>
+        // Mostly for logging and datastream tracking.
         static Dictionary<string, AssetInfo> assetInfo = new Dictionary<string, AssetInfo>();
-
-
         private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
-        private static Dictionary<string, Tuple<IntPtr, IntPtr>> ourOriginalPointers = new Dictionary<string, Tuple<IntPtr, IntPtr>>();
+        //private static Dictionary<string, Tuple<IntPtr, IntPtr>> ourOriginalPointers = new Dictionary<string, Tuple<IntPtr, IntPtr>>();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate IntPtr LoadFromFileAsync_InternalDelegate(IntPtr path, uint crc, ulong offset);
@@ -91,6 +68,9 @@ namespace BundleBouncer
         private unsafe delegate IntPtr LoadFromMemory_InternalDelegate(IntPtr binary, uint crc);
         private static LoadFromMemory_InternalDelegate origLoadFromMemory_Internal;
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
+        private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
 
         public override void OnApplicationStart()
         {
@@ -146,6 +126,7 @@ namespace BundleBouncer
                 Logging.Info($"Loaded {AvatarShitList.UserShitList.Count} entries from {UserAvatarShitListFile}");
             }
 
+            #region Patching
             unsafe
             {
                 // God I hate pointers.
@@ -179,21 +160,6 @@ namespace BundleBouncer
                         break;
                 }
             }
-            /** Hard-crashes with implement-me message
-             * TODO: Rattle cages in VRCMG
-            foreach(var method in typeof(UnityWebRequestAssetBundle).GetMethods(BindingFlags.Static | BindingFlags.Public))
-            {
-                switch (method.Name)
-                {
-                    case "GetAssetBundle":
-                        var p = method.GetParameters();
-                        //public static UnityWebRequest GetAssetBundle(string uri);
-                        if (p.Length == 1 && p[0].ParameterType == typeof(string))
-                            StaticHarmony(method, nameof(BundleBouncer.OnGetAssetBundle_1));
-                        break;
-                }
-            }
-            */
 
             StaticHarmony(typeof(VRCNetworkingClient).GetMethod(nameof(VRCNetworkingClient.OnEvent)), nameof(OnEvent));
 
@@ -202,7 +168,7 @@ namespace BundleBouncer
 
             // AssetBundle.LoadFromMemory_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromMemory_InternalDelegate>("UnityEngine.AssetBundle::LoadFromMemory_Internal");
             PatchICall("UnityEngine.AssetBundle::LoadFromMemory_Internal", out origLoadFromMemory_Internal, "OnLoadFromMemory_Internal");
-
+            #endregion
 
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
@@ -254,12 +220,6 @@ namespace BundleBouncer
                 return IntPtr.Zero;
             }
             return origLoadFromFileAsync_Internal(pathPtr, crc, offset);
-        }
-
-        private static bool OnGetAssetBundle_1(string uri, UnityWebRequest __result)
-        {
-            Logging.Info($"Unity.GetAssetBundle({uri})");
-            return true;
         }
 
         private void StaticHarmony(MethodInfo hookee, string hooker)
@@ -322,7 +282,7 @@ namespace BundleBouncer
             var functionPointer = target.MethodHandle.GetFunctionPointer();
 
             MelonUtils.NativeHookAttach((IntPtr)(&originalPointer), functionPointer);
-            ourOriginalPointers[name] = new Tuple<IntPtr, IntPtr>(originalPointer, functionPointer);
+            //ourOriginalPointers[name] = new Tuple<IntPtr, IntPtr>(originalPointer, functionPointer);
             original = Marshal.GetDelegateForFunctionPointer<T>(originalPointer);
         }
 
@@ -364,7 +324,6 @@ namespace BundleBouncer
         {
             KnownSkiddies = JsonConvert.DeserializeObject<HashSet<string>>(File.ReadAllText(Instance.PlayerShitlistFile));
         }
-
 
         private static void DonAvatarOfShame(Player player)
         {
