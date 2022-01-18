@@ -65,12 +65,24 @@ namespace BundleBouncer
         private static LoadFromFileAsync_InternalDelegate origLoadFromFileAsync_Internal;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
+        private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate IntPtr LoadFromStream_InternalDelegate(IntPtr stream, uint crc, uint managedReadBufferSize);
+        private static LoadFromStream_InternalDelegate origLoadFromStream_Internal;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate IntPtr LoadFromStreamAsync_InternalDelegate(IntPtr stream, uint crc, uint managedReadBufferSize);
+        private static LoadFromStreamAsync_InternalDelegate origLoadFromStreamAsync_Internal;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate IntPtr LoadFromMemory_InternalDelegate(IntPtr binary, uint crc);
         private static LoadFromMemory_InternalDelegate origLoadFromMemory_Internal;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private unsafe delegate IntPtr AttemptAvatarDownloadDelegate(IntPtr hiddenValueTypeReturn, IntPtr thisPtr, IntPtr apiAvatarPtr, IntPtr multicastDelegatePtr, bool idfk, IntPtr nativeMethodInfo);
-        private static AttemptAvatarDownloadDelegate dgAttemptAvatarDownload;
+        private unsafe delegate IntPtr LoadFromMemoryAsync_InternalDelegate(IntPtr binary, uint crc);
+        private static LoadFromMemoryAsync_InternalDelegate origLoadFromMemoryAsync_Internal;
 
         public override void OnApplicationStart()
         {
@@ -147,11 +159,11 @@ namespace BundleBouncer
                 {
                     //public unsafe static AssetBundle LoadFromFile(string path)
                     case "LoadFromFile":
-                        switch(method.GetParameters().Length)
+                        switch (method.GetParameters().Length)
                         {
                             case 1: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_1)); break;
-                            //case 2: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_2)); break;
-                            //case 3: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_3)); break;
+                                //case 2: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_2)); break;
+                                //case 3: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_3)); break;
                         }
                         break;
                     //public static AssetBundle LoadFromFile_Internal(string path, uint crc, ulong offset);
@@ -160,19 +172,71 @@ namespace BundleBouncer
                         break;
                 }
             }
+            foreach (var method in typeof(AssetBundle).GetMethods(BindingFlags.Static | BindingFlags.Public))
+            {
+                switch (method.Name)
+                {
+                    //public static WWW LoadFromCacheOrDownload(string url, Hash128 hash, uint crc)
+                    case "LoadFromCacheOrDownload":
+                        if(HarmonyUtils.MatchParameters(method, new Type[] { typeof(string), typeof(Hash128), typeof(uint) }))
+                        {
+                            StaticHarmony(method, nameof(BundleBouncer.OnLoadFromCacheOrDownload));
+                        }
+                        break;
+                }
+            }
 
             StaticHarmony(typeof(VRCNetworkingClient).GetMethod(nameof(VRCNetworkingClient.OnEvent)), nameof(OnEvent));
 
+            StaticHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0)), nameof(OnCreateAssetBundleDownload));
+
             // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
-            PatchICall("UnityEngine.AssetBundle::LoadFromFileAsync_Internal", out origLoadFromFileAsync_Internal, "OnLoadFromFileAsync_Internal");
+            PatchICall("UnityEngine.AssetBundle::LoadFromFileAsync_Internal", out origLoadFromFileAsync_Internal, nameof(BundleBouncer.OnLoadFromFileAsync_Internal));
 
             // AssetBundle.LoadFromMemory_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromMemory_InternalDelegate>("UnityEngine.AssetBundle::LoadFromMemory_Internal");
-            PatchICall("UnityEngine.AssetBundle::LoadFromMemory_Internal", out origLoadFromMemory_Internal, "OnLoadFromMemory_Internal");
+            PatchICall("UnityEngine.AssetBundle::LoadFromMemory_Internal", out origLoadFromMemory_Internal, nameof(BundleBouncer.OnLoadFromMemory_Internal));
+
+            // AssetBundle.LoadFromMemoryAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromMemoryAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal");
+            PatchICall("UnityEngine.AssetBundle::LoadFromMemoryAsync_Internal", out origLoadFromMemoryAsync_Internal, nameof(BundleBouncer.OnLoadFromMemoryAsync_Internal));
+
+            // AssetBundle.LoadFromStreamInternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromStreamInternalDelegate>("UnityEngine.AssetBundle::LoadFromStreamInternal");
+            PatchICall("UnityEngine.AssetBundle::LoadFromStreamInternal", out origLoadFromStream_Internal, nameof(BundleBouncer.OnLoadFromStream_Internal));
+
+            // AssetBundle.LoadFromStreamAsyncInternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromStreamAsyncInternalDelegate>("UnityEngine.AssetBundle::LoadFromStreamAsyncInternal");
+            PatchICall("UnityEngine.AssetBundle::LoadFromStreamAsyncInternal", out origLoadFromStreamAsync_Internal, nameof(BundleBouncer.OnLoadFromStreamAsync_Internal));
+
             #endregion
 
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
             NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;
+        }
+
+        //public unsafe static string Method_Private_Static_String_String_String_Int32_String_String_String_0(string param_0, string param_1, int param_2, string param_3, string param_4, string param_5)
+        //[18:52:57.664] [BundleBouncer] AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0(https://api.vrchat.cloud/api/1/file/file_e08409d1-173e-4bed-94cc-62a61ad6594d/24/file, wrld_6cbee17f-9ff2-4883-b00e-3743fdc35ffa, 24, 2017.4.28f1, Worlds, vrcw)
+
+        private static bool OnCreateAssetBundleDownload(string __0, string __1, int __2, string __3, string __4, string __5, ref string __result)
+        {
+            string uri = __0;
+            string itemid = __1;
+            int version = __2;
+            string unityversion = __3;
+            string category = __4;
+            string ext = __5;
+            Logging.Info($"AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0({uri}, {itemid}, {version}, {unityversion}, {category}, {ext})");
+            if (ext == "vrca" && AvatarShitList.IsCrasher(itemid))
+            {
+                Logging.Gottem($"Crasher blocked: OnCreateAssetBundleDownload (URI: {uri}, ItemID: {itemid}, version: {version})");
+                __result = null;
+                return false;
+            }
+            return true;
+        }
+
+        private static bool OnLoadFromCacheOrDownload(string url, Hash128 hash, uint crc, WWW __result)
+        {
+            //Logging.Info($"WWW.LoadFromCacheOrDownload: {url} (Hash: <{hash}>, CRC: {crc}) [TODO]");
+            return true;
         }
 
         private static IntPtr OnLoadFromMemory_Internal(IntPtr dataPtr, uint crc)
@@ -196,6 +260,83 @@ namespace BundleBouncer
                 return IntPtr.Zero;
             }
             return origLoadFromMemory_Internal(dataPtr, crc);
+        }
+
+        private static IntPtr OnLoadFromMemoryAsync_Internal(IntPtr dataPtr, uint crc)
+        {
+            var data = (new Il2CppStructArray<byte>(dataPtr)).ToArray();
+            byte[] hash;
+            using (var sha256 = new SHA256Managed())
+            {
+                using (var stream = new MemoryStream(data))
+                {
+                    stream.Position = 0;
+                    hash = sha256.ComputeHash(stream);
+                }
+            }
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load memory-resident assetbundle (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromMemoryAsync_Internal...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: (memory-resident) (CRC: {crc}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                return IntPtr.Zero;
+            }
+            return origLoadFromMemoryAsync_Internal(dataPtr, crc);
+        }
+
+        private static IntPtr OnLoadFromStream_Internal(IntPtr streamPtr, uint crc, uint managedBufferSize)
+        {
+            var stream = new Il2CppSystem.IO.Stream(streamPtr);
+            var prevPos = stream.Position;
+            stream.Position = 0;
+            byte[] hash;
+            var sha256 = new Il2CppSystem.Security.Cryptography.SHA256Managed();
+            try
+            {
+                hash = sha256.ComputeHash(stream).ToArray();
+            }
+            finally
+            {
+                sha256.Dispose();
+            }
+            stream.Position = prevPos;
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle from stream (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromStream_Internal...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: (stream) (CRC: {crc}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                return IntPtr.Zero;
+            }
+            return origLoadFromStream_Internal(streamPtr, crc, managedBufferSize);
+        }
+
+        private static IntPtr OnLoadFromStreamAsync_Internal(IntPtr streamPtr, uint crc, uint managedBufferSize)
+        {
+            var stream = new Il2CppSystem.IO.Stream(streamPtr);
+            var prevPos = stream.Position;
+            stream.Position = 0;
+            byte[] hash;
+            var sha256 = new Il2CppSystem.Security.Cryptography.SHA256Managed();
+            try
+            {
+                hash = sha256.ComputeHash(stream).ToArray();
+            }
+            finally
+            {
+                sha256.Dispose();
+            }
+            stream.Position = prevPos;
+            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"Attempting to load assetbundle from stream (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromStreamAsync_Internal...");
+            if (AvatarShitList.IsBundleACrasher(hash))
+            {
+                Logging.Gottem($"Crasher blocked: (stream) (CRC: {crc}, SHA256: {hashstr})");
+                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
+                return IntPtr.Zero;
+            }
+            return origLoadFromStream_Internal(streamPtr, crc, managedBufferSize);
         }
 
         private static IntPtr OnLoadFromFileAsync_Internal(IntPtr pathPtr, uint crc, ulong offset)
@@ -284,6 +425,7 @@ namespace BundleBouncer
             MelonUtils.NativeHookAttach((IntPtr)(&originalPointer), functionPointer);
             //ourOriginalPointers[name] = new Tuple<IntPtr, IntPtr>(originalPointer, functionPointer);
             original = Marshal.GetDelegateForFunctionPointer<T>(originalPointer);
+            Logging.Info($"Patched icall {name}");
         }
 
         /**
