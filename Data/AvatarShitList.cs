@@ -204,6 +204,10 @@ namespace BundleBouncer.Data
             {
                 return true;
             }
+            else if(avhash[0]==170 && avhash[1]==206 && avhash[2]==197 && avhash[3]==9 && avhash[4]==90 && avhash[5]==124 && avhash[6]==182 && avhash[7]==135 && avhash[8]==80 && avhash[9]==9 && avhash[10]==180 && avhash[11]==164 && avhash[12]==201 && avhash[13]==187 && avhash[14]==232 && avhash[15]==143 && avhash[16]==118 && avhash[17]==93 && avhash[18]==120 && avhash[19]==65 && avhash[20]==194 && avhash[21]==175 && avhash[22]==3 && avhash[23]==178 && avhash[24]==38 && avhash[25]==113 && avhash[26]==65 && avhash[27]==19 && avhash[28]==44 && avhash[29]==245 && avhash[30]==60 && avhash[31]==219)
+            {
+                return true;
+            }
             else if(avhash[0]==173 && avhash[1]==180 && avhash[2]==84 && avhash[3]==32 && avhash[4]==88 && avhash[5]==109 && avhash[6]==39 && avhash[7]==161 && avhash[8]==243 && avhash[9]==151 && avhash[10]==255 && avhash[11]==229 && avhash[12]==109 && avhash[13]==148 && avhash[14]==35 && avhash[15]==109 && avhash[16]==137 && avhash[17]==222 && avhash[18]==108 && avhash[19]==18 && avhash[20]==187 && avhash[21]==162 && avhash[22]==10 && avhash[23]==157 && avhash[24]==81 && avhash[25]==182 && avhash[26]==63 && avhash[27]==192 && avhash[28]==221 && avhash[29]==163 && avhash[30]==176 && avhash[31]==213)
             {
                 return true;
@@ -1031,6 +1035,10 @@ namespace BundleBouncer.Data
                 return true;
             }
             else if(hash[0]==79 && hash[1]==246 && hash[2]==48 && hash[3]==75 && hash[4]==107 && hash[5]==49 && hash[6]==155 && hash[7]==235 && hash[8]==125 && hash[9]==27 && hash[10]==106 && hash[11]==208 && hash[12]==197 && hash[13]==251 && hash[14]==148 && hash[15]==203 && hash[16]==89 && hash[17]==182 && hash[18]==44 && hash[19]==152 && hash[20]==151 && hash[21]==243 && hash[22]==66 && hash[23]==44 && hash[24]==36 && hash[25]==187 && hash[26]==250 && hash[27]==213 && hash[28]==81 && hash[29]==154 && hash[30]==165 && hash[31]==226)
+            {
+                return true;
+            }
+            else if(hash[0]==81 && hash[1]==114 && hash[2]==201 && hash[3]==12 && hash[4]==21 && hash[5]==165 && hash[6]==76 && hash[7]==247 && hash[8]==17 && hash[9]==5 && hash[10]==190 && hash[11]==68 && hash[12]==212 && hash[13]==225 && hash[14]==143 && hash[15]==128 && hash[16]==177 && hash[17]==196 && hash[18]==207 && hash[19]==3 && hash[20]==86 && hash[21]==249 && hash[22]==236 && hash[23]==38 && hash[24]==241 && hash[25]==39 && hash[26]==231 && hash[27]==8 && hash[28]==207 && hash[29]==4 && hash[30]==200 && hash[31]==125)
             {
                 return true;
             }
