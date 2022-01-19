@@ -213,7 +213,6 @@ namespace BundleBouncer
         }
 
         //public unsafe static string Method_Private_Static_String_String_String_Int32_String_String_String_0(string param_0, string param_1, int param_2, string param_3, string param_4, string param_5)
-        //[18:52:57.664] [BundleBouncer] AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0(https://api.vrchat.cloud/api/1/file/file_e08409d1-173e-4bed-94cc-62a61ad6594d/24/file, wrld_6cbee17f-9ff2-4883-b00e-3743fdc35ffa, 24, 2017.4.28f1, Worlds, vrcw)
 
         private static bool OnCreateAssetBundleDownload(string __0, string __1, int __2, string __3, string __4, string __5, ref string __result)
         {
@@ -223,7 +222,8 @@ namespace BundleBouncer
             string unityversion = __3;
             string category = __4;
             string ext = __5;
-            Logging.Info($"AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0({uri}, {itemid}, {version}, {unityversion}, {category}, {ext})");
+            //Logging.Info($"AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0({uri}, {itemid}, {version}, {unityversion}, {category}, {ext})");
+            Logging.Info($"Attempting to download assetbundle (URI: {uri}, Item ID: {itemid}, Version: {version}, Unity: {unityversion}, Category: {category}, Extension: {ext})");
             if (ext == "vrca" && AvatarShitList.IsCrasher(itemid))
             {
                 Logging.Gottem($"Crasher blocked: OnCreateAssetBundleDownload (URI: {uri}, ItemID: {itemid}, version: {version})");
