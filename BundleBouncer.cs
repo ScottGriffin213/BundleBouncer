@@ -58,7 +58,7 @@ namespace BundleBouncer
         // Mostly for logging and datastream tracking.
         static Dictionary<string, AssetInfo> assetInfo = new Dictionary<string, AssetInfo>();
         private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
-        //private static Dictionary<string, Tuple<IntPtr, IntPtr>> ourOriginalPointers = new Dictionary<string, Tuple<IntPtr, IntPtr>>();
+        private static Dictionary<IntPtr, AssetBundleDownload> assetBundleDownloadToFactory = new Dictionary<IntPtr, AssetBundleDownload>();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate IntPtr LoadFromFileAsync_InternalDelegate(IntPtr path, uint crc, ulong offset);
@@ -83,6 +83,9 @@ namespace BundleBouncer
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate IntPtr LoadFromMemoryAsync_InternalDelegate(IntPtr binary, uint crc);
         private static LoadFromMemoryAsync_InternalDelegate origLoadFromMemoryAsync_Internal;
+
+        private static readonly string BLOCKED_AVTR_ID = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
+        private static readonly string BLOCKED_FILE_URL = "https://0.0.0.0/blocked.dat"; // FIXME
 
         public override void OnApplicationStart()
         {
@@ -161,14 +164,14 @@ namespace BundleBouncer
                     case "LoadFromFile":
                         switch (method.GetParameters().Length)
                         {
-                            case 1: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_1)); break;
+                            case 1: PatchHarmony(method, nameof(BundleBouncer.OnLoadFromFile_1)); break;
                                 //case 2: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_2)); break;
                                 //case 3: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_3)); break;
                         }
                         break;
                     //public static AssetBundle LoadFromFile_Internal(string path, uint crc, ulong offset);
                     case "LoadFromFile_Internal":
-                        StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_Internal));
+                        PatchHarmony(method, nameof(BundleBouncer.OnLoadFromFile_Internal));
                         break;
                 }
             }
@@ -180,15 +183,26 @@ namespace BundleBouncer
                     case "LoadFromCacheOrDownload":
                         if(HarmonyUtils.MatchParameters(method, new Type[] { typeof(string), typeof(Hash128), typeof(uint) }))
                         {
-                            StaticHarmony(method, nameof(BundleBouncer.OnLoadFromCacheOrDownload));
+                            PatchHarmony(method, nameof(BundleBouncer.OnLoadFromCacheOrDownload));
                         }
                         break;
                 }
             }
 
-            StaticHarmony(typeof(VRCNetworkingClient).GetMethod(nameof(VRCNetworkingClient.OnEvent)), nameof(OnEvent));
+            PatchHarmony(typeof(VRCNetworkingClient).GetMethod(nameof(VRCNetworkingClient.OnEvent)), nameof(OnEvent));
 
-            StaticHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0)), nameof(OnCreateAssetBundleDownload));
+            PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0)), nameof(OnCreateAssetBundleDownload));
+
+            PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0)), nameof(OnGetAssetBundleGetter));
+            PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0)), nameof(OnGetGameObjectGetter));
+
+            PatchHarmony(typeof(InterfacePublicAbstractIDisposableAsObAsUnique).GetProperty("prop_AssetBundle_0").GetGetMethod(), postfix: nameof(OnIIDisposableAssetBundleContainer_GetAssetBundle));
+
+            PatchHarmony(typeof(ApiFile).GetMethod(nameof(ApiFile.DownloadFile)), prefix: nameof(BundleBouncer.OnAPIFileDownloadFile));
+
+            //private void InternalCreateAssetBundleCached(string url, string name, Hash128 hash, uint crc)
+            PatchHarmony(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.InternalCreateAssetBundleCached), BindingFlags.Public | BindingFlags.Instance),
+                prefix: nameof(BundleBouncer.OnDownloadHandlerAssetBundle_InternalCreateAssetBundleCached));
 
             // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
             PatchICall("UnityEngine.AssetBundle::LoadFromFileAsync_Internal", out origLoadFromFileAsync_Internal, nameof(BundleBouncer.OnLoadFromFileAsync_Internal));
@@ -212,6 +226,106 @@ namespace BundleBouncer
             NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;
         }
 
+        //private void InternalCreateAssetBundleCached(string url, string name, Hash128 hash, uint crc)
+        private static bool OnDownloadHandlerAssetBundle_InternalCreateAssetBundleCached(string __0, string __1, Hash128 __2, uint __3)
+        {
+            // Not seen in use yet.
+            Logging.Info($"DownloadHandlerAssetBundle.InternalCreateAssetBundleCached(url: {__0}, name: {__1}, hash: {__2}, CRC: {__3})");
+            return true;
+        }
+
+        // 
+        // public unsafe InterfacePublicAbstractIDisposableGaObGaUnique Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0()
+        private static bool OnGetGameObjectGetter(AssetBundleDownload __instance)
+        {
+            //HarmonyUtils.ShowDStack();
+            /* This is triggered a lot and spams the log, resulting in lag spikes.
+            Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0(): ct: {__instance.field_Private_ContentType_0}, 0: {__instance.field_Private_String_0}, 1: {__instance.field_Private_String_1}, 2: {__instance.field_Private_String_2}");
+            if (ApiFile.TryParseFileIdAndVersionFromFileAPIUrl(__instance.field_Private_String_1, out string fileId, out int fileVersion))
+            {
+                Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0(): fileID: {fileId}, fileVersion: {fileVersion}");
+            }
+            */
+            if(AvatarShitList.IsCrasher(__instance.field_Private_String_0))
+            {
+                Logging.Gottem($"Crasher blocked: AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0 (avatar ID: {__instance.field_Private_String_0}, URL: {__instance.field_Private_String_1})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
+                __instance.field_Private_String_0 = BLOCKED_AVTR_ID;
+                __instance.field_Private_String_1 = BLOCKED_FILE_URL;
+            }
+            return true;
+        }
+
+        private static bool OnIIDisposableAssetBundleContainer_GetAssetBundle()
+        {
+            // TODO?
+            return true;
+        }
+
+        // public unsafe InterfacePublicAbstractIDisposableAsObAsUnique Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0()
+        private static bool OnGetAssetBundleGetter(AssetBundleDownload __instance)
+        {
+            /* This is triggered a lot and spams the log, resulting in lag spikes.
+            Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0(): ct: {__instance.field_Private_ContentType_0}, 0: {__instance.field_Private_String_0}, 1: {__instance.field_Private_String_1}, 2: {__instance.field_Private_String_2}");
+            if (ApiFile.TryParseFileIdAndVersionFromFileAPIUrl(__instance.field_Private_String_1, out string fileId, out int fileVersion))
+            {
+                Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0(): fileID: {fileId}, fileVersion: {fileVersion}");
+            }
+            */
+            if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsCrasher(__instance.field_Private_String_0))
+            {
+                Logging.Gottem($"Crasher blocked: AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0 (avatar ID: {__instance.field_Private_String_0}, URL: {__instance.field_Private_String_1})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
+                __instance.field_Private_String_0 = BLOCKED_AVTR_ID;
+                __instance.field_Private_String_1 = BLOCKED_FILE_URL;
+            }
+            return true;
+        }
+
+        private static bool OnCheckIfAssetBundleFileTooLarge(ContentType __0, string __1, ref bool __result)
+        {
+            var contentType = __0;
+            var fileName = __1;
+            //var fileSize = __2;
+            Logging.Info($"ValidationHelpers.CheckIfAssetBundleFileTooLarge({contentType}, {fileName})");
+            return true;
+        }
+
+        //public static void DownloadFile(string url, Il2CppSystem.Action<Il2CppStructArray<byte>> onSuccess, Il2CppSystem.Action<string> onError, Il2CppSystem.Action<long, long> onProgress);
+        private static bool OnAPIFileDownloadFile(string __0, ref Il2CppSystem.Action<Il2CppStructArray<byte>> __1, Il2CppSystem.Action<string> __2, Il2CppSystem.Action<long, long> __3)
+        {
+            var url = __0;
+            var onSuccess = __1;
+            var orig_onSuccess = __1;
+            var onError = __2;
+            var onProgress = __3;
+            Action<Il2CppStructArray<byte>> p = (data) =>
+            {
+                byte[] hash;
+                using (var sha256 = new SHA256Managed())
+                {
+                    using (var stream = new MemoryStream(data.ToArray()))
+                    {
+                        stream.Position = 0;
+                        hash = sha256.ComputeHash(stream);
+                    }
+                }
+                string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+                Logging.Info($"Attempting to process ApiFile.DownloadFile onSuccess: (URL: {url}, Hash: {hashstr})");
+                if (AvatarShitList.IsBundleACrasher(hash)){
+                    Logging.Gottem($"Crasher blocked: ApiFile.DownloadFile onSuccess (URL: {url}, Hash: {hashstr})");
+                    BBUI.NotifyUser($"Blocked crasher (see log)");
+                    onError.Invoke("crasher blocked");
+                } 
+                else
+                {
+                    orig_onSuccess.Invoke(data);
+                }
+            };
+            onSuccess = p;
+            return true;
+        }
+
         //public unsafe static string Method_Private_Static_String_String_String_Int32_String_String_String_0(string param_0, string param_1, int param_2, string param_3, string param_4, string param_5)
 
         private static bool OnCreateAssetBundleDownload(string __0, string __1, int __2, string __3, string __4, string __5, ref string __result)
@@ -227,6 +341,7 @@ namespace BundleBouncer
             if (ext == "vrca" && AvatarShitList.IsCrasher(itemid))
             {
                 Logging.Gottem($"Crasher blocked: OnCreateAssetBundleDownload (URI: {uri}, ItemID: {itemid}, version: {version})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 __result = null;
                 return false;
             }
@@ -256,6 +371,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: (memory-resident) (CRC: {crc}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 return IntPtr.Zero;
             }
@@ -279,6 +395,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: (memory-resident) (CRC: {crc}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 return IntPtr.Zero;
             }
@@ -306,6 +423,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: (stream) (CRC: {crc}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 return IntPtr.Zero;
             }
@@ -333,6 +451,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: (stream) (CRC: {crc}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 return IntPtr.Zero;
             }
@@ -357,26 +476,55 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 return IntPtr.Zero;
             }
             return origLoadFromFileAsync_Internal(pathPtr, crc, offset);
         }
 
-        private void StaticHarmony(MethodInfo hookee, string hooker)
+        private void PatchHarmony(MethodInfo hookee, string prefix=null, string postfix=null)
         {
-            string psig = String.Join(",", hookee.GetParameters().Select(x => x.ParameterType.ToString()));
-            string sig = $"{hookee.DeclaringType}.{hookee.Name}({psig})";
+            string sig = mkSigFromMethod(hookee);
+            if (prefix != null)
+            {
+                try
+                {
+                    HarmonyInstance.Patch(hookee, 
+                        prefix:  prefix  == null ? null : typeof(BundleBouncer).GetMethod(prefix,  BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod(),
+                        postfix: postfix == null ? null : typeof(BundleBouncer).GetMethod(postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                    if(prefix!=null)
+                        Logging.Info($"Patched {sig} to {prefix} (prefix)");
+                    if(postfix!=null)
+                        Logging.Info($"Patched {sig} to {postfix} (postfix)");
+                }
+                catch (Exception e)
+                {
+                    Logging.Error($"Unable to patch {sig}:");
+                    Logging.Error(e.ToString());
+                }
+            }
+        }
+
+        private void CtorHarmony(MethodInfo hookee, string hooker_postfix)
+        {
+            string sig = mkSigFromMethod(hookee);
             try
             {
-                HarmonyInstance.Patch(hookee, typeof(BundleBouncer).GetMethod(hooker, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
-                Logging.Info($"Patched {sig} to {hooker} (static)");
+                HarmonyInstance.Patch(hookee, null, typeof(BundleBouncer).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                Logging.Info($"Patched {sig} to {hooker_postfix} (.ctor postfix)");
             }
             catch (Exception e)
             {
-                Logging.Error($"Unable to patch {sig} (static):");
+                Logging.Error($"Unable to patch {sig} (.ctor):");
                 Logging.Error(e.ToString());
             }
+        }
+
+        private string mkSigFromMethod(MethodInfo method)
+        {
+            string psig = String.Join(",", method.GetParameters().Select(x => x.ParameterType.ToString()));
+            return $"{method.DeclaringType}.{method.Name}({psig})";
         }
 
         private void NetworkEvents_OnInstanceChanged(ApiWorld arg1, ApiWorldInstance arg2)
@@ -409,7 +557,7 @@ namespace BundleBouncer
          * From Knah's fabulous Finitizer.
          * https://github.com/knah/VRCMods/blob/9ad060a8aa05c1454696f2625ad6a857fec1fed6/Finitizer/FinitizerMod.cs#L106
          */
-        private static unsafe void PatchICall<T>(string name, out T original, string patchName) where T : MulticastDelegate
+            private static unsafe void PatchICall<T>(string name, out T original, string patchName) where T : MulticastDelegate
         {
             var originalPointer = IL2CPP.il2cpp_resolve_icall(name);
             if (originalPointer == IntPtr.Zero)
@@ -552,6 +700,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 __result = null;
                 return false;
@@ -578,6 +727,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 __result = null;
                 return false;
@@ -605,6 +755,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 __result = null;
                 return false;
@@ -632,6 +783,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsBundleACrasher(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
+                BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 __result = null;
                 return false;
@@ -649,6 +801,7 @@ namespace BundleBouncer
                 if (AvatarShitList.IsCrasher(av.id))
                 {
                     Logging.Gottem($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
+                    BBUI.NotifyUser($"Blocked crasher: {av.id} ({av.name})");
 
                     // TODO: Make configurable, or point to big blaring CRASHER avatar?
                     //av.assetUrl = "http://0.0.0.0/doesnt-exist.asset";

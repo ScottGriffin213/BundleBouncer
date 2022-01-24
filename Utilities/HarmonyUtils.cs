@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Linq;
+using System.Diagnostics;
 
 namespace BundleBouncer
 {
@@ -12,6 +13,11 @@ namespace BundleBouncer
             if (types.Length != p.Length)
                 return false;
             return p.Select(x => x.ParameterType).ToArray() == types;
+        }
+
+        internal static void ShowDStack()
+        {
+            Logging.Info((new Il2CppSystem.Diagnostics.StackTrace(1, false)).ToString());
         }
     }
 }
