@@ -12,13 +12,14 @@ Quit being dicks.  You know who you are.
 * Some C# files in this project are generated from sets of data not included in this repository (to prevent skiddies getting access to all the bad avatars we know of), so **the files seen here are _not_ a complete representation of the codebase**.
   * However, the files in this project **are** representative of everything in the DLL. Compiling this code *should* result in a DLL mostly identical to the one released as a binary (beyond some compiler gibberish).
 * For security, malicious avatar IDs are [hashed](https://en.wikipedia.org/wiki/Cryptographic_hash_function) and mildly obfuscated so skiddies can't easily grab a list of them.
-* **We will not be releasing this on VRCMG yet, since they require manual reviews and would result in horrendously outdated definitions.**  We may end up splitting the definitions into another DLL, but it'll be a while before the infrastructure is ready.
+* **We will not be releasing this on VRCMG yet, since they require manual reviews and would result in horrendously outdated definitions.** We have split the project into a core DLL, and an automatically-generated definitions DLL to simplify things in the future.
 * **ONLY** grab this DLL from [https://github.com/ScottGriffin213/BundleBouncer/releases/latest](https://github.com/ScottGriffin213/BundleBouncer/releases/latest) or the mirror at [https://gitgud.io/Scottinator/BundleBouncer/-/releases](https://gitgud.io/Scottinator/BundleBouncer/-/releases)! Forks can contain dangerous code, so review any files from forks using dnSpy before installing them. Tip:  If they're obfuscating the code, there's something they don't want you to see.
 
 ## Installing
 
 * Install [VRChatUtilityKit](https://github.com/SleepyVRC/Mods#vrchatutilitykit)
-* Install DLL from Releases into MelonLoader `Mods/` directory
+* Install BundleBouncer.dll from Releases into MelonLoader `Mods/` directory
+* Optionally, pre-download BundleBouncer.Shitlist.dll from Releases into a subfolder of your VRChat install called `Dependencies/`.
 
 ## Adding an Avatar ID
 NOTE: There are a bunch of avatars that are automatically blocked by the mod.

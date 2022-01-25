@@ -21,6 +21,8 @@ namespace BundleBouncer
 {
     public class BundleBouncer : MelonMod
     {
+        public Config Config { get; private set; }
+
         /// <summary>
         /// Singleton reference.
         /// </summary>
@@ -66,6 +68,8 @@ namespace BundleBouncer
         public override void OnApplicationStart()
         {
             Logging.LI = LoggerInstance;
+            this.Config = new Config();
+
             Instance = this;
 
             if (!Directory.Exists(UserDataDir))
@@ -116,6 +120,8 @@ namespace BundleBouncer
             {
                 Logging.Info($"Loaded {AvatarShitList.UserShitList.Count} entries from {UserAvatarShitListFile}");
             }
+
+            SyncShitlistDLL();
 
             this.Patches = new Patches(this);
 
@@ -273,16 +279,20 @@ namespace BundleBouncer
                 assetInfo[avURL].UsedBy.Add(user);
         }
 
-        internal static void SyncShitlistDLL()
+        internal void SyncShitlistDLL()
         {
             // Purposefully blocking.
-            var www = new System.Net.WebClient();
+            
             SHITLIST_DLL = Path.Combine("Dependencies", "BundleBouncer.Shitlist.dll");
-            string SHITLIST_HASH = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
-            if (!File.Exists(SHITLIST_DLL) || String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2"))) == LATEST_SHITLIST_CHECKSUM)
+            if (Instance.Config.SyncDefinitions)
             {
-                Logging.Info($"Updating to shitlist of hash {SHITLIST_HASH}...");
-                www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
+                var www = new System.Net.WebClient();
+                string SHITLIST_HASH = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
+                if (!File.Exists(SHITLIST_DLL) || String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2"))) == LATEST_SHITLIST_CHECKSUM)
+                {
+                    Logging.Info($"Updating to shitlist of hash {SHITLIST_HASH}...");
+                    www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
+                }
             }
             Logging.Info($"SHA256: {SHA256File(SHITLIST_DLL)}");
             Logging.Info("Loading shitlist...");
