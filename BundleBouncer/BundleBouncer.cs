@@ -1,6 +1,5 @@
 ﻿using BundleBouncer.Data;
 using BundleBouncer.Utilities;
-using ExitGames.Client.Photon;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
@@ -8,11 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using UnhollowerBaseLib;
 using UnityEngine;
-using UnityEngine.Networking;
 using VRC;
 using VRC.Core;
 using VRChatUtilityKit.Utilities;
@@ -60,8 +56,8 @@ namespace BundleBouncer
         private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
         private static Dictionary<IntPtr, AssetBundleDownload> assetBundleDownloadToFactory = new Dictionary<IntPtr, AssetBundleDownload>();
         private static string SHITLIST_DLL;
-        public static readonly string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/latest/BundleBouncer.Shitlist.dll";
-        public static readonly string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/latest/BundleBouncer.Shitlist.dll.sha256sum";
+        public static readonly string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
+        public static readonly string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
         public static readonly string BLOCKED_AVTR_ID = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
         public static readonly string BLOCKED_FILE_URL = "https://0.0.0.0/blocked.dat"; // FIXME
 
@@ -109,6 +105,8 @@ namespace BundleBouncer
                 Logging.Info($"Created {PlayerShitlistFile}");
             }
 
+            SyncShitlistDLL();
+
             LoadPlayerShitlist();
             if (KnownSkiddies.Count > 0)
             {
@@ -121,7 +119,6 @@ namespace BundleBouncer
                 Logging.Info($"Loaded {AvatarShitList.UserShitList.Count} entries from {UserAvatarShitListFile}");
             }
 
-            SyncShitlistDLL();
 
             this.Patches = new Patches(this);
 
@@ -188,7 +185,7 @@ namespace BundleBouncer
             string avstr = $"{avatarID}";
             string extrastr = "";
             string wornByCount = "";
-            if(Avatars.TryGetValue(avatarID, out av))
+            if (Avatars.TryGetValue(avatarID, out av))
             {
                 wornby = "Worn By: ";
                 if (av.Users.Count > 0)
@@ -206,9 +203,9 @@ namespace BundleBouncer
                 }
                 avstr = $"{av.ID} ({av.Name})";
             }
-            if(extra != null)
+            if (extra != null)
             {
-                extrastr = " ("+String.Join(", ", extra.Select(kvp => $"{kvp.Key}: {kvp.Value}").ToArray())+")";
+                extrastr = " (" + String.Join(", ", extra.Select(kvp => $"{kvp.Key}: {kvp.Value}").ToArray()) + ")";
             }
             Logging.Gottem($"Crasher blocked: Avatar {avstr}{wornby}{extrastr} [{source}]");
             BBUI.NotifyUser($"Blocked Avatar{wornByCount}.");
@@ -282,22 +279,29 @@ namespace BundleBouncer
         internal void SyncShitlistDLL()
         {
             // Purposefully blocking.
-            
+
             SHITLIST_DLL = Path.Combine("Dependencies", "BundleBouncer.Shitlist.dll");
-            if (Instance.Config.SyncDefinitions)
+            var needsDL = !File.Exists(SHITLIST_DLL);
+            var www = new System.Net.WebClient();
+            string remote_hash = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
+            string local_hash = needsDL ? "???" : String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
+            if (!needsDL && Instance.Config.SyncDefinitions)
             {
-                var www = new System.Net.WebClient();
-                string SHITLIST_HASH = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
-                if (!File.Exists(SHITLIST_DLL) || String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2"))) == LATEST_SHITLIST_CHECKSUM)
+                if (local_hash == remote_hash)
                 {
-                    Logging.Info($"Updating to shitlist of hash {SHITLIST_HASH}...");
-                    www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
+                    needsDL = true;
                 }
             }
-            Logging.Info($"SHA256: {SHA256File(SHITLIST_DLL)}");
+            if (needsDL)
+            {
+                Logging.Info($"Updating to shitlist of hash {remote_hash}...");
+                www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
+            }
+            local_hash = String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
+            Logging.Info($"SHA256: {local_hash}");
             Logging.Info("Loading shitlist...");
             var asm = Assembly.LoadFrom(SHITLIST_DLL);
-            AvatarShitList.shitListProvider=(IShitListProvider)asm.GetType("ShitlistProvider").GetConstructor(null).Invoke(null);
+            AvatarShitList.shitListProvider = (IShitListProvider)(asm.GetTypes().Where(x => x.Name == "ShitlistProvider").First().GetConstructor(new Type[0]).Invoke(null));
         }
 
         private static byte[] SHA256File(string filename)

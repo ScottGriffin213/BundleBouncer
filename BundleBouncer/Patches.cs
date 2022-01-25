@@ -55,18 +55,21 @@ namespace BundleBouncer
 
         public Patches(BundleBouncer bundleBouncer)
         {
-            this.bb = bundleBouncer;
+            bb = bundleBouncer;
 
             unsafe
             {
+                Logging.Info("1");
                 // God I hate pointers.
                 var originalMethodPointer = *(IntPtr*)(IntPtr)UnhollowerUtils
                     .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(typeof(AssetBundleDownloadManager).GetMethod(
                         nameof(AssetBundleDownloadManager.Method_Internal_UniTask_1_InterfacePublicAbstractIDisposableGaObGaUnique_ApiAvatar_MulticastDelegateNInternalSealedVoUnUnique_Boolean_0)))
                     .GetValue(null);
 
-                MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), typeof(BundleBouncer).GetMethod(nameof(OnAttemptAvatarDownload), BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer());
+                Logging.Info("2");
+                MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), typeof(Patches).GetMethod(nameof(Patches.OnAttemptAvatarDownload), BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer());
 
+                Logging.Info("3");
                 dgAttemptAvatarDownload = Marshal.GetDelegateForFunctionPointer<AttemptAvatarDownloadDelegate>(originalMethodPointer);
                 Logging.Info($"Hooked AssetBundleDownloadManager.");
             }
@@ -150,7 +153,7 @@ namespace BundleBouncer
                 return;
             }
 
-            var target = typeof(BundleBouncer).GetMethod(patchName, BindingFlags.Static | BindingFlags.NonPublic);
+            var target = typeof(Patches).GetMethod(patchName, BindingFlags.Static | BindingFlags.NonPublic);
             var functionPointer = target.MethodHandle.GetFunctionPointer();
 
             MelonUtils.NativeHookAttach((IntPtr)(&originalPointer), functionPointer);
@@ -167,7 +170,7 @@ namespace BundleBouncer
             string psig = String.Join(",", target.GetParameters().Select(x => x.ParameterType.ToString()));
             string sig = $"{target.DeclaringType}.{target.Name}({psig})";
             var originalMethodPointer = *(IntPtr*)UnhollowerSupport.MethodBaseToIl2CppMethodInfoPointer(target);
-            var detourPointer = typeof(BundleBouncer).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
+            var detourPointer = typeof(Patches).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
             MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
             Logging.Info($"Hooked {target.Name} to {detour}");
             return originalMethodPointer;
@@ -441,8 +444,8 @@ namespace BundleBouncer
                 try
                 {
                     BundleBouncer.Instance.HarmonyInstance.Patch(hookee,
-                        prefix: prefix == null ? null : typeof(BundleBouncer).GetMethod(prefix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod(),
-                        postfix: postfix == null ? null : typeof(BundleBouncer).GetMethod(postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                        prefix: prefix == null ? null : typeof(Patches).GetMethod(prefix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod(),
+                        postfix: postfix == null ? null : typeof(Patches).GetMethod(postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
                     if (prefix != null)
                         Logging.Info($"Patched {sig} to {prefix} (prefix)");
                     if (postfix != null)
@@ -461,7 +464,7 @@ namespace BundleBouncer
             string sig = mkSigFromMethod(hookee);
             try
             {
-                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, null, typeof(BundleBouncer).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, null, typeof(Patches).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
                 Logging.Info($"Patched {sig} to {hooker_postfix} (.ctor postfix)");
             }
             catch (Exception e)
