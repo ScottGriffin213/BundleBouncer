@@ -29,6 +29,11 @@ namespace BundleBouncer
         /// </summary>
         public static HashSet<byte> writtenPhotonSamples = new HashSet<byte>();
 
+        // Mostly for logging and datastream tracking.
+        static Dictionary<string, AssetInfo> assetInfo = new Dictionary<string, AssetInfo>();
+        private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
+        private static Dictionary<IntPtr, AssetBundleDownload> assetBundleDownloadToFactory = new Dictionary<IntPtr, AssetBundleDownload>();
+
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate IntPtr LoadFromFileAsync_InternalDelegate(IntPtr path, uint crc, ulong offset);
         private static LoadFromFileAsync_InternalDelegate origLoadFromFileAsync_Internal;
@@ -59,17 +64,14 @@ namespace BundleBouncer
 
             unsafe
             {
-                Logging.Info("1");
                 // God I hate pointers.
                 var originalMethodPointer = *(IntPtr*)(IntPtr)UnhollowerUtils
                     .GetIl2CppMethodInfoPointerFieldForGeneratedMethod(typeof(AssetBundleDownloadManager).GetMethod(
                         nameof(AssetBundleDownloadManager.Method_Internal_UniTask_1_InterfacePublicAbstractIDisposableGaObGaUnique_ApiAvatar_MulticastDelegateNInternalSealedVoUnUnique_Boolean_0)))
                     .GetValue(null);
 
-                Logging.Info("2");
                 MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), typeof(Patches).GetMethod(nameof(Patches.OnAttemptAvatarDownload), BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer());
 
-                Logging.Info("3");
                 dgAttemptAvatarDownload = Marshal.GetDelegateForFunctionPointer<AttemptAvatarDownloadDelegate>(originalMethodPointer);
                 Logging.Info($"Hooked AssetBundleDownloadManager.");
             }
@@ -307,6 +309,7 @@ namespace BundleBouncer
             return true;
         }
 
+        // Appears to only really be used in mods.
         private static IntPtr OnLoadFromMemory_Internal(IntPtr dataPtr, uint crc)
         {
             var data = (new Il2CppStructArray<byte>(dataPtr)).ToArray();
@@ -600,8 +603,11 @@ namespace BundleBouncer
                 Logging.Info($"Attempting to download avatar {av.id} ({av.name}) via AssetBundleDownloadManager...");
                 if (AvatarShitList.IsCrasher(av.id))
                 {
-                    Logging.Gottem($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
-                    BBUI.NotifyUser($"Blocked crasher: {av.id} ({av.name})");
+                    BundleBouncer.NotifyUserOfBlockedAvatar(av.id, "AvatarDownloadManager", new Dictionary<string, string> {
+                        { "Avatar Name", av.name }
+                    });
+                    //Logging.Gottem($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
+                    //BBUI.NotifyUser($"Blocked crasher: {av.id} ({av.name})");
 
                     // TODO: Make configurable, or point to big blaring CRASHER avatar?
                     //av.assetUrl = "http://0.0.0.0/doesnt-exist.asset";
@@ -640,14 +646,17 @@ namespace BundleBouncer
                             //Logging.Info(customProps);
                             dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
                             var avdata = playerHashtable["249"];
+                            var userid = avdata["user"]["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
                             if (HarmonyUtils.HasProp(avdata, "avatarDict"))
                             {
-                                if (!CheckAvDict(avdata["avatarDict"], avdata["user"]["id"], __0.Code, false))
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata["avatarDict"]["id"].ToString());
+                                if (!CheckAvDict(avdata["avatarDict"], userid, __0.Code, false))
                                     return false;
                             }
                             if (HarmonyUtils.HasProp(avdata, "favatarDict"))
                             {
-                                if (!CheckAvDict(avdata["favatarDict"], avdata["user"]["id"], __0.Code, true))
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata["favatarDict"]["id"].ToString());
+                                if (!CheckAvDict(avdata["favatarDict"], userid, __0.Code, true))
                                     return false;
                             }
                         }
@@ -700,25 +709,13 @@ namespace BundleBouncer
             string avID = avdata["id"];
             string avName = avdata["name"];
             string fbstr = is_fallback ? "fallback" : "main";
-            foreach (dynamic up in avdata["unityPackages"])
-            {
-                BundleBouncer.addAssetURL(up["assetUrl"].ToString(), avID, user);
-            }
             Logging.Info($"Attempting to download {fbstr} avatar {avID} ({avName} via E{code})...");
             if (AvatarShitList.IsCrasher(avID))
             {
-                BundleBouncer.AddToSkiddieShitlist(user);
-                var player = BundleBouncer.GetPlayers().Where(x => x.field_Private_APIUser_0.id == user).FirstOrDefault();
-                if (player != null)
-                {
-                    Logging.Gottem($"Crasher from {player.field_Private_APIUser_0.displayName} ({user}) blocked: {avID} ({avName}) (via event {code})");
-                    BBUI.NotifyUser($"Crasher from {player.field_Private_APIUser_0.displayName} blocked!");
-                }
-                else
-                {
-                    Logging.Gottem($"Crasher from {user} blocked: {avID} ({avName}) (via event {code})");
-                    BBUI.NotifyUser($"Crasher from {user} blocked!");
-                }
+                BundleBouncer.NotifyUserOfBlockedAvatar(avID, $"Photon Event {code}", new Dictionary<string, string> {
+                    {"Avatar Name", avName },
+                    {"Is Fallback", is_fallback ? "yes" : "no" },
+                });
                 return false;
             }
             return true;

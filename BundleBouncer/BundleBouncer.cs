@@ -45,17 +45,18 @@ namespace BundleBouncer
         /// </summary>
         public static HashSet<Player> DetectedSkiddies = new HashSet<Player>();
 
+        /// <summary>
+        /// userID => avID
+        /// </summary>
+        private static Dictionary<string, AvatarInfo> Avatars = new Dictionary<string, AvatarInfo>();
+        private static Dictionary<string, UserAvatars> AvatarUsers = new Dictionary<string, UserAvatars>();
+
         //public static string AvatarOfShameURL = ""; // TODO: Make one
 
         // Red ESP pill
         static HighlightsFXStandalone shitterHighlighter;
 
-        // Mostly for logging and datastream tracking.
-        static Dictionary<string, AssetInfo> assetInfo = new Dictionary<string, AssetInfo>();
-        private static Dictionary<string, AvatarInfo> Avatars = new Dictionary<string, AvatarInfo>();
-        private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
-        private static Dictionary<IntPtr, AssetBundleDownload> assetBundleDownloadToFactory = new Dictionary<IntPtr, AssetBundleDownload>();
-        private static string SHITLIST_DLL;
+        public static string SHITLIST_DLL { get; private set; }
         public static readonly string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
         public static readonly string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
         public static readonly string BLOCKED_AVTR_ID = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
@@ -129,7 +130,8 @@ namespace BundleBouncer
         private void NetworkEvents_OnInstanceChanged(ApiWorld arg1, ApiWorldInstance arg2)
         {
             // Clear asset tracking.
-            assetInfo.Clear();
+            AvatarUsers.Clear();
+            Avatars.Clear();
             DetectedSkiddies.Clear();
             if (shitterHighlighter != null && shitterHighlighter.field_Protected_HashSet_1_Renderer_0 != null)
                 shitterHighlighter.field_Protected_HashSet_1_Renderer_0.Clear();
@@ -137,14 +139,22 @@ namespace BundleBouncer
 
         private void NetworkEvents_OnPlayerLeft(Player player)
         {
+            string userID = player.field_Private_APIUser_0.id;
+            string avID = player.prop_ApiAvatar_0.id;
+            if (AvatarUsers.ContainsKey(userID))
+                AvatarUsers.Remove(userID);
+            if (Avatars.ContainsKey(avID) && Avatars[avID].Users.Contains(userID))
+                Avatars[avID].Users.Remove(userID);
             DoffAvatarOfShame(player);
         }
 
         private void NetworkEvents_OnPlayerJoined(Player player)
         {
-            if (DetectedSkiddies.Contains(player))
+            if (KnownSkiddies.Contains(player.field_Private_APIUser_0.id))
             {
+                DetectedSkiddies.Add(player);
                 DonAvatarOfShame(player);
+                BBUI.NotifyUser($"Known malicious user {player.field_Private_APIUser_0.displayName} has joined.");
             }
             else
             {
@@ -162,9 +172,16 @@ namespace BundleBouncer
                 return;
             }
 
+            // Currently in the room with us
             DetectedSkiddies.Add(match);
+
+            // Add to our list of all known skiddies
             KnownSkiddies.Add(usrID);
+
+            // Dunce hat
             DonAvatarOfShame(match);
+
+            // Save
             SavePlayerShitlist();
         }
 
@@ -180,12 +197,11 @@ namespace BundleBouncer
 
         internal static void NotifyUserOfBlockedAvatar(string avatarID, string source, Dictionary<string, string> extra = null)
         {
-            AvatarInfo av = null;
             string wornby = "";
             string avstr = $"{avatarID}";
             string extrastr = "";
             string wornByCount = "";
-            if (Avatars.TryGetValue(avatarID, out av))
+            if (Avatars.TryGetValue(avatarID, out AvatarInfo av))
             {
                 wornby = "Worn By: ";
                 if (av.Users.Count > 0)
@@ -195,6 +211,10 @@ namespace BundleBouncer
                     if (av.Users.Count > 1)
                     {
                         wornByCount = $" worn by {av.Users.Count} users";
+                    }
+                    foreach(var usrID in av.Users)
+                    {
+                        AddToSkiddieShitlist(usrID);
                     }
                 }
                 else
@@ -217,12 +237,6 @@ namespace BundleBouncer
             {
                 throw new ArgumentNullException(nameof(player));
             }
-            /*
-            if(s_BoothCat == null)
-            {
-                LoadAvatarOfShame();
-            }
-            */
             var selectRegion = player.transform.Find("SelectRegion");
             if (BundleBouncer.shitterHighlighter == null)
             {
@@ -265,16 +279,6 @@ namespace BundleBouncer
             }
         }
 
-        internal static void addAssetURL(string avURL, string avID, string user)
-        {
-            Uri parts = new Uri(avURL);
-            string fileID = parts.AbsolutePath.Split('/').Where(x => x.StartsWith("file_")).First();
-            avIDsByFileSubURL[$"file/{fileID}"] = avID;
-            if (!assetInfo.ContainsKey(avURL))
-                assetInfo[avURL] = new AssetInfo(avURL, avID, null);
-            if (!assetInfo[avURL].UsedBy.Contains(user))
-                assetInfo[avURL].UsedBy.Add(user);
-        }
 
         internal void SyncShitlistDLL()
         {
@@ -298,7 +302,7 @@ namespace BundleBouncer
                 www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
             }
             local_hash = String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
-            Logging.Info($"SHA256: {local_hash}");
+            Logging.Info($"Post-download hash of shitlist: {local_hash}");
             Logging.Info("Loading shitlist...");
             var asm = Assembly.LoadFrom(SHITLIST_DLL);
             AvatarShitList.shitListProvider = (IShitListProvider)(asm.GetTypes().Where(x => x.Name == "ShitlistProvider").First().GetConstructor(new Type[0]).Invoke(null));
@@ -313,6 +317,21 @@ namespace BundleBouncer
                     return sha.ComputeHash(stream);
                 }
             }
+        }
+
+        internal static void SetUserAvatar(string userid, EAvatarType avType, dynamic avDict)
+        {
+            string avID = avDict["id"];
+            if (!Avatars.ContainsKey(avID))
+            {
+                Avatars[avID] = new AvatarInfo();
+            }
+            Avatars[avID].FromDynamic(avDict);
+            if (!AvatarUsers.ContainsKey(userid))
+            {
+                AvatarUsers[userid] = new UserAvatars();
+            }
+            AvatarUsers[userid].Set(avType, avID);
         }
     }
 
