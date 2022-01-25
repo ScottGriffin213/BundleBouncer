@@ -5,7 +5,7 @@ using System.IO;
 namespace BundleBouncer
 {
 
-    internal static class Logging
+    public static class Logging
     {
         internal static MelonLogger.Instance LI;
 
