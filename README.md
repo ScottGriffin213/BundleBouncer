@@ -75,7 +75,7 @@ Include the following:
 
 ## Contact
 
-TODO: Discord
+* Discord: https://discord.gg/jt8xppHeQq
 
 ## License
 
