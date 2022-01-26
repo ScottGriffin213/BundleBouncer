@@ -20,3 +20,4 @@ using System.Runtime.InteropServices;
 [assembly: MelonInfo(typeof(BundleBouncer.BundleBouncer), "BundleBouncer", "1.2.1", "Scott Griffin")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.Red)]
+[assembly: VerifyLoaderVersion(0,5,3,0,is_minimum:true)] // Bug in ML 0.5.2 results in false obfuscation detection.
