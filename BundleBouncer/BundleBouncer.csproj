@@ -9,6 +9,9 @@
     <None Remove="images\png\BundleBouncer-512.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="images\png\BundleBouncer-512.png" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="Accessibility">
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Accessibility.dll</HintPath>
       <Private>false</Private>
@@ -133,16 +136,16 @@
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Iced.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="Il2CppMono.Security">
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Il2CppMono.Security.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Il2Cppmscorlib">
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppNewtonsoft.Json">
+      <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Il2CppNewtonsoft.Json.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Il2CppSystem">
@@ -973,9 +976,5 @@
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\WindowsBase.dll</HintPath>
       <Private>false</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="images\png\BundleBouncer-512.png" />
-    <EmbeddedResource Include="images\png\BundleBouncer-512.png" />
   </ItemGroup>
 </Project>

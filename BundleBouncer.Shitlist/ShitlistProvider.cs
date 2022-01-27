@@ -7,7 +7,7 @@ namespace BundleBouncer.Shitlist
     [System.CodeDom.Compiler.GeneratedCode("devtools/build.py", "0.0.0")]
     public class ShitlistProvider : IShitListProvider
     {
-        public ShitlistProvider() => Logging.Info("BundleBouncer definitions generated @ 2022-01-27T01:03:38.590767");
+        public ShitlistProvider() => Logging.Info("BundleBouncer definitions generated @ 2022-01-27T22:13:00.400962");
 
         // The following is a bunch of generated if-trees created by putting
         // a bunch of avID SHA256s into a trie (https://en.wikipedia.org/wiki/Trie) and optimizing it.

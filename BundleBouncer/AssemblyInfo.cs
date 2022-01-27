@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM.
 
 [assembly: Guid("E22130A0-1166-448B-B4D9-B4E3AC7E305E")]
-[assembly: MelonInfo(typeof(BundleBouncer.BundleBouncer), "BundleBouncer", "1.2.2", "Scott Griffin")]
+[assembly: MelonInfo(typeof(BundleBouncer.BundleBouncer), "BundleBouncer", "1.2.3", "Scott Griffin")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.Red)]
-[assembly: VerifyLoaderVersion(0,5,3,0,is_minimum:true)] // Bug in ML 0.5.2 results in false obfuscation detection.
+// Broken in 0.5.3.0 [assembly: VerifyLoaderVersion(0, 5, 3, true)] // Bug in ML 0.5.2 results in false obfuscation detection.
