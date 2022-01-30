@@ -7,7 +7,11 @@ namespace BundleBouncer.Shitlist
     [System.CodeDom.Compiler.GeneratedCode("devtools/build.py", "0.0.0")]
     public class ShitlistProvider : IShitListProvider
     {
-        public ShitlistProvider() => Logging.Info("BundleBouncer definitions generated @ 2022-01-29T00:35:54.474510");
+        public ShitlistProvider() {
+            Logging.Info("BundleBouncer definitions generated @ 2022-01-30T22:29:26.318326");
+            Logging.Info("Avatar IDs.........: 32");
+            Logging.Info("AssetBundle Hashes.: 21");
+        }
 
         // The following is a bunch of generated if-trees created by putting
         // a bunch of avID SHA256s into a trie (https://en.wikipedia.org/wiki/Trie) and optimizing it.
