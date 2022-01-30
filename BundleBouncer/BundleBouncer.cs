@@ -123,6 +123,8 @@ namespace BundleBouncer
 
             this.Patches = new Patches(this);
 
+            Logging.Startup();
+
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
             NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;

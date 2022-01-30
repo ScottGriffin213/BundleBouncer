@@ -16,6 +16,9 @@ namespace BundleBouncer
 
         internal static void Startup()
         {
+            var bbdir = Path.GetDirectoryName(BLOCKLOG);
+            if (!Directory.Exists(bbdir))
+                Directory.CreateDirectory(bbdir);
             File.WriteAllText(BLOCKLOG, $"BundleBouncer BlockLog started @ {GetTimeStamp()}\n");
         }
 
