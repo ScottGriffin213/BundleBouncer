@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.5 - In Development
+
+<!-- TODO -->
+
 ## 1.2.4
 
 * User State Tracking
