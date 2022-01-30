@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM.
 [assembly: Guid("E22130A0-1166-448B-B4D9-B4E3AC7E305E")]
 
-[assembly: MelonInfo(typeof(BundleBouncer.BundleBouncer), "BundleBouncer", "1.2.3", "Scott Griffin")]
+[assembly: MelonInfo(typeof(BundleBouncer.BundleBouncer), "BundleBouncer", "1.2.4", "Scott Griffin")]
 [assembly: MelonGame("VRChat", "VRChat")]
 [assembly: MelonColor(ConsoleColor.Red)]
 [assembly: MelonAdditionalDependencies("VRChatUtilityKit", "UIExpansionKit")]

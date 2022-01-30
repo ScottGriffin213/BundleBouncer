@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.4 - In Development
+## 1.2.4
 
 * User State Tracking
   * Now tracks the `properties_changed` event properly.
