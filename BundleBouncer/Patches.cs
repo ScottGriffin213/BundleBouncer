@@ -667,13 +667,16 @@ namespace BundleBouncer
                             //Logging.Info(customProps);
                             dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
                             var avdata = playerHashtable["251"];
+                            var userid = avdata["user"]["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
                             if (HarmonyUtils.HasProp(avdata, "avatarDict"))
                             {
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata["avatarDict"]["id"].ToString());
                                 if (!CheckAvDict(avdata["avatarDict"], avdata["user"]["id"], __0.Code, false))
                                     return false;
                             }
                             if (HarmonyUtils.HasProp(avdata, "favatarDict"))
                             {
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata["favatarDict"]["id"].ToString());
                                 if (!CheckAvDict(avdata["favatarDict"], avdata["user"]["id"], __0.Code, true))
                                     return false;
                             }
@@ -709,7 +712,7 @@ namespace BundleBouncer
             string avID = avdata["id"];
             string avName = avdata["name"];
             string fbstr = is_fallback ? "fallback" : "main";
-            Logging.Info($"Attempting to download {fbstr} avatar {avID} ({avName} via E{code})...");
+            Logging.Info($"User changed {fbstr} avatar to {avID} ({avName}; via E{code})...");
             if (AvatarShitList.IsCrasher(avID))
             {
                 BundleBouncer.NotifyUserOfBlockedAvatar(avID, $"Photon Event {code}", new Dictionary<string, string> {
