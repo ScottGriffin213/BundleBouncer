@@ -21,7 +21,7 @@ namespace BundleBouncer
             devModeSet = HasCommandLineOption("--bb.dev-mode");
 
             bbCat = MelonPreferences.CreateCategory("BundleBouncer");
-            _syncDefinitions = bbCat.CreateEntry("SyncDefinitions", false, "Synchronize Definitions", "Do you wish to automatically download new shitlists from github?");
+            _syncDefinitions = bbCat.CreateEntry("SyncRemoteDefinitions", true, "Synchronize Definitions", "Do you wish to automatically download new shitlists from github?");
             _devMode = bbCat.CreateEntry("DevMode", false, is_hidden:true);
         }
 

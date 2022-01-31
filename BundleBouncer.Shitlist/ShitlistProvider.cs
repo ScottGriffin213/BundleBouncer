@@ -8,7 +8,7 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-01-31T08:50:33.554486");
+            Logging.Info("BundleBouncer definitions generated @ 2022-01-31T09:13:09.654863");
             Logging.Info("Avatar IDs.........: 33");
             Logging.Info("AssetBundle Hashes.: 21");
         }
