@@ -1,0 +1,86 @@
+name: Bug Report
+description: File a bug or crash report
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        In order to make the process easier, please take a few minutes to fill this out.
+
+        **Important note:**  Do **NOT** include any crasher reports here.  Send them to Scott's email.
+
+  - type: textarea
+    id: os
+    attributes:
+      label: What OS are you using?
+      description: Describe your OS ("Windows 10 Pro, Chinese language").
+    validations:
+      required: true
+
+  - type: textarea
+    id: vrc-install
+    attributes:
+      label: VRChat Information
+      description: You should tell us what sort of VRChat install you have (e.g. Steam, standalone), and any non-standard mods or "clients" you're using.
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Why are you writing this report?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      description: Give us a step-by-step guide on how to make the same problem happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: Expected Behaviour
+      description: What you expected to happen when the above steps were completed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behaviour
+    attributes:
+      label: Actual Behaviour
+      description: What actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Put your cursor in the box below, then drag ``VRChat\MelonLoader\Latest.log`` into the textbox.  You can also use the attach file button at the bottom. Do not edit it except to remove personal information.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: requiredcriteria
+    attributes:
+      label: All of the following criteria must be met
+      description: Please take the time to check each critera is met properly.
+      options:
+        - label: I have installed all the <a href="https://github.com/LavaGang/MelonLoader/blob/master/README.md#requirements">MelonLoader requirements</a>.
+          required: true
+        - label: Full, unedited ``Latest.log`` is attached
+          required: true
+        - label: I have listed what, if any, clients I am using.
+          required: true
+        - label: I realize that the devs have other things going on and may take time to respond.
+          required: true
+        - label: I have written and proofread my report so that I don't sound like a jerk.
+          required: true
+        - label: I am not reporting a new/incorrect crasher, since github isn't the place for that.
+          required: true
