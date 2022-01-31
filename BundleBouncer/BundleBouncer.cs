@@ -57,8 +57,8 @@ namespace BundleBouncer
         static HighlightsFXStandalone shitterHighlighter;
 
         public static string SHITLIST_DLL { get; private set; }
-        public static readonly string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
-        public static readonly string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
+        public const string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
+        public const string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
         public static readonly string BLOCKED_AVTR_ID = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
         public static readonly string BLOCKED_FILE_URL = "https://0.0.0.0/blocked.dat"; // FIXME
 
@@ -290,10 +290,14 @@ namespace BundleBouncer
             var needsDL = !File.Exists(SHITLIST_DLL);
             var www = new System.Net.WebClient();
             string remote_hash = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
-            string local_hash = needsDL ? "???" : String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
+            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
+            //Logging.Info($"Definitions File Exists: {needsDL}");
+            //Logging.Info($"Config - Sync Definitions: {Instance.Config.SyncDefinitions}");
+            //Logging.Info($"Remote hash: {remote_hash}");
+            //Logging.Info($"Local hash: {local_hash}");
             if (!needsDL && Instance.Config.SyncDefinitions)
             {
-                if (local_hash == remote_hash)
+                if (local_hash != remote_hash)
                 {
                     needsDL = true;
                 }
@@ -304,7 +308,7 @@ namespace BundleBouncer
                 www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
             }
             local_hash = String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
-            Logging.Info($"Post-download hash of shitlist: {local_hash}");
+            Logging.Info($"Hash of {SHITLIST_DLL} after update checks: {local_hash}");
             Logging.Info("Loading shitlist...");
             var asm = Assembly.LoadFrom(SHITLIST_DLL);
             AvatarShitList.shitListProvider = (IShitListProvider)(asm.GetTypes().Where(x => x.Name == "ShitlistProvider").First().GetConstructor(new Type[0]).Invoke(null));

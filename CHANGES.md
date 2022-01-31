@@ -1,8 +1,9 @@
 # Changelog
 
-## 1.2.5 - In Development
+## 1.2.5
 
-<!-- TODO -->
+* Definitions
+  * Fix shitlist auto-updates crippled by crappy logic.
 
 ## 1.2.4
 
