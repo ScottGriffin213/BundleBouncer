@@ -1,11 +1,11 @@
-<p style="text-align:center">
+<p align="center">
   <img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-512.png" />
   <img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-text.png" />
 </p>
 
 ---
 
-<p style="text-align:center">
+<p align="center">
 	<a href="https://github.com/ScottGriffin213/BundleBouncer/releases/latest"><img src="https://img.shields.io/github/v/release/ScottGriffin213/BundleBouncer?label=latest&style=for-the-badge"></a>
 	<a href="https://github.com/ScottGriffin213/BundleBouncer/releases"><img src="https://img.shields.io/github/downloads/ScottGriffin213/BundleBouncer/total.svg?style=for-the-badge"></a>
 	<a href="https://github.com/ScottGriffin213/BundleBouncer/graphs/contributors"><img src="https://img.shields.io/github/contributors/ScottGriffin213/BundleBouncer?style=for-the-badge"></a>
