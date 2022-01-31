@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-512.png" />
-  <img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-text.png" />
+  <a href="#"><img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-512.png"></a>
+  <a href="#"><img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-text.png"></a>
 </p>
 
 ---
