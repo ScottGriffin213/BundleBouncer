@@ -8,8 +8,8 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-01-30T23:33:55.810821");
-            Logging.Info("Avatar IDs.........: 32");
+            Logging.Info("BundleBouncer definitions generated @ 2022-01-31T05:39:38.764758");
+            Logging.Info("Avatar IDs.........: 33");
             Logging.Info("AssetBundle Hashes.: 21");
         }
 
@@ -113,6 +113,10 @@ namespace BundleBouncer.Shitlist
         bool IShitListProvider.IsAvatarIDAnAssetBundleCrasher(byte[] digest)
         {
             if(digest[0]==100 && digest[1]==147 && digest[2]==108 && digest[3]==93 && digest[4]==106 && digest[5]==104 && digest[6]==243 && digest[7]==91 && digest[8]==253 && digest[9]==127 && digest[10]==35 && digest[11]==188 && digest[12]==104 && digest[13]==72 && digest[14]==129 && digest[15]==121 && digest[16]==140 && digest[17]==240 && digest[18]==250 && digest[19]==11 && digest[20]==148 && digest[21]==162 && digest[22]==23 && digest[23]==132 && digest[24]==158 && digest[25]==36 && digest[26]==11 && digest[27]==111 && digest[28]==131 && digest[29]==236 && digest[30]==96 && digest[31]==107)
+            {
+                return true;
+            }
+            else if(digest[0]==114 && digest[1]==136 && digest[2]==156 && digest[3]==61 && digest[4]==204 && digest[5]==108 && digest[6]==133 && digest[7]==99 && digest[8]==136 && digest[9]==204 && digest[10]==187 && digest[11]==102 && digest[12]==150 && digest[13]==90 && digest[14]==58 && digest[15]==243 && digest[16]==2 && digest[17]==79 && digest[18]==188 && digest[19]==242 && digest[20]==148 && digest[21]==126 && digest[22]==42 && digest[23]==209 && digest[24]==41 && digest[25]==42 && digest[26]==186 && digest[27]==183 && digest[28]==183 && digest[29]==140 && digest[30]==220 && digest[31]==12)
             {
                 return true;
             }
