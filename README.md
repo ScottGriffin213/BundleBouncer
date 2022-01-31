@@ -1,4 +1,19 @@
-# BundleBouncer
+<p style="text-align:center">
+  <img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-512.png" />
+  <img src="https://github.com/ScottGriffin213/BundleBouncer/raw/main/BundleBouncer/images/png/BundleBouncer-text.png" />
+</p>
+
+---
+
+<p style="text-align:center">
+	<a href="https://github.com/ScottGriffin213/BundleBouncer/releases/latest"><img src="https://img.shields.io/github/v/release/ScottGriffin213/BundleBouncer?label=latest&style=for-the-badge"></a>
+	<a href="https://github.com/ScottGriffin213/BundleBouncer/releases"><img src="https://img.shields.io/github/downloads/ScottGriffin213/BundleBouncer/total.svg?style=for-the-badge"></a>
+	<a href="https://github.com/ScottGriffin213/BundleBouncer/graphs/contributors"><img src="https://img.shields.io/github/contributors/ScottGriffin213/BundleBouncer?style=for-the-badge"></a>
+	<a href="https://github.com/ScottGriffin213/BundleBouncer/graphs/contributors"><img alt="GitHub" src="https://img.shields.io/github/license/ScottGriffin213/BundleBouncer?style=for-the-badge"></a>
+  <a href="https://discord.gg/jt8xppHeQq"><img alt="Discord" src="https://img.shields.io/discord/935695835012952085?style=for-the-badge"></a>
+</p>
+
+---
 
 This project is a quick and dirty avatar ID blocker, designed to prevent corrupted assetbundles from crashing your game by preventing them from being downloaded at all, or at the very least blocking them from being loaded.  It currently relies on known avatar IDs and bundle hashes, but we're working on automated detection and reporting.
 
