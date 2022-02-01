@@ -8,8 +8,8 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-01-31T09:16:52.649767");
-            Logging.Info("Avatar IDs.........: 33");
+            Logging.Info("BundleBouncer definitions generated @ 2022-02-01T00:16:02.156631");
+            Logging.Info("Avatar IDs.........: 34");
             Logging.Info("AssetBundle Hashes.: 21");
         }
 
@@ -120,9 +120,16 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
-            else if(digest[0]==123 && digest[1]==85 && digest[2]==60 && digest[3]==225 && digest[4]==63 && digest[5]==37 && digest[6]==177 && digest[7]==232 && digest[8]==171 && digest[9]==180 && digest[10]==69 && digest[11]==124 && digest[12]==22 && digest[13]==61 && digest[14]==54 && digest[15]==120 && digest[16]==5 && digest[17]==66 && digest[18]==242 && digest[19]==216 && digest[20]==216 && digest[21]==20 && digest[22]==87 && digest[23]==80 && digest[24]==57 && digest[25]==247 && digest[26]==255 && digest[27]==250 && digest[28]==148 && digest[29]==149 && digest[30]==49 && digest[31]==181)
+            else if(digest[0]==123)
             {
-                return true;
+                if(digest[1]==11 && digest[2]==198 && digest[3]==77 && digest[4]==95 && digest[5]==18 && digest[6]==183 && digest[7]==183 && digest[8]==33 && digest[9]==90 && digest[10]==179 && digest[11]==225 && digest[12]==21 && digest[13]==141 && digest[14]==131 && digest[15]==8 && digest[16]==153 && digest[17]==43 && digest[18]==73 && digest[19]==112 && digest[20]==60 && digest[21]==91 && digest[22]==7 && digest[23]==57 && digest[24]==255 && digest[25]==172 && digest[26]==29 && digest[27]==221 && digest[28]==128 && digest[29]==173 && digest[30]==113 && digest[31]==18)
+                {
+                    return true;
+                }
+                else if(digest[1]==85 && digest[2]==60 && digest[3]==225 && digest[4]==63 && digest[5]==37 && digest[6]==177 && digest[7]==232 && digest[8]==171 && digest[9]==180 && digest[10]==69 && digest[11]==124 && digest[12]==22 && digest[13]==61 && digest[14]==54 && digest[15]==120 && digest[16]==5 && digest[17]==66 && digest[18]==242 && digest[19]==216 && digest[20]==216 && digest[21]==20 && digest[22]==87 && digest[23]==80 && digest[24]==57 && digest[25]==247 && digest[26]==255 && digest[27]==250 && digest[28]==148 && digest[29]==149 && digest[30]==49 && digest[31]==181)
+                {
+                    return true;
+                }
             }
             else if(digest[0]==138)
             {
