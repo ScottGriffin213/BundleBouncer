@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.6 - In Development
+
+* Bugfixes
+  * Fixed NRE caused by null players joining/leaving.
+  
 ## 1.2.5
 
 * Definitions

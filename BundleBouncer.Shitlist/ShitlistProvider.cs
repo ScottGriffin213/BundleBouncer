@@ -8,9 +8,9 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-02-01T00:16:02.156631");
+            Logging.Info("BundleBouncer definitions generated @ 2022-02-01T18:12:32.954315");
             Logging.Info("Avatar IDs.........: 34");
-            Logging.Info("AssetBundle Hashes.: 21");
+            Logging.Info("AssetBundle Hashes.: 26");
         }
 
         // The following is a bunch of generated if-trees created by putting
@@ -19,7 +19,11 @@ namespace BundleBouncer.Shitlist
         // Mostly the cool factor, though.
         bool IShitListProvider.IsAssetBundleAnAssetBundleCrasher(byte[] digest)
         {
-            if(digest[0]==154 && digest[1]==141 && digest[2]==180 && digest[3]==127 && digest[4]==219 && digest[5]==180 && digest[6]==176 && digest[7]==128 && digest[8]==45 && digest[9]==214 && digest[10]==72 && digest[11]==244 && digest[12]==239 && digest[13]==171 && digest[14]==230 && digest[15]==27 && digest[16]==133 && digest[17]==2 && digest[18]==97 && digest[19]==79 && digest[20]==232 && digest[21]==110 && digest[22]==151 && digest[23]==160 && digest[24]==124 && digest[25]==253 && digest[26]==26 && digest[27]==230 && digest[28]==241 && digest[29]==158 && digest[30]==209 && digest[31]==131)
+            if(digest[0]==128 && digest[1]==7 && digest[2]==83 && digest[3]==105 && digest[4]==9 && digest[5]==58 && digest[6]==209 && digest[7]==215 && digest[8]==108 && digest[9]==159 && digest[10]==195 && digest[11]==153 && digest[12]==128 && digest[13]==61 && digest[14]==208 && digest[15]==229 && digest[16]==211 && digest[17]==109 && digest[18]==152 && digest[19]==107 && digest[20]==239 && digest[21]==208 && digest[22]==116 && digest[23]==181 && digest[24]==143 && digest[25]==234 && digest[26]==112 && digest[27]==248 && digest[28]==33 && digest[29]==89 && digest[30]==37 && digest[31]==95)
+            {
+                return true;
+            }
+            else if(digest[0]==154 && digest[1]==141 && digest[2]==180 && digest[3]==127 && digest[4]==219 && digest[5]==180 && digest[6]==176 && digest[7]==128 && digest[8]==45 && digest[9]==214 && digest[10]==72 && digest[11]==244 && digest[12]==239 && digest[13]==171 && digest[14]==230 && digest[15]==27 && digest[16]==133 && digest[17]==2 && digest[18]==97 && digest[19]==79 && digest[20]==232 && digest[21]==110 && digest[22]==151 && digest[23]==160 && digest[24]==124 && digest[25]==253 && digest[26]==26 && digest[27]==230 && digest[28]==241 && digest[29]==158 && digest[30]==209 && digest[31]==131)
             {
                 return true;
             }
@@ -28,6 +32,14 @@ namespace BundleBouncer.Shitlist
                 return true;
             }
             else if(digest[0]==160 && digest[1]==13 && digest[2]==47 && digest[3]==153 && digest[4]==37 && digest[5]==44 && digest[6]==90 && digest[7]==163 && digest[8]==151 && digest[9]==126 && digest[10]==127 && digest[11]==126 && digest[12]==192 && digest[13]==228 && digest[14]==160 && digest[15]==93 && digest[16]==60 && digest[17]==237 && digest[18]==144 && digest[19]==196 && digest[20]==222 && digest[21]==152 && digest[22]==226 && digest[23]==32 && digest[24]==117 && digest[25]==245 && digest[26]==233 && digest[27]==84 && digest[28]==200 && digest[29]==137 && digest[30]==189 && digest[31]==96)
+            {
+                return true;
+            }
+            else if(digest[0]==181 && digest[1]==233 && digest[2]==247 && digest[3]==61 && digest[4]==95 && digest[5]==5 && digest[6]==34 && digest[7]==7 && digest[8]==51 && digest[9]==67 && digest[10]==34 && digest[11]==253 && digest[12]==192 && digest[13]==238 && digest[14]==183 && digest[15]==182 && digest[16]==159 && digest[17]==173 && digest[18]==9 && digest[19]==242 && digest[20]==248 && digest[21]==231 && digest[22]==224 && digest[23]==164 && digest[24]==205 && digest[25]==211 && digest[26]==83 && digest[27]==134 && digest[28]==32 && digest[29]==179 && digest[30]==99 && digest[31]==194)
+            {
+                return true;
+            }
+            else if(digest[0]==182 && digest[1]==203 && digest[2]==139 && digest[3]==83 && digest[4]==32 && digest[5]==136 && digest[6]==23 && digest[7]==13 && digest[8]==147 && digest[9]==131 && digest[10]==85 && digest[11]==211 && digest[12]==56 && digest[13]==167 && digest[14]==181 && digest[15]==115 && digest[16]==154 && digest[17]==128 && digest[18]==32 && digest[19]==207 && digest[20]==219 && digest[21]==54 && digest[22]==7 && digest[23]==91 && digest[24]==94 && digest[25]==21 && digest[26]==226 && digest[27]==243 && digest[28]==156 && digest[29]==156 && digest[30]==67 && digest[31]==106)
             {
                 return true;
             }
@@ -46,9 +58,16 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
-            else if(digest[0]==200 && digest[1]==94 && digest[2]==8 && digest[3]==177 && digest[4]==182 && digest[5]==220 && digest[6]==237 && digest[7]==28 && digest[8]==251 && digest[9]==228 && digest[10]==176 && digest[11]==114 && digest[12]==125 && digest[13]==190 && digest[14]==227 && digest[15]==168 && digest[16]==122 && digest[17]==218 && digest[18]==91 && digest[19]==79 && digest[20]==251 && digest[21]==130 && digest[22]==18 && digest[23]==85 && digest[24]==25 && digest[25]==75 && digest[26]==61 && digest[27]==65 && digest[28]==55 && digest[29]==139 && digest[30]==97 && digest[31]==132)
+            else if(digest[0]==200)
             {
-                return true;
+                if(digest[1]==5 && digest[2]==36 && digest[3]==217 && digest[4]==192 && digest[5]==219 && digest[6]==135 && digest[7]==129 && digest[8]==223 && digest[9]==215 && digest[10]==82 && digest[11]==112 && digest[12]==144 && digest[13]==192 && digest[14]==153 && digest[15]==15 && digest[16]==23 && digest[17]==184 && digest[18]==28 && digest[19]==244 && digest[20]==4 && digest[21]==135 && digest[22]==224 && digest[23]==136 && digest[24]==63 && digest[25]==110 && digest[26]==130 && digest[27]==86 && digest[28]==160 && digest[29]==16 && digest[30]==12 && digest[31]==9)
+                {
+                    return true;
+                }
+                else if(digest[1]==94 && digest[2]==8 && digest[3]==177 && digest[4]==182 && digest[5]==220 && digest[6]==237 && digest[7]==28 && digest[8]==251 && digest[9]==228 && digest[10]==176 && digest[11]==114 && digest[12]==125 && digest[13]==190 && digest[14]==227 && digest[15]==168 && digest[16]==122 && digest[17]==218 && digest[18]==91 && digest[19]==79 && digest[20]==251 && digest[21]==130 && digest[22]==18 && digest[23]==85 && digest[24]==25 && digest[25]==75 && digest[26]==61 && digest[27]==65 && digest[28]==55 && digest[29]==139 && digest[30]==97 && digest[31]==132)
+                {
+                    return true;
+                }
             }
             else if(digest[0]==201 && digest[1]==211 && digest[2]==11 && digest[3]==197 && digest[4]==242 && digest[5]==184 && digest[6]==111 && digest[7]==57 && digest[8]==120 && digest[9]==137 && digest[10]==158 && digest[11]==155 && digest[12]==174 && digest[13]==6 && digest[14]==22 && digest[15]==127 && digest[16]==101 && digest[17]==174 && digest[18]==177 && digest[19]==60 && digest[20]==177 && digest[21]==33 && digest[22]==153 && digest[23]==117 && digest[24]==227 && digest[25]==157 && digest[26]==129 && digest[27]==134 && digest[28]==135 && digest[29]==199 && digest[30]==183 && digest[31]==106)
             {
@@ -63,6 +82,10 @@ namespace BundleBouncer.Shitlist
                 return true;
             }
             else if(digest[0]==23 && digest[1]==91 && digest[2]==89 && digest[3]==145 && digest[4]==44 && digest[5]==254 && digest[6]==149 && digest[7]==164 && digest[8]==11 && digest[9]==200 && digest[10]==13 && digest[11]==206 && digest[12]==91 && digest[13]==109 && digest[14]==255 && digest[15]==32 && digest[16]==1 && digest[17]==250 && digest[18]==0 && digest[19]==217 && digest[20]==82 && digest[21]==72 && digest[22]==143 && digest[23]==5 && digest[24]==164 && digest[25]==168 && digest[26]==116 && digest[27]==186 && digest[28]==65 && digest[29]==69 && digest[30]==94 && digest[31]==209)
+            {
+                return true;
+            }
+            else if(digest[0]==31 && digest[1]==239 && digest[2]==116 && digest[3]==78 && digest[4]==4 && digest[5]==193 && digest[6]==7 && digest[7]==237 && digest[8]==13 && digest[9]==224 && digest[10]==100 && digest[11]==43 && digest[12]==151 && digest[13]==213 && digest[14]==224 && digest[15]==242 && digest[16]==12 && digest[17]==234 && digest[18]==218 && digest[19]==57 && digest[20]==234 && digest[21]==6 && digest[22]==122 && digest[23]==85 && digest[24]==91 && digest[25]==117 && digest[26]==199 && digest[27]==65 && digest[28]==166 && digest[29]==134 && digest[30]==229 && digest[31]==104)
             {
                 return true;
             }
@@ -113,10 +136,6 @@ namespace BundleBouncer.Shitlist
         bool IShitListProvider.IsAvatarIDAnAssetBundleCrasher(byte[] digest)
         {
             if(digest[0]==100 && digest[1]==147 && digest[2]==108 && digest[3]==93 && digest[4]==106 && digest[5]==104 && digest[6]==243 && digest[7]==91 && digest[8]==253 && digest[9]==127 && digest[10]==35 && digest[11]==188 && digest[12]==104 && digest[13]==72 && digest[14]==129 && digest[15]==121 && digest[16]==140 && digest[17]==240 && digest[18]==250 && digest[19]==11 && digest[20]==148 && digest[21]==162 && digest[22]==23 && digest[23]==132 && digest[24]==158 && digest[25]==36 && digest[26]==11 && digest[27]==111 && digest[28]==131 && digest[29]==236 && digest[30]==96 && digest[31]==107)
-            {
-                return true;
-            }
-            else if(digest[0]==114 && digest[1]==136 && digest[2]==156 && digest[3]==61 && digest[4]==204 && digest[5]==108 && digest[6]==133 && digest[7]==99 && digest[8]==136 && digest[9]==204 && digest[10]==187 && digest[11]==102 && digest[12]==150 && digest[13]==90 && digest[14]==58 && digest[15]==243 && digest[16]==2 && digest[17]==79 && digest[18]==188 && digest[19]==242 && digest[20]==148 && digest[21]==126 && digest[22]==42 && digest[23]==209 && digest[24]==41 && digest[25]==42 && digest[26]==186 && digest[27]==183 && digest[28]==183 && digest[29]==140 && digest[30]==220 && digest[31]==12)
             {
                 return true;
             }
@@ -254,6 +273,10 @@ namespace BundleBouncer.Shitlist
                 return true;
             }
             else if(digest[0]==93 && digest[1]==36 && digest[2]==66 && digest[3]==231 && digest[4]==116 && digest[5]==146 && digest[6]==183 && digest[7]==201 && digest[8]==39 && digest[9]==250 && digest[10]==143 && digest[11]==151 && digest[12]==93 && digest[13]==37 && digest[14]==87 && digest[15]==228 && digest[16]==66 && digest[17]==7 && digest[18]==28 && digest[19]==126 && digest[20]==141 && digest[21]==87 && digest[22]==9 && digest[23]==231 && digest[24]==171 && digest[25]==224 && digest[26]==238 && digest[27]==31 && digest[28]==16 && digest[29]==99 && digest[30]==45 && digest[31]==17)
+            {
+                return true;
+            }
+            else if(digest[0]==97 && digest[1]==151 && digest[2]==176 && digest[3]==156 && digest[4]==69 && digest[5]==82 && digest[6]==234 && digest[7]==226 && digest[8]==117 && digest[9]==140 && digest[10]==7 && digest[11]==38 && digest[12]==74 && digest[13]==147 && digest[14]==121 && digest[15]==81 && digest[16]==9 && digest[17]==70 && digest[18]==90 && digest[19]==113 && digest[20]==13 && digest[21]==40 && digest[22]==16 && digest[23]==130 && digest[24]==125 && digest[25]==176 && digest[26]==190 && digest[27]==253 && digest[28]==212 && digest[29]==23 && digest[30]==189 && digest[31]==79)
             {
                 return true;
             }

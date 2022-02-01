@@ -141,6 +141,11 @@ namespace BundleBouncer
 
         private void NetworkEvents_OnPlayerLeft(Player player)
         {
+            if(player == null)
+            {
+                Logging.Warning("Null player left!");
+                return;
+            }
             string userID = player.field_Private_APIUser_0.id;
             string avID = player.prop_ApiAvatar_0.id;
             if (AvatarUsers.ContainsKey(userID))
@@ -152,6 +157,11 @@ namespace BundleBouncer
 
         private void NetworkEvents_OnPlayerJoined(Player player)
         {
+            if (player == null)
+            {
+                Logging.Warning("Null player joined!");
+                return;
+            }
             if (KnownSkiddies.Contains(player.field_Private_APIUser_0.id))
             {
                 DetectedSkiddies.Add(player);
