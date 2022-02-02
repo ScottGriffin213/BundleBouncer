@@ -8,8 +8,8 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-02-01T18:12:32.954315");
-            Logging.Info("Avatar IDs.........: 34");
+            Logging.Info("BundleBouncer definitions generated @ 2022-02-02T05:50:50.249020");
+            Logging.Info("Avatar IDs.........: 35");
             Logging.Info("AssetBundle Hashes.: 26");
         }
 
@@ -225,9 +225,16 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
-            else if(digest[0]==44 && digest[1]==87 && digest[2]==138 && digest[3]==37 && digest[4]==223 && digest[5]==167 && digest[6]==176 && digest[7]==207 && digest[8]==43 && digest[9]==165 && digest[10]==185 && digest[11]==99 && digest[12]==80 && digest[13]==144 && digest[14]==214 && digest[15]==66 && digest[16]==101 && digest[17]==249 && digest[18]==51 && digest[19]==64 && digest[20]==132 && digest[21]==132 && digest[22]==92 && digest[23]==146 && digest[24]==130 && digest[25]==10 && digest[26]==94 && digest[27]==193 && digest[28]==11 && digest[29]==157 && digest[30]==53 && digest[31]==4)
+            else if(digest[0]==44)
             {
-                return true;
+                if(digest[1]==102 && digest[2]==163 && digest[3]==160 && digest[4]==1 && digest[5]==155 && digest[6]==225 && digest[7]==96 && digest[8]==116 && digest[9]==169 && digest[10]==24 && digest[11]==230 && digest[12]==242 && digest[13]==11 && digest[14]==43 && digest[15]==221 && digest[16]==116 && digest[17]==124 && digest[18]==73 && digest[19]==29 && digest[20]==72 && digest[21]==85 && digest[22]==247 && digest[23]==211 && digest[24]==228 && digest[25]==161 && digest[26]==70 && digest[27]==243 && digest[28]==246 && digest[29]==205 && digest[30]==238 && digest[31]==139)
+                {
+                    return true;
+                }
+                else if(digest[1]==87 && digest[2]==138 && digest[3]==37 && digest[4]==223 && digest[5]==167 && digest[6]==176 && digest[7]==207 && digest[8]==43 && digest[9]==165 && digest[10]==185 && digest[11]==99 && digest[12]==80 && digest[13]==144 && digest[14]==214 && digest[15]==66 && digest[16]==101 && digest[17]==249 && digest[18]==51 && digest[19]==64 && digest[20]==132 && digest[21]==132 && digest[22]==92 && digest[23]==146 && digest[24]==130 && digest[25]==10 && digest[26]==94 && digest[27]==193 && digest[28]==11 && digest[29]==157 && digest[30]==53 && digest[31]==4)
+                {
+                    return true;
+                }
             }
             else if(digest[0]==47 && digest[1]==131 && digest[2]==149 && digest[3]==175 && digest[4]==209 && digest[5]==228 && digest[6]==154 && digest[7]==30 && digest[8]==115 && digest[9]==177 && digest[10]==117 && digest[11]==197 && digest[12]==99 && digest[13]==150 && digest[14]==22 && digest[15]==39 && digest[16]==0 && digest[17]==162 && digest[18]==174 && digest[19]==246 && digest[20]==82 && digest[21]==86 && digest[22]==116 && digest[23]==118 && digest[24]==76 && digest[25]==195 && digest[26]==210 && digest[27]==124 && digest[28]==255 && digest[29]==107 && digest[30]==23 && digest[31]==99)
             {
