@@ -2,8 +2,10 @@
 
 ## 1.2.6 - In Development
 
-* Bugfixes
+* User State Tracking
   * Fixed NRE caused by null players joining/leaving.
+* Shitlist
+  * Fixed some avatar hashes not getting added to the bundle hash check.
   
 ## 1.2.5
 
