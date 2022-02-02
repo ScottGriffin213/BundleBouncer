@@ -8,9 +8,9 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-02-02T16:54:52.582668");
+            Logging.Info("BundleBouncer definitions generated @ 2022-02-02T17:07:41.102753");
             Logging.Info("Avatar IDs.........: 35");
-            Logging.Info("AssetBundle Hashes.: 26");
+            Logging.Info("AssetBundle Hashes.: 51");
         }
 
         // The following is a bunch of generated if-trees created by putting
@@ -19,7 +19,61 @@ namespace BundleBouncer.Shitlist
         // Mostly the cool factor, though.
         bool IShitListProvider.IsAssetBundleAnAssetBundleCrasher(byte[] digest)
         {
-            if(digest[0] == 128 && digest[1] == 7 && digest[2] == 83 && digest[3] == 105 && digest[4] == 9 && digest[5] == 58 && digest[6] == 209 && digest[7] == 215 && digest[8] == 108 && digest[9] == 159 && digest[10] == 195 && digest[11] == 153 && digest[12] == 128 && digest[13] == 61 && digest[14] == 208 && digest[15] == 229 && digest[16] == 211 && digest[17] == 109 && digest[18] == 152 && digest[19] == 107 && digest[20] == 239 && digest[21] == 208 && digest[22] == 116 && digest[23] == 181 && digest[24] == 143 && digest[25] == 234 && digest[26] == 112 && digest[27] == 248 && digest[28] == 33 && digest[29] == 89 && digest[30] == 37 && digest[31] == 95)
+            if(digest[0] == 101 && digest[1] == 71 && digest[2] == 111 && digest[3] == 74 && digest[4] == 117 && digest[5] == 54 && digest[6] == 102 && digest[7] == 117 && digest[8] == 74 && digest[9] == 79 && digest[10] == 82 && digest[11] == 111 && digest[12] == 99 && digest[13] == 72 && digest[14] == 98 && digest[15] == 69 && digest[16] == 71 && digest[17] == 105 && digest[18] == 104 && digest[19] == 78 && digest[20] == 117 && digest[21] == 105 && digest[22] == 86 && digest[23] == 75 && digest[24] == 100 && digest[25] == 108 && digest[26] == 49 && digest[27] == 84 && digest[28] == 77 && digest[29] == 77 && digest[30] == 115 && digest[31] == 89 && digest[32] == 104 && digest[33] == 76 && digest[34] == 70 && digest[35] == 51 && digest[36] == 89 && digest[37] == 50 && digest[38] == 109 && digest[39] == 120 && digest[40] == 49 && digest[41] == 57 && digest[42] == 73 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 104 && digest[1] == 102 && digest[2] == 70 && digest[3] == 115 && digest[4] == 122 && digest[5] == 78 && digest[6] == 98 && digest[7] == 83 && digest[8] == 109 && digest[9] == 68 && digest[10] == 55 && digest[11] == 98 && digest[12] == 48 && digest[13] == 86 && digest[14] == 101 && digest[15] == 90 && digest[16] == 79 && digest[17] == 103 && digest[18] == 103 && digest[19] == 82 && digest[20] == 98 && digest[21] == 53 && digest[22] == 74 && digest[23] == 90 && digest[24] == 101 && digest[25] == 53 && digest[26] == 87 && digest[27] == 52 && digest[28] == 53 && digest[29] == 74 && digest[30] == 110 && digest[31] == 90 && digest[32] == 102 && digest[33] == 55 && digest[34] == 119 && digest[35] == 57 && digest[36] == 52 && digest[37] == 105 && digest[38] == 81 && digest[39] == 108 && digest[40] == 49 && digest[41] == 99 && digest[42] == 89 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 109 && digest[1] == 111 && digest[2] == 50 && digest[3] == 48 && digest[4] == 102 && digest[5] == 57 && digest[6] == 117 && digest[7] == 48 && digest[8] == 115 && digest[9] == 73 && digest[10] == 65 && digest[11] == 116 && digest[12] == 49 && digest[13] == 107 && digest[14] == 106 && digest[15] == 48 && digest[16] == 55 && digest[17] == 54 && digest[18] == 118 && digest[19] == 109 && digest[20] == 71 && digest[21] == 52 && digest[22] == 85 && digest[23] == 67 && digest[24] == 89 && digest[25] == 85 && digest[26] == 47 && digest[27] == 111 && digest[28] == 98 && digest[29] == 112 && digest[30] == 101 && digest[31] == 103 && digest[32] == 102 && digest[33] == 80 && digest[34] == 48 && digest[35] == 97 && digest[36] == 53 && digest[37] == 118 && digest[38] == 71 && digest[39] == 101 && digest[40] == 48 && digest[41] == 89 && digest[42] == 77 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 110)
+            {
+                if(digest[1] == 110 && digest[2] == 79 && digest[3] == 121 && digest[4] == 56 && digest[5] == 75 && digest[6] == 81 && digest[7] == 66 && digest[8] == 47 && digest[9] == 109 && digest[10] == 99 && digest[11] == 74 && digest[12] == 70 && digest[13] == 67 && digest[14] == 75 && digest[15] == 115 && digest[16] == 103 && digest[17] == 122 && digest[18] == 68 && digest[19] == 86 && digest[20] == 69 && digest[21] == 52 && digest[22] == 118 && digest[23] == 71 && digest[24] == 88 && digest[25] == 97 && digest[26] == 56 && digest[27] == 107 && digest[28] == 53 && digest[29] == 68 && digest[30] == 86 && digest[31] == 107 && digest[32] == 109 && digest[33] == 83 && digest[34] == 121 && digest[35] == 89 && digest[36] == 65 && digest[37] == 102 && digest[38] == 110 && digest[39] == 105 && digest[40] == 90 && digest[41] == 120 && digest[42] == 115 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
+                else if(digest[1] == 122 && digest[2] == 102 && digest[3] == 56 && digest[4] == 109 && digest[5] == 71 && digest[6] == 85 && digest[7] == 116 && digest[8] == 112 && digest[9] == 108 && digest[10] == 52 && digest[11] == 109 && digest[12] == 90 && digest[13] == 65 && digest[14] == 87 && digest[15] == 113 && digest[16] == 119 && digest[17] == 81 && digest[18] == 85 && digest[19] == 108 && digest[20] == 80 && digest[21] == 54 && digest[22] == 105 && digest[23] == 86 && digest[24] == 50 && digest[25] == 84 && digest[26] == 69 && digest[27] == 102 && digest[28] == 48 && digest[29] == 48 && digest[30] == 113 && digest[31] == 56 && digest[32] == 104 && digest[33] == 79 && digest[34] == 48 && digest[35] == 66 && digest[36] == 83 && digest[37] == 89 && digest[38] == 54 && digest[39] == 99 && digest[40] == 52 && digest[41] == 111 && digest[42] == 56 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
+            }
+            else if(digest[0] == 111 && digest[1] == 65 && digest[2] == 48 && digest[3] == 118 && digest[4] == 109 && digest[5] == 83 && digest[6] == 85 && digest[7] == 115 && digest[8] == 87 && digest[9] == 113 && digest[10] == 79 && digest[11] == 88 && digest[12] == 102 && digest[13] == 110 && digest[14] == 57 && digest[15] == 43 && digest[16] == 119 && digest[17] == 79 && digest[18] == 83 && digest[19] == 103 && digest[20] == 88 && digest[21] == 84 && digest[22] == 122 && digest[23] == 116 && digest[24] == 107 && digest[25] == 77 && digest[26] == 84 && digest[27] == 101 && digest[28] == 109 && digest[29] == 79 && digest[30] == 73 && digest[31] == 103 && digest[32] == 100 && digest[33] == 102 && digest[34] == 88 && digest[35] == 112 && digest[36] == 86 && digest[37] == 77 && digest[38] == 105 && digest[39] == 74 && digest[40] == 118 && digest[41] == 87 && digest[42] == 65 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 115 && digest[1] == 78 && digest[2] == 118 && digest[3] == 106 && digest[4] == 70 && digest[5] == 68 && digest[6] == 98 && digest[7] == 99 && digest[8] == 109 && digest[9] == 50 && digest[10] == 68 && digest[11] == 115 && digest[12] == 84 && digest[13] == 74 && digest[14] == 70 && digest[15] == 69 && digest[16] == 85 && digest[17] == 51 && digest[18] == 65 && digest[19] == 48 && digest[20] == 73 && digest[21] == 120 && digest[22] == 107 && digest[23] == 100 && digest[24] == 57 && digest[25] == 114 && digest[26] == 83 && digest[27] == 78 && digest[28] == 111 && digest[29] == 77 && digest[30] == 49 && digest[31] == 113 && digest[32] == 70 && digest[33] == 81 && digest[34] == 43 && digest[35] == 71 && digest[36] == 114 && digest[37] == 43 && digest[38] == 56 && digest[39] == 117 && digest[40] == 101 && digest[41] == 43 && digest[42] == 89 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 116 && digest[1] == 101 && digest[2] == 110 && digest[3] == 51 && digest[4] == 80 && digest[5] == 86 && digest[6] == 56 && digest[7] == 70 && digest[8] == 73 && digest[9] == 103 && digest[10] == 99 && digest[11] == 122 && digest[12] == 81 && digest[13] == 121 && digest[14] == 76 && digest[15] == 57 && digest[16] == 119 && digest[17] == 79 && digest[18] == 54 && digest[19] == 51 && digest[20] == 116 && digest[21] == 112 && digest[22] == 43 && digest[23] == 116 && digest[24] == 67 && digest[25] == 102 && digest[26] == 76 && digest[27] == 52 && digest[28] == 53 && digest[29] == 43 && digest[30] == 67 && digest[31] == 107 && digest[32] == 122 && digest[33] == 100 && digest[34] == 78 && digest[35] == 84 && digest[36] == 104 && digest[37] == 105 && digest[38] == 67 && digest[39] == 122 && digest[40] == 89 && digest[41] == 56 && digest[42] == 73 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 118 && digest[1] == 115 && digest[2] == 106 && digest[3] == 75 && digest[4] == 120 && digest[5] == 66 && digest[6] == 81 && digest[7] == 101 && digest[8] == 121 && digest[9] == 79 && digest[10] == 105 && digest[11] == 120 && digest[12] == 121 && digest[13] == 106 && digest[14] == 104 && digest[15] == 56 && digest[16] == 68 && digest[17] == 50 && digest[18] == 121 && digest[19] == 72 && digest[20] == 122 && digest[21] == 72 && digest[22] == 83 && digest[23] == 121 && digest[24] == 87 && digest[25] == 107 && digest[26] == 102 && digest[27] == 111 && digest[28] == 89 && digest[29] == 112 && digest[30] == 104 && digest[31] == 83 && digest[32] == 101 && digest[33] == 83 && digest[34] == 78 && digest[35] == 121 && digest[36] == 71 && digest[37] == 114 && digest[38] == 80 && digest[39] == 107 && digest[40] == 57 && digest[41] == 83 && digest[42] == 103 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 120 && digest[1] == 78 && digest[2] == 75 && digest[3] == 55 && digest[4] == 86 && digest[5] == 87 && digest[6] == 111 && digest[7] == 101 && digest[8] == 88 && digest[9] == 81 && digest[10] == 83 && digest[11] == 106 && digest[12] == 103 && digest[13] == 66 && digest[14] == 86 && digest[15] == 76 && digest[16] == 80 && digest[17] == 109 && digest[18] == 114 && digest[19] == 55 && digest[20] == 57 && digest[21] == 97 && digest[22] == 113 && digest[23] == 99 && digest[24] == 107 && digest[25] == 114 && digest[26] == 105 && digest[27] == 90 && digest[28] == 107 && digest[29] == 57 && digest[30] == 100 && digest[31] == 51 && digest[32] == 113 && digest[33] == 89 && digest[34] == 106 && digest[35] == 53 && digest[36] == 97 && digest[37] == 51 && digest[38] == 109 && digest[39] == 51 && digest[40] == 120 && digest[41] == 55 && digest[42] == 69 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 121)
+            {
+                if(digest[1] == 100 && digest[2] == 77 && digest[3] == 76 && digest[4] == 120 && digest[5] == 102 && digest[6] == 75 && digest[7] == 52 && digest[8] == 98 && digest[9] == 122 && digest[10] == 108 && digest[11] == 52 && digest[12] == 105 && digest[13] == 90 && digest[14] == 54 && digest[15] == 98 && digest[16] == 114 && digest[17] == 103 && digest[18] == 89 && digest[19] == 87 && digest[20] == 102 && digest[21] == 50 && digest[22] == 87 && digest[23] == 117 && digest[24] == 115 && digest[25] == 84 && digest[26] == 121 && digest[27] == 120 && digest[28] == 73 && digest[29] == 90 && digest[30] == 108 && digest[31] == 49 && digest[32] == 52 && digest[33] == 53 && digest[34] == 50 && digest[35] == 66 && digest[36] == 104 && digest[37] == 111 && digest[38] == 102 && digest[39] == 72 && digest[40] == 116 && digest[41] == 50 && digest[42] == 111 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
+                else if(digest[1] == 70 && digest[2] == 52 && digest[3] == 73 && digest[4] == 115 && digest[5] == 98 && digest[6] == 98 && digest[7] == 99 && digest[8] == 55 && digest[9] == 82 && digest[10] == 122 && digest[11] == 55 && digest[12] == 53 && digest[13] == 76 && digest[14] == 66 && digest[15] == 121 && digest[16] == 102 && digest[17] == 98 && digest[18] == 55 && digest[19] == 106 && digest[20] == 113 && digest[21] == 72 && digest[22] == 114 && digest[23] == 97 && digest[24] == 87 && digest[25] == 48 && digest[26] == 47 && digest[27] == 55 && digest[28] == 103 && digest[29] == 104 && digest[30] == 74 && digest[31] == 86 && digest[32] == 71 && digest[33] == 85 && digest[34] == 115 && digest[35] == 57 && digest[36] == 81 && digest[37] == 84 && digest[38] == 101 && digest[39] == 76 && digest[40] == 89 && digest[41] == 89 && digest[42] == 81 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
+            }
+            else if(digest[0] == 128 && digest[1] == 7 && digest[2] == 83 && digest[3] == 105 && digest[4] == 9 && digest[5] == 58 && digest[6] == 209 && digest[7] == 215 && digest[8] == 108 && digest[9] == 159 && digest[10] == 195 && digest[11] == 153 && digest[12] == 128 && digest[13] == 61 && digest[14] == 208 && digest[15] == 229 && digest[16] == 211 && digest[17] == 109 && digest[18] == 152 && digest[19] == 107 && digest[20] == 239 && digest[21] == 208 && digest[22] == 116 && digest[23] == 181 && digest[24] == 143 && digest[25] == 234 && digest[26] == 112 && digest[27] == 248 && digest[28] == 33 && digest[29] == 89 && digest[30] == 37 && digest[31] == 95)
             {
                 return true;
             }
@@ -105,6 +159,14 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
+            else if(digest[0] == 51 && digest[1] == 106 && digest[2] == 120 && digest[3] == 69 && digest[4] == 50 && digest[5] == 116 && digest[6] == 81 && digest[7] == 102 && digest[8] == 98 && digest[9] == 85 && digest[10] == 78 && digest[11] == 104 && digest[12] == 75 && digest[13] == 119 && digest[14] == 79 && digest[15] == 101 && digest[16] == 76 && digest[17] == 87 && digest[18] == 118 && digest[19] == 78 && digest[20] == 119 && digest[21] == 102 && digest[22] == 104 && digest[23] == 54 && digest[24] == 108 && digest[25] == 68 && digest[26] == 66 && digest[27] == 51 && digest[28] == 119 && digest[29] == 118 && digest[30] == 85 && digest[31] == 79 && digest[32] == 115 && digest[33] == 117 && digest[34] == 105 && digest[35] == 76 && digest[36] == 88 && digest[37] == 109 && digest[38] == 115 && digest[39] == 43 && digest[40] == 57 && digest[41] == 47 && digest[42] == 115 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 52 && digest[1] == 73 && digest[2] == 51 && digest[3] == 82 && digest[4] == 117 && digest[5] == 57 && digest[6] == 76 && digest[7] == 80 && digest[8] == 80 && digest[9] == 101 && digest[10] == 90 && digest[11] == 116 && digest[12] == 67 && digest[13] == 102 && digest[14] == 101 && digest[15] == 55 && digest[16] == 108 && digest[17] == 79 && digest[18] == 116 && digest[19] == 80 && digest[20] == 89 && digest[21] == 111 && digest[22] == 107 && digest[23] == 116 && digest[24] == 65 && digest[25] == 52 && digest[26] == 107 && digest[27] == 115 && digest[28] == 88 && digest[29] == 72 && digest[30] == 73 && digest[31] == 73 && digest[32] == 115 && digest[33] == 97 && digest[34] == 119 && digest[35] == 76 && digest[36] == 78 && digest[37] == 119 && digest[38] == 97 && digest[39] == 114 && digest[40] == 81 && digest[41] == 116 && digest[42] == 65 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
             else if(digest[0] == 56 && digest[1] == 123 && digest[2] == 179 && digest[3] == 238 && digest[4] == 40 && digest[5] == 110 && digest[6] == 14 && digest[7] == 255 && digest[8] == 198 && digest[9] == 219 && digest[10] == 30 && digest[11] == 28 && digest[12] == 89 && digest[13] == 177 && digest[14] == 57 && digest[15] == 253 && digest[16] == 101 && digest[17] == 169 && digest[18] == 91 && digest[19] == 150 && digest[20] == 207 && digest[21] == 138 && digest[22] == 148 && digest[23] == 167 && digest[24] == 169 && digest[25] == 68 && digest[26] == 69 && digest[27] == 43 && digest[28] == 172 && digest[29] == 232 && digest[30] == 61 && digest[31] == 35)
             {
                 return true;
@@ -121,13 +183,63 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
-            else if(digest[0] == 81 && digest[1] == 114 && digest[2] == 201 && digest[3] == 12 && digest[4] == 21 && digest[5] == 165 && digest[6] == 76 && digest[7] == 247 && digest[8] == 17 && digest[9] == 5 && digest[10] == 190 && digest[11] == 68 && digest[12] == 212 && digest[13] == 225 && digest[14] == 143 && digest[15] == 128 && digest[16] == 177 && digest[17] == 196 && digest[18] == 207 && digest[19] == 3 && digest[20] == 86 && digest[21] == 249 && digest[22] == 236 && digest[23] == 38 && digest[24] == 241 && digest[25] == 39 && digest[26] == 231 && digest[27] == 8 && digest[28] == 207 && digest[29] == 4 && digest[30] == 200 && digest[31] == 125)
+            else if(digest[0] == 66 && digest[1] == 109 && digest[2] == 120 && digest[3] == 53 && digest[4] == 83 && digest[5] == 69 && digest[6] == 52 && digest[7] == 54 && digest[8] == 86 && digest[9] == 104 && digest[10] == 113 && digest[11] == 98 && digest[12] == 43 && digest[13] == 43 && digest[14] == 48 && digest[15] == 117 && digest[16] == 78 && digest[17] == 43 && digest[18] == 103 && digest[19] == 69 && digest[20] == 107 && digest[21] == 76 && digest[22] == 69 && digest[23] == 116 && digest[24] == 48 && digest[25] == 100 && digest[26] == 108 && digest[27] == 109 && digest[28] == 97 && digest[29] == 67 && digest[30] == 111 && digest[31] == 55 && digest[32] == 71 && digest[33] == 69 && digest[34] == 47 && digest[35] == 106 && digest[36] == 57 && digest[37] == 116 && digest[38] == 120 && digest[39] == 80 && digest[40] == 71 && digest[41] == 88 && digest[42] == 119 && digest[43] == 61 && digest[44] == 10)
             {
                 return true;
+            }
+            else if(digest[0] == 70 && digest[1] == 49 && digest[2] == 116 && digest[3] == 90 && digest[4] == 107 && digest[5] == 83 && digest[6] == 122 && digest[7] == 43 && digest[8] == 108 && digest[9] == 97 && digest[10] == 81 && digest[11] == 76 && digest[12] == 121 && digest[13] == 65 && digest[14] == 51 && digest[15] == 79 && digest[16] == 87 && digest[17] == 50 && digest[18] == 51 && digest[19] == 47 && digest[20] == 73 && digest[21] == 65 && digest[22] == 72 && digest[23] == 54 && digest[24] == 65 && digest[25] == 78 && digest[26] == 108 && digest[27] == 83 && digest[28] == 83 && digest[29] == 73 && digest[30] == 56 && digest[31] == 70 && digest[32] == 112 && digest[33] == 75 && digest[34] == 104 && digest[35] == 48 && digest[36] == 117 && digest[37] == 107 && digest[38] == 70 && digest[39] == 70 && digest[40] == 88 && digest[41] == 116 && digest[42] == 69 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 73 && digest[1] == 85 && digest[2] == 72 && digest[3] == 114 && digest[4] == 52 && digest[5] == 102 && digest[6] == 100 && digest[7] == 76 && digest[8] == 118 && digest[9] == 87 && digest[10] == 114 && digest[11] == 108 && digest[12] == 117 && digest[13] == 110 && digest[14] == 122 && digest[15] == 48 && digest[16] == 114 && digest[17] == 121 && digest[18] == 56 && digest[19] == 85 && digest[20] == 72 && digest[21] == 102 && digest[22] == 115 && digest[23] == 48 && digest[24] == 102 && digest[25] == 53 && digest[26] == 113 && digest[27] == 79 && digest[28] == 111 && digest[29] == 74 && digest[30] == 73 && digest[31] == 47 && digest[32] == 54 && digest[33] == 101 && digest[34] == 112 && digest[35] == 97 && digest[36] == 114 && digest[37] == 110 && digest[38] == 57 && digest[39] == 72 && digest[40] == 113 && digest[41] == 98 && digest[42] == 52 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 75 && digest[1] == 86 && digest[2] == 83 && digest[3] == 88 && digest[4] == 49 && digest[5] == 102 && digest[6] == 54 && digest[7] == 105 && digest[8] == 80 && digest[9] == 48 && digest[10] == 86 && digest[11] == 120 && digest[12] == 55 && digest[13] == 48 && digest[14] == 70 && digest[15] == 48 && digest[16] == 107 && digest[17] == 43 && digest[18] == 69 && digest[19] == 105 && digest[20] == 111 && digest[21] == 112 && digest[22] == 121 && digest[23] == 121 && digest[24] == 74 && digest[25] == 57 && digest[26] == 73 && digest[27] == 74 && digest[28] == 50 && digest[29] == 117 && digest[30] == 87 && digest[31] == 50 && digest[32] == 111 && digest[33] == 111 && digest[34] == 43 && digest[35] == 105 && digest[36] == 47 && digest[37] == 87 && digest[38] == 86 && digest[39] == 78 && digest[40] == 77 && digest[41] == 90 && digest[42] == 77 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 77 && digest[1] == 89 && digest[2] == 114 && digest[3] == 90 && digest[4] == 106 && digest[5] == 122 && digest[6] == 70 && digest[7] == 75 && digest[8] == 112 && digest[9] == 117 && digest[10] == 48 && digest[11] == 48 && digest[12] == 113 && digest[13] == 110 && digest[14] == 51 && digest[15] == 89 && digest[16] == 52 && digest[17] == 68 && digest[18] == 101 && digest[19] == 77 && digest[20] == 97 && digest[21] == 69 && digest[22] == 76 && digest[23] == 81 && digest[24] == 108 && digest[25] == 108 && digest[26] == 99 && digest[27] == 72 && digest[28] == 97 && digest[29] == 119 && digest[30] == 67 && digest[31] == 67 && digest[32] == 97 && digest[33] == 98 && digest[34] == 99 && digest[35] == 101 && digest[36] == 120 && digest[37] == 103 && digest[38] == 57 && digest[39] == 100 && digest[40] == 69 && digest[41] == 116 && digest[42] == 81 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 78 && digest[1] == 112 && digest[2] == 104 && digest[3] == 103 && digest[4] == 88 && digest[5] == 102 && digest[6] == 53 && digest[7] == 74 && digest[8] == 107 && digest[9] == 120 && digest[10] == 83 && digest[11] == 107 && digest[12] == 117 && digest[13] == 81 && digest[14] == 47 && digest[15] == 89 && digest[16] == 65 && digest[17] == 118 && digest[18] == 50 && digest[19] == 109 && digest[20] == 51 && digest[21] == 90 && digest[22] == 107 && digest[23] == 65 && digest[24] == 84 && digest[25] == 55 && digest[26] == 104 && digest[27] == 43 && digest[28] == 50 && digest[29] == 116 && digest[30] == 68 && digest[31] == 118 && digest[32] == 112 && digest[33] == 118 && digest[34] == 116 && digest[35] == 115 && digest[36] == 74 && digest[37] == 54 && digest[38] == 86 && digest[39] == 70 && digest[40] == 76 && digest[41] == 76 && digest[42] == 119 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 79 && digest[1] == 72 && digest[2] == 117 && digest[3] == 122 && digest[4] == 55 && digest[5] == 105 && digest[6] == 104 && digest[7] == 117 && digest[8] == 68 && digest[9] == 118 && digest[10] == 47 && digest[11] == 71 && digest[12] == 50 && digest[13] == 120 && digest[14] == 52 && digest[15] == 99 && digest[16] == 87 && digest[17] == 98 && digest[18] == 69 && digest[19] == 53 && digest[20] == 47 && digest[21] == 87 && digest[22] == 87 && digest[23] == 112 && digest[24] == 87 && digest[25] == 53 && digest[26] == 98 && digest[27] == 80 && digest[28] == 105 && digest[29] == 112 && digest[30] == 83 && digest[31] == 110 && digest[32] == 113 && digest[33] == 85 && digest[34] == 82 && digest[35] == 70 && digest[36] == 75 && digest[37] == 54 && digest[38] == 122 && digest[39] == 111 && digest[40] == 80 && digest[41] == 83 && digest[42] == 77 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 80 && digest[1] == 103 && digest[2] == 111 && digest[3] == 106 && digest[4] == 49 && digest[5] == 53 && digest[6] == 83 && digest[7] == 53 && digest[8] == 66 && digest[9] == 83 && digest[10] == 70 && digest[11] == 120 && digest[12] == 50 && digest[13] == 89 && digest[14] == 114 && digest[15] == 106 && digest[16] == 119 && digest[17] == 118 && digest[18] == 121 && digest[19] == 113 && digest[20] == 122 && digest[21] == 87 && digest[22] == 121 && digest[23] == 48 && digest[24] == 70 && digest[25] == 90 && digest[26] == 51 && digest[27] == 98 && digest[28] == 103 && digest[29] == 86 && digest[30] == 52 && digest[31] == 102 && digest[32] == 97 && digest[33] == 43 && digest[34] == 47 && digest[35] == 68 && digest[36] == 101 && digest[37] == 78 && digest[38] == 77 && digest[39] == 87 && digest[40] == 85 && digest[41] == 79 && digest[42] == 77 && digest[43] == 61 && digest[44] == 10)
+            {
+                return true;
+            }
+            else if(digest[0] == 81)
+            {
+                if(digest[1] == 100 && digest[2] == 121 && digest[3] == 103 && digest[4] == 90 && digest[5] == 115 && digest[6] == 53 && digest[7] == 79 && digest[8] == 111 && digest[9] == 102 && digest[10] == 56 && digest[11] == 73 && digest[12] == 81 && digest[13] == 55 && digest[14] == 72 && digest[15] == 50 && digest[16] == 70 && digest[17] == 84 && digest[18] == 100 && digest[19] == 73 && digest[20] == 119 && digest[21] == 65 && digest[22] == 106 && digest[23] == 75 && digest[24] == 87 && digest[25] == 55 && digest[26] == 54 && digest[27] == 43 && digest[28] == 77 && digest[29] == 76 && digest[30] == 50 && digest[31] == 43 && digest[32] == 76 && digest[33] == 89 && digest[34] == 111 && digest[35] == 80 && digest[36] == 67 && digest[37] == 69 && digest[38] == 108 && digest[39] == 52 && digest[40] == 49 && digest[41] == 65 && digest[42] == 69 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
+                else if(digest[1] == 114 && digest[2] == 201 && digest[3] == 12 && digest[4] == 21 && digest[5] == 165 && digest[6] == 76 && digest[7] == 247 && digest[8] == 17 && digest[9] == 5 && digest[10] == 190 && digest[11] == 68 && digest[12] == 212 && digest[13] == 225 && digest[14] == 143 && digest[15] == 128 && digest[16] == 177 && digest[17] == 196 && digest[18] == 207 && digest[19] == 3 && digest[20] == 86 && digest[21] == 249 && digest[22] == 236 && digest[23] == 38 && digest[24] == 241 && digest[25] == 39 && digest[26] == 231 && digest[27] == 8 && digest[28] == 207 && digest[29] == 4 && digest[30] == 200 && digest[31] == 125)
+                {
+                    return true;
+                }
             }
             else if(digest[0] == 83 && digest[1] == 158 && digest[2] == 57 && digest[3] == 85 && digest[4] == 56 && digest[5] == 130 && digest[6] == 241 && digest[7] == 99 && digest[8] == 144 && digest[9] == 117 && digest[10] == 24 && digest[11] == 184 && digest[12] == 77 && digest[13] == 19 && digest[14] == 119 && digest[15] == 201 && digest[16] == 18 && digest[17] == 83 && digest[18] == 164 && digest[19] == 150 && digest[20] == 214 && digest[21] == 176 && digest[22] == 188 && digest[23] == 168 && digest[24] == 176 && digest[25] == 252 && digest[26] == 202 && digest[27] == 105 && digest[28] == 236 && digest[29] == 51 && digest[30] == 110 && digest[31] == 155)
             {
                 return true;
+            }
+            else if(digest[0] == 85)
+            {
+                if(digest[1] == 53 && digest[2] == 52 && digest[3] == 53 && digest[4] == 86 && digest[5] == 84 && digest[6] == 105 && digest[7] == 67 && digest[8] == 56 && digest[9] == 87 && digest[10] == 79 && digest[11] == 81 && digest[12] == 100 && digest[13] == 82 && digest[14] == 105 && digest[15] == 52 && digest[16] == 84 && digest[17] == 82 && digest[18] == 78 && digest[19] == 51 && digest[20] == 121 && digest[21] == 82 && digest[22] == 74 && digest[23] == 84 && digest[24] == 112 && digest[25] == 74 && digest[26] == 98 && digest[27] == 87 && digest[28] == 115 && digest[29] == 76 && digest[30] == 121 && digest[31] == 111 && digest[32] == 115 && digest[33] == 80 && digest[34] == 122 && digest[35] == 75 && digest[36] == 97 && digest[37] == 101 && digest[38] == 119 && digest[39] == 122 && digest[40] == 98 && digest[41] == 112 && digest[42] == 115 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
+                else if(digest[1] == 88 && digest[2] == 76 && digest[3] == 74 && digest[4] == 68 && digest[5] == 66 && digest[6] == 87 && digest[7] == 108 && digest[8] == 84 && digest[9] == 80 && digest[10] == 99 && digest[11] == 82 && digest[12] == 66 && digest[13] == 98 && digest[14] == 53 && digest[15] == 69 && digest[16] == 49 && digest[17] == 79 && digest[18] == 71 && digest[19] == 80 && digest[20] == 103 && digest[21] == 76 && digest[22] == 72 && digest[23] == 69 && digest[24] == 122 && digest[25] == 119 && digest[26] == 78 && digest[27] == 87 && digest[28] == 43 && digest[29] == 101 && digest[30] == 119 && digest[31] == 109 && digest[32] == 56 && digest[33] == 83 && digest[34] == 102 && digest[35] == 110 && digest[36] == 67 && digest[37] == 77 && digest[38] == 56 && digest[39] == 69 && digest[40] == 121 && digest[41] == 72 && digest[42] == 48 && digest[43] == 61 && digest[44] == 10)
+                {
+                    return true;
+                }
             }
 
             return false;
