@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.2.6 - In Development
+## 1.2.7 - In Development
+
+*Nothing yet!*
+
+## 1.2.6
 
 * Core
   * Standardized more avatar ID detection notifications.
