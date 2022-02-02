@@ -78,7 +78,7 @@ When reporting an issue, please provide the following:
 
 Feature requests are welcome, but are not guaranteed to be added.
 
-Please note that any feature added is NOT your property, but the property of the project. 
+Please note that any feature added is NOT your property, but the property of the project.
 
 ### Shitlist Additions
 

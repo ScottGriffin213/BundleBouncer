@@ -2,9 +2,11 @@
 
 ## 1.2.6 - In Development
 
+* Core
+  * Standardized more avatar ID detection notifications.
 * User State Tracking
   * Fixed NRE caused by null players joining/leaving.
-* Shitlist
+* Definitions
   * Fixed some avatar hashes not getting added to the bundle hash check.
   
 ## 1.2.5

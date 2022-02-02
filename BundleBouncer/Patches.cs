@@ -10,8 +10,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using UnhollowerBaseLib;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -202,8 +200,9 @@ namespace BundleBouncer
             */
             if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsCrasher(__instance.field_Private_String_0))
             {
-                Logging.Gottem($"Crasher blocked: AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0 (avatar ID: {__instance.field_Private_String_0}, URL: {__instance.field_Private_String_1})");
-                BBUI.NotifyUser($"Blocked crasher (see log)");
+                BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetGameObjectGetter", new Dictionary<string, string>(){
+                    {"URL", __instance.field_Private_String_1},
+                });
                 __instance.field_Private_String_0 = BundleBouncer.BLOCKED_AVTR_ID;
                 __instance.field_Private_String_1 = BundleBouncer.BLOCKED_FILE_URL;
             }
@@ -228,8 +227,9 @@ namespace BundleBouncer
             */
             if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsCrasher(__instance.field_Private_String_0))
             {
-                Logging.Gottem($"Crasher blocked: AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0 (avatar ID: {__instance.field_Private_String_0}, URL: {__instance.field_Private_String_1})");
-                BBUI.NotifyUser($"Blocked crasher (see log)");
+                BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetAssetBundleGetter", new Dictionary<string, string>(){
+                    {"URL", __instance.field_Private_String_1},
+                });
                 __instance.field_Private_String_0 = BundleBouncer.BLOCKED_AVTR_ID;
                 __instance.field_Private_String_1 = BundleBouncer.BLOCKED_FILE_URL;
             }
@@ -295,8 +295,10 @@ namespace BundleBouncer
             Logging.Info($"Attempting to download assetbundle (URI: {uri}, Item ID: {itemid}, Version: {version}, Unity: {unityversion}, Category: {category}, Extension: {ext})");
             if (ext == "vrca" && AvatarShitList.IsCrasher(itemid))
             {
-                Logging.Gottem($"Crasher blocked: OnCreateAssetBundleDownload (URI: {uri}, ItemID: {itemid}, version: {version})");
-                BBUI.NotifyUser($"Blocked crasher (see log)");
+                BundleBouncer.NotifyUserOfBlockedAvatar(itemid, "OnCreateAssetBundleDownload", new Dictionary<string, string>(){
+                    {"URI", uri},
+                    {"Version", version.ToString()},
+                });
                 __result = null;
                 return false;
             }
@@ -606,9 +608,6 @@ namespace BundleBouncer
                     BundleBouncer.NotifyUserOfBlockedAvatar(av.id, "AvatarDownloadManager", new Dictionary<string, string> {
                         { "Avatar Name", av.name }
                     });
-                    //Logging.Gottem($"Crasher blocked: {av.id} ({av.name}) -> {av.unityPackageUrl} (OnAttemptAvatarDownload)");
-                    //BBUI.NotifyUser($"Blocked crasher: {av.id} ({av.name})");
-
                     // TODO: Make configurable, or point to big blaring CRASHER avatar?
                     //av.assetUrl = "http://0.0.0.0/doesnt-exist.asset";
                     av.assetUrl = null; // This supposedly returns faster.

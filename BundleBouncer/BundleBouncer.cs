@@ -141,7 +141,7 @@ namespace BundleBouncer
 
         private void NetworkEvents_OnPlayerLeft(Player player)
         {
-            if(player == null)
+            if (player == null)
             {
                 Logging.Warning("Null player left!");
                 return;
@@ -224,7 +224,7 @@ namespace BundleBouncer
                     {
                         wornByCount = $" worn by {av.Users.Count} users";
                     }
-                    foreach(var usrID in av.Users)
+                    foreach (var usrID in av.Users)
                     {
                         AddToSkiddieShitlist(usrID);
                     }
