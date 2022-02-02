@@ -13,6 +13,12 @@
   <a href="https://discord.gg/jt8xppHeQq"><img alt="Discord" src="https://img.shields.io/discord/935695835012952085?style=for-the-badge"></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/ScottGriffin213/BundleBouncer/wiki/FAQ">⚠️FAQ⚠️</a>
+  |
+  <a href="https://github.com/ScottGriffin213/BundleBouncer/wiki/Compiling">Compiling</a>
+</p>
+
 ---
 
 This project is a quick and dirty avatar ID blocker, designed to prevent corrupted assetbundles from crashing your game by preventing them from being downloaded at all, or at the very least blocking them from being loaded.  It currently relies on known avatar IDs and bundle hashes, but we're working on automated detection and reporting.
@@ -48,7 +54,7 @@ The file should look like this when you're done:
 
 ```
 # Any line beginning with # are comments and are ignored by BundleBouncer.
-# NOTE: The avtr_ IDs below are fake and shouldn't exist in real life.
+# NOTE: The avtr_ IDs used in this example are fake and shouldn't exist in real life.
 
 avtr_6c6b51e5-5abe-4534-a223-f4d955770201
 ```
@@ -76,12 +82,12 @@ Please note that any feature added is NOT your property, but the property of the
 
 ### Shitlist Additions
 
-Please send any crasher, lagger, or otherwise malicious avatar IDs to `scgriffin213@outlook.com` (this is not my real email, but will still reach me). **DO NOT REPORT THESE AVATARS TO THE ISSUE LIST ABOVE!**
+Please send any crasher, lagger, or otherwise malicious avatar IDs to scgriffin213@outlook.com (this is not my real email, but will still reach me). **DO NOT REPORT THESE AVATARS TO THE ISSUE LIST ABOVE!**
 
 Include the following:
 
-* Asset ID (avtr_ or file_)
-* SHA256 of assetbundle, if known
+* Asset ID (`avtr_` or `file_`)
+* Assetbundle and/or its SHA256 checksum, if known
 * Avatar Name, if available
 * Pictures, if available
 * Description of malicious behaviour
