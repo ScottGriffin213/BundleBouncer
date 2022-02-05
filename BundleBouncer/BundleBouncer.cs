@@ -33,6 +33,7 @@ namespace BundleBouncer
         public string UserAvatarShitListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
 
+
         internal Patches Patches { get; private set; }
 
         /// <summary>
@@ -128,6 +129,11 @@ namespace BundleBouncer
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
             NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;
+        }
+
+        public override void OnLateUpdate()
+        {
+            Patches.OnLateUpdate();
         }
         private void NetworkEvents_OnInstanceChanged(ApiWorld arg1, ApiWorldInstance arg2)
         {
@@ -243,6 +249,13 @@ namespace BundleBouncer
             BBUI.NotifyUser($"Blocked Avatar{wornByCount}.");
         }
 
+        internal static void NotifyUserOfBlockedBundle(byte[] hash, string source)
+        {
+            var strhash = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Gottem($"Crasher blocked: AssetBundle {strhash} [{source}]");
+            BBUI.NotifyUser($"Blocked AssetBundle.");
+        }
+
         private static void DonAvatarOfShame(Player player)
         {
             if (player is null)
@@ -300,7 +313,7 @@ namespace BundleBouncer
             var needsDL = !File.Exists(SHITLIST_DLL);
             var www = new System.Net.WebClient();
             string remote_hash = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
-            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
+            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(IOTool.SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
             //Logging.Info($"Definitions File Exists: {needsDL}");
             //Logging.Info($"Config - Sync Definitions: {Instance.Config.SyncDefinitions}");
             //Logging.Info($"Remote hash: {remote_hash}");
@@ -317,22 +330,11 @@ namespace BundleBouncer
                 Logging.Info($"Updating to shitlist of hash {remote_hash}...");
                 www.DownloadFile(LATEST_SHITLIST_URL, SHITLIST_DLL);
             }
-            local_hash = String.Concat(SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
+            local_hash = String.Concat(IOTool.SHA256File(SHITLIST_DLL).Select(x => x.ToString("X2")));
             Logging.Info($"Hash of {SHITLIST_DLL} after update checks: {local_hash}");
             Logging.Info("Loading shitlist...");
             var asm = Assembly.LoadFrom(SHITLIST_DLL);
             AvatarShitList.shitListProvider = (IShitListProvider)(asm.GetTypes().Where(x => x.Name == "ShitlistProvider").First().GetConstructor(new Type[0]).Invoke(null));
-        }
-
-        private static byte[] SHA256File(string filename)
-        {
-            using (var sha = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(filename))
-                {
-                    return sha.ComputeHash(stream);
-                }
-            }
         }
 
         internal static void SetUserAvatar(string userid, EAvatarType avType, dynamic avDict)

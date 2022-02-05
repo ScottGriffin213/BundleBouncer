@@ -1,6 +1,7 @@
 ﻿using BundleBouncer.Data;
 using BundleBouncer.Utilities;
 using ExitGames.Client.Photon;
+using HarmonyLib;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using UnhollowerBaseLib;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -56,10 +58,11 @@ namespace BundleBouncer
         private unsafe delegate IntPtr LoadFromMemoryAsync_InternalDelegate(IntPtr binary, uint crc);
         private static LoadFromMemoryAsync_InternalDelegate origLoadFromMemoryAsync_Internal;
 
+        private static Dictionary<string, DateTime> scannedGameObjects = new Dictionary<string, DateTime>();
+
         public Patches(BundleBouncer bundleBouncer)
         {
             bb = bundleBouncer;
-
             unsafe
             {
                 // God I hate pointers.
@@ -82,44 +85,41 @@ namespace BundleBouncer
                     case "LoadFromFile":
                         switch (method.GetParameters().Length)
                         {
-                            case 1: PatchHarmony(method, nameof(OnLoadFromFile_1)); break;
+                            case 1: HarmonyPatchMethod(method, nameof(OnLoadFromFile_1)); break;
                                 //case 2: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_2)); break;
                                 //case 3: StaticHarmony(method, nameof(BundleBouncer.OnLoadFromFile_3)); break;
                         }
                         break;
                     //public static AssetBundle LoadFromFile_Internal(string path, uint crc, ulong offset);
                     case "LoadFromFile_Internal":
-                        PatchHarmony(method, nameof(OnLoadFromFile_Internal));
-                        break;
-                }
-            }
-            foreach (var method in typeof(AssetBundle).GetMethods(BindingFlags.Static | BindingFlags.Public))
-            {
-                switch (method.Name)
-                {
-                    //public static WWW LoadFromCacheOrDownload(string url, Hash128 hash, uint crc)
-                    case "LoadFromCacheOrDownload":
-                        if (HarmonyUtils.MatchParameters(method, new Type[] { typeof(string), typeof(Hash128), typeof(uint) }))
-                        {
-                            PatchHarmony(method, nameof(OnLoadFromCacheOrDownload));
-                        }
+                        HarmonyPatchMethod(method, nameof(OnLoadFromFile_Internal));
                         break;
                 }
             }
 
-            PatchHarmony(typeof(VRCNetworkingClient).GetMethod(nameof(VRCNetworkingClient.OnEvent)), nameof(OnEvent));
+            HarmonyPatchMethod(typeof(VRCNetworkingClient).GetMethod(nameof(VRCNetworkingClient.OnEvent)), nameof(OnEvent));
 
-            PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0)), nameof(OnCreateAssetBundleDownload));
+            // This is the right one, but ML doesn't handle ctors properly ;_;
+            //HarmonyPatchMethod(typeof(UnityWebRequest).GetConstructor(new Type[] { typeof(string), typeof(string) }), nameof(OnUnityWebRequest_CtorStrStr));
+            //HarmonyPatchMethod(typeof(UnityWebRequest).GetConstructor(new Type[] { typeof(string), typeof(string), typeof(DownloadHandler), typeof(UploadHandler) }), prefix: nameof(OnUnityWebRequest_CtorStrStrDHUH));
 
-            PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0)), nameof(OnGetAssetBundleGetter));
-            PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0)), nameof(OnGetGameObjectGetter));
+            // Both of these trigger a mono implement-me assertion.
+            // var tUnityWebRequestAssetBundle = typeof(UnityWebRequestAssetBundle);
+            // var nGetAssetBundle = nameof(UnityWebRequestAssetBundle.GetAssetBundle);
+            // HarmonyPatchMethod(tUnityWebRequestAssetBundle.GetMethod(nGetAssetBundle, new Type[] { typeof(string) }), prefix: nameof(OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_Str));
+            // HarmonyPatchMethod(tUnityWebRequestAssetBundle.GetMethod(nGetAssetBundle, new Type[] { typeof(string), typeof(CachedAssetBundle), typeof(uint) }), prefix: nameof(OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_StrCabUi));
 
-            PatchHarmony(typeof(InterfacePublicAbstractIDisposableAsObAsUnique).GetProperty("prop_AssetBundle_0").GetGetMethod(), postfix: nameof(OnIIDisposableAssetBundleContainer_GetAssetBundle));
+            HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0)), nameof(OnCreateAssetBundleDownload));
+            //PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_0), AccessTools.all), nameof(OnUnknownStringHook1_pre), nameof(OnUnknownStringHook1_post));
+            HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0)), nameof(OnGetAssetBundleGetter));
+            HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0)), nameof(OnGetGameObjectGetter));
 
-            PatchHarmony(typeof(ApiFile).GetMethod(nameof(ApiFile.DownloadFile)), prefix: nameof(OnAPIFileDownloadFile));
+            HarmonyPatchMethod(typeof(InterfacePublicAbstractIDisposableAsObAsUnique).GetProperty("prop_AssetBundle_0").GetGetMethod(), postfix: nameof(OnIIDisposableAssetBundleContainer_GetAssetBundle));
+
+            HarmonyPatchMethod(typeof(ApiFile).GetMethod(nameof(ApiFile.DownloadFile)), prefix: nameof(OnAPIFileDownloadFile));
 
             //private void InternalCreateAssetBundleCached(string url, string name, Hash128 hash, uint crc)
-            PatchHarmony(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.InternalCreateAssetBundleCached), BindingFlags.Public | BindingFlags.Instance),
+            HarmonyPatchMethod(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.InternalCreateAssetBundleCached), BindingFlags.Public | BindingFlags.Instance),
                 prefix: nameof(OnDownloadHandlerAssetBundle_InternalCreateAssetBundleCached));
 
             // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
@@ -136,6 +136,112 @@ namespace BundleBouncer
 
             // AssetBundle.LoadFromStreamAsyncInternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromStreamAsyncInternalDelegate>("UnityEngine.AssetBundle::LoadFromStreamAsyncInternal");
             PatchICall("UnityEngine.AssetBundle::LoadFromStreamAsyncInternal", out origLoadFromStreamAsync_Internal, nameof(OnLoadFromStreamAsync_Internal));
+        }
+
+        private static bool OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_StrCabUi(ref UnityWebRequest __result, string __0, CachedAssetBundle __1, [Optional] uint __2)
+        {
+            var uri = __0;
+            var cab = __1;
+            var crc = __2;
+            Logging.Info($"UnityWebRequestAssetBundle.GetAssetBundle(uri: {uri}, cab: {cab}, crc: {crc})");
+            return true;
+        }
+
+        // public unsafe static UnityWebRequest GetAssetBundle(string uri)
+        private static bool OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_Str(ref UnityWebRequest __result, string __0)
+        {
+            var uri = __0;
+            Logging.Info($"UnityWebRequestAssetBundle.GetAssetBundle(uri: {uri})");
+            return true;
+        }
+
+        private static bool OnUnityWebRequest_Pre_Get_Str(ref UnityWebRequest __result, string __0)
+        {
+            /*
+            Logging.Info($"UnityWebRequest.Get({__0})");
+            // return new UnityWebRequest(uri, "GET", new DownloadHandlerBuffer(), null);
+            __result = new UnityWebRequest(__0, "GET", new InterceptingDownloadHandler(new DownloadHandlerBuffer(), __0, "GET"), null);
+            */
+            return true;
+        }
+
+        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrUiUi(ref UnityWebRequest __result, string __0, uint __1, uint __2)
+        {
+            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1}, {__2})");
+            var uri = __0;
+            var version = __1;
+            var crc = __2;
+            // return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, version, crc), null);
+            return true;
+        }
+
+        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrUi(ref UnityWebRequest __result, string __0, uint __1)
+        {
+            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1})");
+            var uri = __0;
+            var crc = __1;
+            // return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, crc), null);
+            return true;
+        }
+
+        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrHaUi(ref UnityWebRequest __result, string __0, Hash128 __1, uint __2)
+        {
+            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1}, {__2})");
+            var uri = __0;
+            var hash = __1;
+            var crc = __2;
+            // return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, crc), null);
+            return true;
+        }
+
+        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrCabUi(ref UnityWebRequest __result, string __0, CachedAssetBundle __1, uint __2)
+        {
+            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1}, {__2})");
+            var uri = __0;
+            var cachedAssetBundle = __1;
+            var crc = __2;
+            //return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, cachedAssetBundle.name, cachedAssetBundle.hash, crc), null);
+            return true;
+        }
+
+        public void OnLateUpdate()
+        {
+            lock (scannedGameObjects)
+            {
+                foreach (var kvp in new Dictionary<string, DateTime>(scannedGameObjects))
+                {
+                    if (kvp.Value <= DateTime.Now)
+                        scannedGameObjects.Remove(kvp.Key);
+                }
+            }
+        }
+
+        private static bool OnUnityWebRequest_CtorStrStr(ref UnityWebRequest __instance, string __0, string __1)
+        {
+            Logging.Info($"UnityWebRequest({__0}, {__1})");
+            return true;
+        }
+
+        // [17:00:31.550] [BundleBouncer] UnityWebRequest(https://api.vrchat.cloud/api/1/file/file_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/xx/file, GET, UnityEngine.Networking.DownloadHandler, null)
+        const string WANTED_URL_PATTERN = @"^https://[^/]+/api/1/file/([^/]+)/([0-9]+)/file/?";
+        private static bool OnUnityWebRequest_CtorStrStrDHUH(ref UnityWebRequest __instance, string __0, string __1, ref DownloadHandler __2, UploadHandler __3)
+        {
+            string dhType = __2!=null ? __2.GetType().FullName : "null";
+            string uhType = __3!=null ? __3.GetType().FullName : "null";
+            Logging.Info($"UnityWebRequest({__0}, {__1}, {dhType}, {uhType})");
+
+            var url = __0;
+            var method = __1;
+            Match m;
+            if ((m = Regex.Match(url, WANTED_URL_PATTERN)) != null)
+            {
+                if (typeof(InterceptingDownloadHandler) == __2.GetType())
+                    return true;
+                var fileId = m.Groups[1].Value;
+                var fileVersion = int.Parse(m.Groups[2].Value);
+                __instance.downloadHandler = new InterceptingDownloadHandler(__2, url, method);
+            }
+            return true;
         }
 
 
@@ -206,12 +312,42 @@ namespace BundleBouncer
                 __instance.field_Private_String_0 = BundleBouncer.BLOCKED_AVTR_ID;
                 __instance.field_Private_String_1 = BundleBouncer.BLOCKED_FILE_URL;
             }
+            if (ApiFile.TryParseFileIdAndVersionFromFileAPIUrl(__instance.field_Private_String_1, out string fileId, out int fileVersion))
+            {
+                if (!scannedGameObjects.ContainsKey(__instance.field_Private_String_1))
+                {
+                    scannedGameObjects[__instance.field_Private_String_1] = DateTime.Now + new TimeSpan(0, 5, 0);
+                    var bpath = CacheTool.GetCacheDataPath(fileId, fileVersion);
+                    //Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0(): fileID: {fileId}, fileVersion: {fileVersion}, bpath: {bpath}");
+                    if (File.Exists(bpath) && AvatarShitList.IsBundleACrasher(IOTool.SHA256File(bpath)))
+                    {
+                        BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetGameObjectGetter", new Dictionary<string, string>(){
+                        {"URL", __instance.field_Private_String_1},
+                        {"BPath", bpath},
+                    });
+                        __instance.field_Private_String_0 = BundleBouncer.BLOCKED_AVTR_ID;
+                        __instance.field_Private_String_1 = BundleBouncer.BLOCKED_FILE_URL;
+                    }
+                }
+            }
             return true;
         }
 
         private static bool OnIIDisposableAssetBundleContainer_GetAssetBundle()
         {
             // TODO?
+            return true;
+        }
+
+        //public static string Method_Private_Static_String_String_0(string param_0);
+        private static bool OnUnknownStringHook1_pre(ref string __0, ref string __result)
+        {
+            Logging.Info($"OnUnknownStringHook1_pre(__0: {__0}");
+            return true;
+        }
+        private static bool OnUnknownStringHook1_post(ref string __0, ref string __result)
+        {
+            Logging.Info($"OnUnknownStringHook1_post(__0: {__0}, __result: {__result}");
             return true;
         }
 
@@ -441,7 +577,7 @@ namespace BundleBouncer
             return origLoadFromFileAsync_Internal(pathPtr, crc, offset);
         }
 
-        private void PatchHarmony(MethodInfo hookee, string prefix = null, string postfix = null)
+        private void HarmonyPatchMethod(MethodBase hookee, string prefix = null, string postfix = null)
         {
             string sig = mkSigFromMethod(hookee);
             if (prefix != null)
@@ -464,12 +600,12 @@ namespace BundleBouncer
             }
         }
 
-        private void CtorHarmony(MethodInfo hookee, string hooker_postfix)
+        private void CtorHarmony(ConstructorInfo hookee, string hooker_postfix)
         {
             string sig = mkSigFromMethod(hookee);
             try
             {
-                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, null, typeof(Patches).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, postfix: typeof(Patches).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
                 Logging.Info($"Patched {sig} to {hooker_postfix} (.ctor postfix)");
             }
             catch (Exception e)
@@ -479,7 +615,7 @@ namespace BundleBouncer
             }
         }
 
-        private string mkSigFromMethod(MethodInfo method)
+        private string mkSigFromMethod(MethodBase method)
         {
             string psig = String.Join(",", method.GetParameters().Select(x => x.ParameterType.ToString()));
             return $"{method.DeclaringType}.{method.Name}({psig})";
@@ -723,4 +859,6 @@ namespace BundleBouncer
             return true;
         }
     }
+
+
 }
