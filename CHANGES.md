@@ -2,7 +2,8 @@
 
 ## 1.2.7 - In Development
 
-*Nothing yet!*
+* Core
+  * Added avatar whitelist functionality.
 
 ## 1.2.6
 

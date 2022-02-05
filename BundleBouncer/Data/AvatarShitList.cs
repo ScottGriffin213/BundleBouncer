@@ -25,20 +25,18 @@ namespace BundleBouncer.Data
                 return false;
             }
 
+            if (shitListProvider.IsAvatarIDWhitelisted(avID))
+                return false;
+
             if (!avID.StartsWith("avtr_"))
             {
                 // Handles kaj's weird invalid bullshit.
                 // Will probably also trap some very old avs but IDGAF.
-                // FIXME: Whitelist any needed avIDs.
                 return true;
             }
 
             // avIDs of crashers hashed so people can't just pull them from the binary.
-            byte[] avhash;
-            using (SHA256 hash = SHA256Managed.Create())
-            {
-                avhash = hash.ComputeHash(Encoding.UTF8.GetBytes(avID));
-            }
+            byte[] avhash = IOTool.SHA256String(avID);
 
             if (shitListProvider.IsAvatarIDAnAssetBundleCrasher(avhash))
                 return true;

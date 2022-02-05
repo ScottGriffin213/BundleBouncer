@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using UnhollowerBaseLib;
 
 namespace BundleBouncer
@@ -26,6 +27,14 @@ namespace BundleBouncer
                 {
                     return sha256.ComputeHash(stream);
                 }
+            }
+        }
+
+        internal static byte[] SHA256String(string input)
+        {
+            using (SHA256 hash = SHA256Managed.Create())
+            {
+                return hash.ComputeHash(Encoding.UTF8.GetBytes(input));
             }
         }
     }

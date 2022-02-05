@@ -8,9 +8,11 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info("BundleBouncer definitions generated @ 2022-02-05T03:41:32.098079");
-            Logging.Info("Avatar IDs.........: 34");
-            Logging.Info("AssetBundle Hashes.: 49");
+            Logging.Info("BundleBouncer definitions - Generated @ 2022-02-05T07:44:44.557617:");
+            Logging.Info("  Blacklisted Avatar IDs.........: 34");
+            Logging.Info("  Blacklisted AssetBundle Hashes.: 49");
+            Logging.Info("  Whitelisted Avatar IDs.........: 1");
+            Logging.Info("  Whitelisted AssetBundle Hashes.: 0");
         }
 
         // The following is a bunch of generated if-trees created by putting
@@ -381,6 +383,13 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
+
+            return false;
+        }
+
+        bool IShitListProvider.IsAvatarIDWhitelisted(string avID)
+        {
+            return avID[0] == 'd' && avID[1] == 'f' && avID[2] == 'g' && avID[3] == 'd' && avID[4] == 'f' && avID[5] == 'g' && avID[6] == 'd' && avID[7] == 'g' && avID[8] == 'd' && avID[9] == 'f';
 
             return false;
         }

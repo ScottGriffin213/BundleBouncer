@@ -14,11 +14,19 @@ namespace BundleBouncer.Data
         /// <param name="digestOfAvId">SHA256 sum of avatar ID (UTF-8 encoded)</param>
         /// <returns></returns>
         bool IsAvatarIDAnAssetBundleCrasher(byte[] digestOfAvId);
+
         /// <summary>
         /// Returns true if digest of assetbundle is a known crasher.
         /// </summary>
         /// <param name="digest">SHA256 sum of assetbundle</param>
         /// <returns></returns>
         bool IsAssetBundleAnAssetBundleCrasher(byte[] digest);
+
+        /// <summary>
+        /// Is the given avatar ID in a whitelist?
+        /// </summary>
+        /// <param name="avID"></param>
+        /// <returns></returns>
+        bool IsAvatarIDWhitelisted(string avID);
     }
 }
