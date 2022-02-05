@@ -38,7 +38,7 @@ namespace BundleBouncer.Data
             // avIDs of crashers hashed so people can't just pull them from the binary.
             byte[] avhash = IOTool.SHA256String(avID);
 
-            if (shitListProvider.IsAvatarIDAnAssetBundleCrasher(avhash))
+            if (shitListProvider.IsAvatarIDHashBlacklisted(avhash))
                 return true;
 
             // Check against user shitlist
@@ -52,7 +52,7 @@ namespace BundleBouncer.Data
 
         internal static bool IsBundleACrasher(byte[] hash)
         {
-            return shitListProvider.IsAssetBundleAnAssetBundleCrasher(hash);
+            return shitListProvider.IsAssetBundleHashBlacklisted(hash);
         }
     }
 }
