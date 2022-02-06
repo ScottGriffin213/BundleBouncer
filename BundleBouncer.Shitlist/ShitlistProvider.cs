@@ -43,7 +43,7 @@ namespace BundleBouncer.Shitlist
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-06T05:01:19.292565";
+        public const string GENERATED_AT = "2022-02-06T22:50:10.967019";
 
         public const int LEN_BLACKLISTED_AVIDS = 34;
         public const int LEN_WHITELISTED_AVIDS = 1;
@@ -268,7 +268,6 @@ namespace BundleBouncer.Shitlist
                 return true;
             }
 
-
             return false;
 
         }
@@ -421,7 +420,6 @@ namespace BundleBouncer.Shitlist
                 return true;
             }
 
-
             return false;
 
         }
@@ -430,12 +428,10 @@ namespace BundleBouncer.Shitlist
         {
             return a[0] == 'd' && a[1] == 'f' && a[2] == 'g' && a[3] == 'd' && a[4] == 'f' && a[5] == 'g' && a[6] == 'd' && a[7] == 'g' && a[8] == 'd' && a[9] == 'f';
 
-
         }
 
         bool IShitListProvider.IsAssetBundleHashWhitelisted(byte[] a)
         {
-
 
             return false;
 
