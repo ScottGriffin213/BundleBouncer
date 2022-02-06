@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.7 - In Development
+## 1.2.7
 
 * Core
   * Added avatar whitelist functionality.
