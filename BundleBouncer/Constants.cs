@@ -14,6 +14,6 @@ namespace BundleBouncer
         ///<summary>
         /// Used throughout the code.
         ///</summary>
-        public const string VERSION_STRING = "1.2.7";
+        public const string VERSION_STRING = "1.2.8";
     }
 }
