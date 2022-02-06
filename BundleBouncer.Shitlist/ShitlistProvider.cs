@@ -36,14 +36,14 @@ namespace BundleBouncer.Shitlist
     public class ShitlistProvider : IShitListProvider
     {
         public ShitlistProvider() {
-            Logging.Info($"BundleBouncer definitions - Generated @ {GENERATED_AT}:");
+            Logging.Info($"BundleBouncer Definitions - Generated @ {GENERATED_AT}:");
             Logging.Info($"  Blacklisted Avatar IDs.........: {LEN_BLACKLISTED_AVIDS}");
             Logging.Info($"  Whitelisted Avatar IDs.........: {LEN_WHITELISTED_AVIDS}");
             Logging.Info($"  Blacklisted AssetBundle Hashes.: {LEN_BLACKLISTED_HASHES}");
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-06T22:50:10.967019";
+        public const string GENERATED_AT = "2022-02-06T23:32:13.475183";
 
         public const int LEN_BLACKLISTED_AVIDS = 34;
         public const int LEN_WHITELISTED_AVIDS = 1;
@@ -54,6 +54,7 @@ namespace BundleBouncer.Shitlist
         // a bunch of avID SHA256s into a trie (https://en.wikipedia.org/wiki/Trie) and optimizing it.
         // Why?  Because I wanted to. Also offers some level of obfuscation.
         // Mostly the cool factor, though.
+
         bool IShitListProvider.IsAssetBundleHashBlacklisted(byte[] a)
         {
             if (a[0] == 6 && a[1] == 108 && a[2] == 121 && a[3] == 72 && a[4] == 78 && a[5] == 58 && a[6] == 86 && a[7] == 26 && a[8] == 155 && a[9] == 251 && a[10] == 237 && a[11] == 46 && a[12] == 55 && a[13] == 232 && a[14] == 4 && a[15] == 144 && a[16] == 177 && a[17] == 45 && a[18] == 209 && a[19] == 217 && a[20] == 102 && a[21] == 104 && a[22] == 42 && a[23] == 59 && a[24] == 24 && a[25] == 79 && a[26] == 227 && a[27] == 246 && a[28] == 220 && a[29] == 79 && a[30] == 25 && a[31] == 124)
@@ -267,9 +268,12 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
-
             return false;
+        }
 
+        bool IShitListProvider.IsAssetBundleHashWhitelisted(byte[] a)
+        {
+            return false;
         }
 
         bool IShitListProvider.IsAvatarIDHashBlacklisted(byte[] a)
@@ -419,22 +423,13 @@ namespace BundleBouncer.Shitlist
             {
                 return true;
             }
-
             return false;
-
         }
 
         bool IShitListProvider.IsAvatarIDWhitelisted(string a)
         {
             return a[0] == 'd' && a[1] == 'f' && a[2] == 'g' && a[3] == 'd' && a[4] == 'f' && a[5] == 'g' && a[6] == 'd' && a[7] == 'g' && a[8] == 'd' && a[9] == 'f';
-
         }
 
-        bool IShitListProvider.IsAssetBundleHashWhitelisted(byte[] a)
-        {
-
-            return false;
-
-        }
     }
 }
