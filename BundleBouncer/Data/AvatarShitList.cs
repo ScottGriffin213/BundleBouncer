@@ -8,13 +8,16 @@ namespace BundleBouncer.Data
 {
     public class AvatarShitList
     {
-        // Loaded from UserData/BundleBouncer/Avatars.txt in BundleBouncer.OnApplicationStart()
-        public static HashSet<string> UserShitList;
+        // Loaded from UserData/BundleBouncer/My-Blocked-Avatars.txt in BundleBouncer.OnApplicationStart()
+        public static HashSet<string> UserAvatarShitList;
+
+        // Loaded from UserData/BundleBouncer/My-Allowed-Avatars.txt in BundleBouncer.OnApplicationStart()
+        public static HashSet<string> UserAvatarAllowList;
 
         // Loaded from Dependencies/BundleBouncer.Shitlist.dll
         public static IShitListProvider shitListProvider;
 
-        public static bool IsCrasher(string avID)
+        public static bool IsAvatarIDBlocked(string avID)
         {
             // No fun allowed.
             avID = avID.ToLowerInvariant();
@@ -24,8 +27,13 @@ namespace BundleBouncer.Data
                 // Local test avatar, bypasses rules.
                 return false;
             }
-
+            
+            // Check against global whitelist.
             if (shitListProvider.IsAvatarIDWhitelisted(avID))
+                return false;
+
+            // Check against user whitelist.
+            if (UserAvatarAllowList.Contains(avID))
                 return false;
 
             if (!avID.StartsWith("avtr_"))
@@ -42,7 +50,7 @@ namespace BundleBouncer.Data
                 return true;
 
             // Check against user shitlist
-            if (UserShitList.Contains(avID))
+            if (UserAvatarShitList.Contains(avID))
                 return true;
 
             return false;
@@ -50,8 +58,12 @@ namespace BundleBouncer.Data
 
 
 
-        internal static bool IsBundleACrasher(byte[] hash)
+        internal static bool IsAssetBundleHashBlocked(byte[] hash)
         {
+            // Check against global whitelist.  Shouldn't be needed until we start checking shit with YARA/AssetUtils...
+            if (shitListProvider.IsAssetBundleHashWhitelisted(hash))
+                return false;
+
             return shitListProvider.IsAssetBundleHashBlacklisted(hash);
         }
     }

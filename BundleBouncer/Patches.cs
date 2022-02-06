@@ -304,7 +304,7 @@ namespace BundleBouncer
                 Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0(): fileID: {fileId}, fileVersion: {fileVersion}");
             }
             */
-            if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsCrasher(__instance.field_Private_String_0))
+            if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsAvatarIDBlocked(__instance.field_Private_String_0))
             {
                 BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetGameObjectGetter", new Dictionary<string, string>(){
                     {"URL", __instance.field_Private_String_1},
@@ -319,7 +319,7 @@ namespace BundleBouncer
                     scannedGameObjects[__instance.field_Private_String_1] = DateTime.Now + new TimeSpan(0, 5, 0);
                     var bpath = CacheTool.GetCacheDataPath(fileId, fileVersion);
                     //Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0(): fileID: {fileId}, fileVersion: {fileVersion}, bpath: {bpath}");
-                    if (File.Exists(bpath) && AvatarShitList.IsBundleACrasher(IOTool.SHA256File(bpath)))
+                    if (File.Exists(bpath) && AvatarShitList.IsAssetBundleHashBlocked(IOTool.SHA256File(bpath)))
                     {
                         BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetGameObjectGetter", new Dictionary<string, string>(){
                         {"URL", __instance.field_Private_String_1},
@@ -361,7 +361,7 @@ namespace BundleBouncer
                 Logging.Info($"AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0(): fileID: {fileId}, fileVersion: {fileVersion}");
             }
             */
-            if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsCrasher(__instance.field_Private_String_0))
+            if (__instance.field_Private_ContentType_0 == ContentType.Avatar && AvatarShitList.IsAvatarIDBlocked(__instance.field_Private_String_0))
             {
                 BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetAssetBundleGetter", new Dictionary<string, string>(){
                     {"URL", __instance.field_Private_String_1},
@@ -402,7 +402,7 @@ namespace BundleBouncer
                 }
                 string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
                 Logging.Info($"Attempting to process ApiFile.DownloadFile onSuccess: (URL: {url}, Hash: {hashstr})");
-                if (AvatarShitList.IsBundleACrasher(hash))
+                if (AvatarShitList.IsAssetBundleHashBlocked(hash))
                 {
                     Logging.Gottem($"Crasher blocked: ApiFile.DownloadFile onSuccess (URL: {url}, Hash: {hashstr})");
                     BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -429,7 +429,7 @@ namespace BundleBouncer
             string ext = __5;
             //Logging.Info($"AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0({uri}, {itemid}, {version}, {unityversion}, {category}, {ext})");
             Logging.Info($"Attempting to download assetbundle (URI: {uri}, Item ID: {itemid}, Version: {version}, Unity: {unityversion}, Category: {category}, Extension: {ext})");
-            if (ext == "vrca" && AvatarShitList.IsCrasher(itemid))
+            if (ext == "vrca" && AvatarShitList.IsAvatarIDBlocked(itemid))
             {
                 BundleBouncer.NotifyUserOfBlockedAvatar(itemid, "OnCreateAssetBundleDownload", new Dictionary<string, string>(){
                     {"URI", uri},
@@ -462,7 +462,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load memory-resident assetbundle (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromMemory_Internal...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: (memory-resident) (CRC: {crc}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -486,7 +486,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load memory-resident assetbundle (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromMemoryAsync_Internal...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: (memory-resident) (CRC: {crc}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -514,7 +514,7 @@ namespace BundleBouncer
             stream.Position = prevPos;
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle from stream (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromStream_Internal...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: (stream) (CRC: {crc}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -542,7 +542,7 @@ namespace BundleBouncer
             stream.Position = prevPos;
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle from stream (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromStreamAsync_Internal...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: (stream) (CRC: {crc}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -567,7 +567,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromMemory_Internal...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -638,7 +638,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (SHA256: {hashstr}) via AssetBundle.LoadFromFile(string)...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -665,7 +665,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -693,7 +693,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -721,7 +721,7 @@ namespace BundleBouncer
             }
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile_Internal...");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
@@ -739,7 +739,7 @@ namespace BundleBouncer
             {
                 var av = AttemptAvatarDownloadContext.apiAvatar;
                 Logging.Info($"Attempting to download avatar {av.id} ({av.name}) via AssetBundleDownloadManager...");
-                if (AvatarShitList.IsCrasher(av.id))
+                if (AvatarShitList.IsAvatarIDBlocked(av.id))
                 {
                     BundleBouncer.NotifyUserOfBlockedAvatar(av.id, "AvatarDownloadManager", new Dictionary<string, string> {
                         { "Avatar Name", av.name }
@@ -848,7 +848,7 @@ namespace BundleBouncer
             string avName = avdata["name"];
             string fbstr = is_fallback ? "fallback" : "main";
             Logging.Info($"User changed {fbstr} avatar to {avID} ({avName}; via E{code})...");
-            if (AvatarShitList.IsCrasher(avID))
+            if (AvatarShitList.IsAvatarIDBlocked(avID))
             {
                 BundleBouncer.NotifyUserOfBlockedAvatar(avID, $"Photon Event {code}", new Dictionary<string, string> {
                     {"Avatar Name", avName },

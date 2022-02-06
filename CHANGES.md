@@ -5,6 +5,7 @@
 * Core
   * Added avatar whitelist functionality.
   * Added assetbundle hash whitelist functionality.
+  * Added user avatar ID whitelist to bypass automatic tests.
 
 ## 1.2.6
 

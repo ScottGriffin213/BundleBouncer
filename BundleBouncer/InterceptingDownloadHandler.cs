@@ -30,7 +30,7 @@ namespace BundleBouncer
                 var rcvdata = downloadHandler.data;
                 var hash = IOTool.SHA256Data(rcvdata);
                 Logging.Info($"Intercepted DownloadHandler.data call. Result: {rcvdata.Length}B");
-                if (AvatarShitList.IsBundleACrasher(hash))
+                if (AvatarShitList.IsAssetBundleHashBlocked(hash))
                 {
                     BundleBouncer.NotifyUserOfBlockedBundle(hash, "InterceptingDownloadHandler");
                     return null;
@@ -44,7 +44,7 @@ namespace BundleBouncer
             var rcvdata = downloadHandler.GetData();
             var hash = IOTool.SHA256Data(rcvdata);
             Logging.Info($"Intercepted DownloadHandler.data call. Result: {rcvdata.Length}B");
-            if (AvatarShitList.IsBundleACrasher(hash))
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 BundleBouncer.NotifyUserOfBlockedBundle(hash, "InterceptingDownloadHandler");
                 return null;

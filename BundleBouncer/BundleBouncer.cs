@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using UnityEngine;
 using VRC;
 using VRC.Core;
@@ -30,7 +29,8 @@ namespace BundleBouncer
         public string UserDataDir { get { return Path.Combine("UserData", "BundleBouncer"); } }
         public string LogDir { get { return Path.Combine(UserDataDir, "Logs"); } }
         public string OldShitListFile { get { return Path.Combine(UserDataDir, "Avatars.txt"); } }
-        public string UserAvatarShitListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
+        public string UserAvatarBlockListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
+        public string UserAvatarAllowListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Avatars.txt"); } }
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
 
 
@@ -51,8 +51,6 @@ namespace BundleBouncer
         /// </summary>
         private static Dictionary<string, AvatarInfo> Avatars = new Dictionary<string, AvatarInfo>();
         private static Dictionary<string, UserAvatars> AvatarUsers = new Dictionary<string, UserAvatars>();
-
-        //public static string AvatarOfShameURL = ""; // TODO: Make one
 
         // Red ESP pill
         static HighlightsFXStandalone shitterHighlighter;
@@ -84,21 +82,27 @@ namespace BundleBouncer
 
             if (File.Exists(OldShitListFile))
             {
-                if (File.Exists(UserAvatarShitListFile))
+                if (File.Exists(UserAvatarBlockListFile))
                 {
-                    Logging.Warning($"Both the new ({UserAvatarShitListFile}) and old ({OldShitListFile}) avatar blacklists are present.  Merge them and get rid of the old one.");
+                    Logging.Warning($"Both the new ({UserAvatarBlockListFile}) and old ({OldShitListFile}) avatar blacklists are present.  Merge them and get rid of the old one.");
                 }
                 else
                 {
-                    Logging.Warning($"Moving {OldShitListFile} to {UserAvatarShitListFile}...");
-                    File.Move(OldShitListFile, UserAvatarShitListFile);
+                    Logging.Warning($"Moving {OldShitListFile} to {UserAvatarBlockListFile}...");
+                    File.Move(OldShitListFile, UserAvatarBlockListFile);
                 }
             }
 
-            if (!File.Exists(UserAvatarShitListFile))
+            if (!File.Exists(UserAvatarBlockListFile))
             {
-                File.WriteAllLines(UserAvatarShitListFile, new string[] { "# Add avatar IDs below this line, but without the #.", "" });
-                Logging.Info($"Created {UserAvatarShitListFile}");
+                File.WriteAllLines(UserAvatarBlockListFile, new string[] { "# Add avatar IDs below this line, but without the #.", "" });
+                Logging.Info($"Created {UserAvatarBlockListFile}");
+            }
+
+            if (!File.Exists(UserAvatarAllowListFile))
+            {
+                File.WriteAllLines(UserAvatarAllowListFile, new string[] { "# Add avatar IDs below this line, but without the #.", "" });
+                Logging.Info($"Created {UserAvatarAllowListFile}");
             }
 
             if (!File.Exists(PlayerShitlistFile))
@@ -109,16 +113,22 @@ namespace BundleBouncer
 
             SyncShitlistDLL();
 
-            LoadPlayerShitlist();
+            LoadPlayerShitlists();
             if (KnownSkiddies.Count > 0)
             {
                 Logging.Info($"Loaded {KnownSkiddies.Count} entries from {PlayerShitlistFile}");
             }
 
-            AvatarShitList.UserShitList = File.ReadAllLines(UserAvatarShitListFile).Select(x => x.Trim().ToLowerInvariant()).Where(x => x != "" && !x.StartsWith("#")).ToHashSet();
-            if (AvatarShitList.UserShitList.Count > 0)
+            AvatarShitList.UserAvatarShitList = File.ReadAllLines(UserAvatarBlockListFile).Select(x => x.Trim().ToLowerInvariant()).Where(x => x != "" && !x.StartsWith("#")).ToHashSet();
+            if (AvatarShitList.UserAvatarShitList.Count > 0)
             {
-                Logging.Info($"Loaded {AvatarShitList.UserShitList.Count} entries from {UserAvatarShitListFile}");
+                Logging.Info($"Loaded {AvatarShitList.UserAvatarShitList.Count} entries from {UserAvatarBlockListFile}");
+            }
+
+            AvatarShitList.UserAvatarAllowList = File.ReadAllLines(UserAvatarAllowListFile).Select(x => x.Trim().ToLowerInvariant()).Where(x => x != "" && !x.StartsWith("#")).ToHashSet();
+            if (AvatarShitList.UserAvatarAllowList.Count > 0)
+            {
+                Logging.Info($"Loaded {AvatarShitList.UserAvatarAllowList.Count} entries from {UserAvatarAllowListFile}");
             }
 
 
@@ -172,7 +182,8 @@ namespace BundleBouncer
             {
                 DetectedSkiddies.Add(player);
                 DonAvatarOfShame(player);
-                BBUI.NotifyUser($"Known malicious user {player.field_Private_APIUser_0.displayName} has joined.");
+                Logging.Gottem($"Malicious user {player.field_Private_APIUser_0.displayName} has joined.");
+                BBUI.NotifyUser($"Malicious user {player.field_Private_APIUser_0.displayName} has joined.");
             }
             else
             {
@@ -210,7 +221,7 @@ namespace BundleBouncer
             File.WriteAllText(Instance.PlayerShitlistFile, JsonConvert.SerializeObject(KnownSkiddies));
         }
 
-        private static void LoadPlayerShitlist()
+        private static void LoadPlayerShitlists()
         {
             KnownSkiddies = JsonConvert.DeserializeObject<HashSet<string>>(File.ReadAllText(Instance.PlayerShitlistFile));
         }
