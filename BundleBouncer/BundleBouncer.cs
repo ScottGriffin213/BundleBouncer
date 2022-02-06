@@ -2,6 +2,7 @@
 using BundleBouncer.Utilities;
 using MelonLoader;
 using Newtonsoft.Json;
+using Semver;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,6 +56,8 @@ namespace BundleBouncer
         // Red ESP pill
         static HighlightsFXStandalone shitterHighlighter;
 
+        private SemVersion MinimumMLVersion = new SemVersion(0, 5, 3);
+
         public static string SHITLIST_DLL { get; private set; }
         public const string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
         public const string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
@@ -64,6 +67,14 @@ namespace BundleBouncer
         public override void OnApplicationStart()
         {
             Logging.LI = LoggerInstance;
+
+            // Idiot checks
+            if(new Semver.SemVersion(new Version(MelonLoader.BuildInfo.Version)) < MinimumMLVersion)
+            {
+                Logging.Error($"You are using MelonLoader {MelonLoader.BuildInfo.Version}, which has problems with BundleBouncer.  Please update.");
+                return;
+            }
+
             this.Config = new Config();
 
             Instance = this;
