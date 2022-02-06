@@ -201,6 +201,8 @@ namespace BundleBouncer
 
             // Save
             SavePlayerShitlist();
+
+            Logging.Info($"User {usrID} added to your user shitlist.");
         }
 
         private static void SavePlayerShitlist()
