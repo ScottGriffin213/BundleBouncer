@@ -15,7 +15,7 @@ namespace BundleBouncer.Shitlist
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-06T00:57:48.518887";
+        public const string GENERATED_AT = "2022-02-06T01:04:24.348223";
 
         public const int LEN_BLACKLISTED_AVIDS = 34;
         public const int LEN_WHITELISTED_AVIDS = 1;
@@ -398,9 +398,10 @@ namespace BundleBouncer.Shitlist
 
         }
 
-        bool IShitListProvider.IsAvatarIDWhitelisted(string avID)
+        bool IShitListProvider.IsAvatarIDWhitelisted(string a)
         {
-return avID[0] == 'd' && avID[1] == 'f' && avID[2] == 'g' && avID[3] == 'd' && avID[4] == 'f' && avID[5] == 'g' && avID[6] == 'd' && avID[7] == 'g' && avID[8] == 'd' && avID[9] == 'f';
+            return a[0] == 'd' && a[1] == 'f' && a[2] == 'g' && a[3] == 'd' && a[4] == 'f' && a[5] == 'g' && a[6] == 'd' && a[7] == 'g' && a[8] == 'd' && a[9] == 'f';
+
 
         }
 
