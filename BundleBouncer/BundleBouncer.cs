@@ -69,7 +69,8 @@ namespace BundleBouncer
             Logging.LI = LoggerInstance;
 
             // Idiot checks
-            if(new Semver.SemVersion(new Version(MelonLoader.BuildInfo.Version)) < MinimumMLVersion)
+            var chunks = MelonLoader.BuildInfo.Version.Split('.').Select(x=>int.Parse(x)).ToArray();
+            if (new Semver.SemVersion(chunks[0], chunks[1], chunks[2]) < MinimumMLVersion)
             {
                 Logging.Error($"You are using MelonLoader {MelonLoader.BuildInfo.Version}, which has problems with BundleBouncer.  Please update.");
                 return;
