@@ -1,12 +1,38 @@
-﻿using BundleBouncer.Data;
+﻿/**
+ * BundleBouncer Detours and Patches
+ * 
+ * Copyright (c) 2022 BundleBouncer Contributors
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+using BundleBouncer.Data;
 using BundleBouncer.Utilities;
 using ExitGames.Client.Photon;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -135,7 +161,132 @@ namespace BundleBouncer
 
             // AssetBundle.LoadFromStreamAsyncInternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromStreamAsyncInternalDelegate>("UnityEngine.AssetBundle::LoadFromStreamAsyncInternal");
             PatchICall("UnityEngine.AssetBundle::LoadFromStreamAsyncInternal", out origLoadFromStreamAsync_Internal, nameof(OnLoadFromStreamAsync_Internal));
+
+            var mods = Process.GetCurrentProcess().Modules.Cast<ProcessModule>();
+            var modUnityPlayer = mods.Where(x => x.ModuleName.Equals("UnityPlayer.dll")).First();
+            unsafe
+            {
+                UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_BASICSTRING_CHAR_CSTR, out UnityCoreUtils.origNATIVECoreBasicString_CStr);
+
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILE, OnUnityPlayer_LoadFromFile_NATIVE, out origNATIVELoadFromFile);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILEASYNC, OnUnityPlayer_LoadFromFileAsync_NATIVE, out origNATIVELoadFromFileAsync);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMMEMORY, OnUnityPlayer_LoadFromMemory_NATIVE, out origNATIVELoadFromMemory);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool, out origNATIVEInitAssetBundleStorageFSEUlongBool);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong, out origNATIVEInitAssetBundleStorageStrUlong);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATE, OnDownloadHandlerAssetBundle_Create, out origNATIVEDownloadHandlerAssetBundle_Create);
+                
+            }
         }
+
+        private static unsafe void UsingFunctionInModule<T>(ProcessModule module, int offset, out T delegateField) where T : MulticastDelegate
+        {
+            Logging.Info($"Attaching to {module.ModuleName} + 0x{offset:X8}");
+            delegateField = null;
+            if (offset == 0)
+                return;
+            var ptr = module.BaseAddress + offset;
+            delegateField = Marshal.GetDelegateForFunctionPointer<T>(ptr);
+        }
+
+        // Roughly based off of Knah's code: https://github.com/knah/VRCMods/blob/9ad060a8aa05c1454696f2625ad6a857fec1fed6/AdvancedSafety/ReaderPatches.cs#L84
+        private static unsafe void PatchModule<T>(ProcessModule module, int offset, T patchDelegate, out T delegateField) where T : MulticastDelegate
+        {
+            Logging.Info($"Patching {module.ModuleName} + 0x{offset:X8}");
+            delegateField = null;
+            if (offset == 0)
+                return;
+            var ptr = module.BaseAddress + offset;
+            MelonUtils.NativeHookAttach((IntPtr)(&ptr), Marshal.GetFunctionPointerForDelegate(patchDelegate));
+            delegateField = Marshal.GetDelegateForFunctionPointer<T>(ptr);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void OnUnityPlayer_LoadFromFile_Delegate(IntPtr a1, IntPtr filenamePtr, int a3, uint crc);
+        private static OnUnityPlayer_LoadFromFile_Delegate origNATIVELoadFromFile;
+        private static unsafe void OnUnityPlayer_LoadFromFile_NATIVE(IntPtr a1, IntPtr filenamePtr, int a3, uint crc)
+        {
+            string filename = UnityCoreUtils.CoreBasicString2String(filenamePtr);
+            Logging.Info($"UnityPlayer::LoadFromFile - {filename}");
+            origNATIVELoadFromFile(a1, filenamePtr, a3, crc);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void OnUnityPlayer_LoadFromFileAsync_Delegate(IntPtr a1, IntPtr filenamePtr, int a3, uint crc);
+        private static OnUnityPlayer_LoadFromFileAsync_Delegate origNATIVELoadFromFileAsync;
+        private static unsafe void OnUnityPlayer_LoadFromFileAsync_NATIVE(IntPtr a1, IntPtr filenamePtr, int a3, uint crc)
+        {
+            string filename = UnityCoreUtils.CoreBasicString2String(filenamePtr);
+            Logging.Info($"UnityPlayer::LoadFromFileAsync - {filename}");
+            origNATIVELoadFromFileAsync(a1, filenamePtr, a3, crc);
+        }
+
+        /* Not really useful, but interesting.
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool_Delegate(IntPtr @this, IntPtr fse, ulong a2, bool a3);
+        private static OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool_Delegate origNATIVEInitAssetBundleStorageFSEUlongBool;
+        private static unsafe void OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool(IntPtr @this, IntPtr fse, ulong a2, bool a3)
+        {
+            Logging.Info($"UnityPlayer::AssetBundleLoadFromAsyncOperation::InitializeAssetBundleStorage(FSE, {a2}, {a3})");
+            origNATIVEInitAssetBundleStorageFSEUlongBool(@this, fse, a2, a3);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong_Delegate(IntPtr @this, IntPtr a1, bool a2);
+        private static OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong_Delegate origNATIVEInitAssetBundleStorageStrUlong;
+        private static unsafe IntPtr OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong(IntPtr @this, IntPtr a1, bool a2)
+        {
+            string filename = UnityCoreUtils.CoreBasicString2String(a1);
+            Logging.Info($"UnityPlayer::AssetBundleLoadFromAsyncOperation::InitializeAssetBundleStorage({filename}, {a2})");
+            return origNATIVEInitAssetBundleStorageStrUlong(@this, a1, a2);
+        }
+        */
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr OnDownloadHandlerAssetBundle_CreateCached_Delegate(IntPtr scriptingObjectPtr, IntPtr urlPtr, IntPtr keyPtr, Hash128 hash, uint crc);
+        private static OnDownloadHandlerAssetBundle_CreateCached_Delegate origNATIVEDownloadHandlerAssetBundle_CreateCached;
+        private static unsafe IntPtr OnDownloadHandlerAssetBundle_CreateCached(IntPtr scriptingObjectPtr, IntPtr urlPtr, IntPtr keyPtr, Hash128 hash, uint crc)
+        {
+            string url = UnityCoreUtils.CoreBasicString2String(urlPtr);
+            string key = UnityCoreUtils.CoreBasicString2String(keyPtr);
+            Logging.Info($"UnityPlayer::DownloadHandlerAssetBundle::CreateCached(sop, {url}, {key}, {hash}, {crc})");
+            var cachedObjPath = CacheTool.GetRawCacheDataPath(key, hash);
+            if(!File.Exists(cachedObjPath))
+            {
+                Logging.Info("Downloading...");
+                //return origNATIVEDownloadHandlerVFS_Create(scriptingObjectPtr, urlPtr, False)
+                // I have no idea how to wrap or create a SOP without jumping through 50 hoops.  This is what you're getting.
+                var parentDir = Path.GetDirectoryName(cachedObjPath);
+                Directory.CreateDirectory(parentDir);
+                // God help me.
+                UnityWebRequest wr = new UnityWebRequest(url, "GET");
+                wr.downloadHandler = new DownloadHandlerFile(cachedObjPath);
+                wr.SendWebRequest();
+                while(!wr.isDone) { } // Force syncronicity
+                // TODO: Update world/avatar progress bar.
+                CacheTool.CreateCacheInfoFile(key, hash);
+            }
+            Logging.Info($"Checking {cachedObjPath}...");
+            var sha256 = IOTool.SHA256File(cachedObjPath);
+            var hashstr = string.Concat(sha256.Select(x => x.ToString("X2")));
+            if (AvatarShitList.IsAssetBundleHashBlocked(sha256))
+            {
+                BundleBouncer.NotifyUserOfBlockedBundle(sha256, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached");
+                return IntPtr.Zero;
+            }
+            return origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
+        }
+        /* Not used
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr OnDownloadHandlerAssetBundle_Create_Delegate(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc);
+        private static OnDownloadHandlerAssetBundle_Create_Delegate origNATIVEDownloadHandlerAssetBundle_Create;
+        private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc)
+        {
+            string url = UnityCoreUtils.CoreBasicString2String(urlPtr);
+            Logging.Info($"UnityPlayer::DownloadHandlerAssetBundle::Create(sop, {url}, {crc})");
+            return origNATIVEDownloadHandlerAssetBundle_Create(scriptingObjectPtr, urlPtr, crc);
+        }
+        */
 
         private static bool OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_StrCabUi(ref UnityWebRequest __result, string __0, CachedAssetBundle __1, [Optional] uint __2)
         {
@@ -625,16 +776,7 @@ namespace BundleBouncer
         private static bool OnLoadFromFile_1(string __0, ref AssetBundle __result)
         {
             string path = __0;
-
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
+            byte[] hash = IOTool.SHA256File(path);
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (SHA256: {hashstr}) via AssetBundle.LoadFromFile(string)...");
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))
@@ -653,15 +795,7 @@ namespace BundleBouncer
             string path = __0;
             uint crc = __1;
 
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
+            byte[] hash = IOTool.SHA256File(path);
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))
@@ -686,7 +820,7 @@ namespace BundleBouncer
             {
                 using (var stream = File.OpenRead(path))
                 {
-                    stream.Position = 0;
+                    stream.Position = (long)offset;
                     hash = sha256.ComputeHash(stream);
                 }
             }

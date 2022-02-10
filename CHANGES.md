@@ -1,8 +1,9 @@
 # Changelog
 
-## 1.2.8 - In Development
+## 1.3.0 - In Development
 
-*Nothing - Yet!*
+* Core
+  * Now intercepts Unity internals in order to capture bundles just prior to loading.
 
 ## 1.2.7
 
