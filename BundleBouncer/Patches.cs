@@ -86,6 +86,8 @@ namespace BundleBouncer
 
         private static Dictionary<string, DateTime> scannedGameObjects = new Dictionary<string, DateTime>();
 
+        private static Dictionary<IntPtr, InterceptingAssetBundleDownloadHandler> intercepts = new Dictionary<IntPtr, InterceptingAssetBundleDownloadHandler>();
+
         public Patches(BundleBouncer bundleBouncer)
         {
             bb = bundleBouncer;
@@ -144,13 +146,6 @@ namespace BundleBouncer
 
             HarmonyPatchMethod(typeof(ApiFile).GetMethod(nameof(ApiFile.DownloadFile)), prefix: nameof(OnAPIFileDownloadFile));
 
-            //private void InternalCreateAssetBundleCached(string url, string name, Hash128 hash, uint crc)
-            HarmonyPatchMethod(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.InternalCreateAssetBundleCached), BindingFlags.Public | BindingFlags.Instance),
-                prefix: nameof(OnDownloadHandlerAssetBundle_InternalCreateAssetBundleCached));
-
-            HarmonyPatchMethod(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.CreateCached_Injected), AccessTools.all),
-                prefix: nameof(OnDownloadHandlerAssetBundle_CreateCached_Injected));
-
             // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
             PatchICall("UnityEngine.AssetBundle::LoadFromFileAsync_Internal", out origLoadFromFileAsync_Internal, nameof(OnLoadFromFileAsync_Internal));
 
@@ -171,15 +166,23 @@ namespace BundleBouncer
             unsafe
             {
                 UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_BASICSTRING_CHAR_CSTR, out UnityCoreUtils.origNATIVECoreBasicString_CStr);
+                UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN, out UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Assign);
+                // There's a deallocator for wchar_t, but not char...? UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_STRINGSTORAGEDEFAULT_CHAR_DEALLOCATE, out UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Deallocate);
+                UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.HEADERMAP_FIND, out origNATIVEHeaderMap_find);
 
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILE, OnUnityPlayer_LoadFromFile_NATIVE, out origNATIVELoadFromFile);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILEASYNC, OnUnityPlayer_LoadFromFileAsync_NATIVE, out origNATIVELoadFromFileAsync);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMMEMORY, OnUnityPlayer_LoadFromMemory_NATIVE, out origNATIVELoadFromMemory);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool, out origNATIVEInitAssetBundleStorageFSEUlongBool);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong, out origNATIVEInitAssetBundleStorageStrUlong);
-                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
                 
-                
+                // IDHAB shit
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS, OnDownloadHandlerAssetBundle_GetProgress, out origNATIVEDownloadHandlerAssetBundle_GetProgress);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ISDONE, OnDownloadHandlerAssetBundle_IsDone, out origNATIVEDownloadHandlerAssetBundle_IsDone);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT, OnDownloadHandlerAssetBundle_OnCompleteContent, out origNATIVEDownloadHandlerAssetBundle_OnCompleteContent);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA, OnDownloadHandlerAssetBundle_OnReceiveData, out origNATIVEDownloadHandlerAssetBundle_OnReceiveData);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLER_PROCESSHEADERS, OnDownloadHandler_ProcessHeaders, out origNATIVEDownloadHandler_ProcessHeaders);
             }
         }
 
@@ -339,15 +342,19 @@ namespace BundleBouncer
             string key = UnityCoreUtils.CoreBasicString2String(keyPtr);
             Logging.Info($"UnityPlayer::DownloadHandlerAssetBundle::CreateCached(sop, {url}, {key}, {hash}, {crc})");
             var cachedObjPath = CacheTool.GetRawCacheDataPath(key, hash);
-            if(!File.Exists(cachedObjPath))
+            if (!File.Exists(cachedObjPath))
             {
                 Logging.Info("Downloading...");
                 // This *should* be OK, since the function sig calls for DownloadHandler...
                 var dhab = new DownloadHandlerAssetBundle(scriptingObjectPtr);
-                Logging.Info("DHAB");
-                var idh = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab);
-                Logging.Info("IDH");
-                return idh.Pointer;
+                Logging.Info("IDHAB created.");
+                var idhab = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab);
+                var o = origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
+                idhab.ptr = o;
+                Patches.intercepts[o] = idhab;
+                Logging.Info($"Assigned to [{o.ToInt64()}]");
+                return o;
+
                 /*
                 // I have no idea how to wrap or create a SOP without jumping through 50 hoops.  This is what you're getting.
                 var parentDir = Path.GetDirectoryName(cachedObjPath);
@@ -361,38 +368,109 @@ namespace BundleBouncer
                 CacheTool.CreateCacheInfoFile(key, hash);
                 */
             }
-            if(CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
+            if (CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
             {
                 return IntPtr.Zero;
             }
             return origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
         }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate double OnDownloadHandlerAssetBundle_GetProgress_Delegate(IntPtr @this);
+        private static OnDownloadHandlerAssetBundle_GetProgress_Delegate origNATIVEDownloadHandlerAssetBundle_GetProgress;
+        private static unsafe double OnDownloadHandlerAssetBundle_GetProgress(IntPtr @this)
+        {
+            Logging.Info($"OnDownloadHandlerAssetBundle_GetProgress[{@this.ToInt64()}]");
+            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            {
+                return idhab.GetProgress();
+            }
+            return origNATIVEDownloadHandlerAssetBundle_GetProgress(@this);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate char OnDownloadHandlerAssetBundle_IsDone_Delegate(IntPtr @this);
+        private static OnDownloadHandlerAssetBundle_IsDone_Delegate origNATIVEDownloadHandlerAssetBundle_IsDone;
+        private static unsafe char OnDownloadHandlerAssetBundle_IsDone(IntPtr @this)
+        {
+            Logging.Info($"OnDownloadHandlerAssetBundle_IsDone[{@this.ToInt64()}]");
+            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            {
+                return (char)(idhab.IsDone() ? 0x01 : 0x00);
+            }
+            return origNATIVEDownloadHandlerAssetBundle_IsDone(@this);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void OnDownloadHandlerAssetBundle_OnCompleteContent_Delegate(IntPtr @this);
+        private static OnDownloadHandlerAssetBundle_OnCompleteContent_Delegate origNATIVEDownloadHandlerAssetBundle_OnCompleteContent;
+        private static unsafe void OnDownloadHandlerAssetBundle_OnCompleteContent(IntPtr @this)
+        {
+            Logging.Info($"OnDownloadHandlerAssetBundle_OnCompleteContent[{@this.ToInt64()}]");
+            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            {
+                idhab.OnCompleteContent();
+            }
+            else
+            {
+                origNATIVEDownloadHandlerAssetBundle_OnCompleteContent(@this);
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr OnHeaderMap_find_Delegate(IntPtr @this, IntPtr ustr);
+        private static OnHeaderMap_find_Delegate origNATIVEHeaderMap_find;
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void OnDownloadHandler_ProcessHeaders_Delegate(IntPtr @this, IntPtr hdrmap);
+        private static OnDownloadHandler_ProcessHeaders_Delegate origNATIVEDownloadHandler_ProcessHeaders;
+        private static unsafe void OnDownloadHandler_ProcessHeaders(IntPtr @this, IntPtr hdrmap)
+        {
+            byte[] data = new byte[256];
+            for (var i = 0; i < 256; i++)
+                data[i] = Marshal.ReadByte(hdrmap+i);
+            
+            Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}] - hdrmap: {hdrmap.ToInt64()} - {Convert.ToBase64String(data)}");
+            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            {
+                Logging.Info("Converting Content-Length into a CoreString...");
+                var str_clen = UnityCoreUtils.String2CoreBasicString("Content-Length").Pointer;
+                Logging.Info($"  Trying to extract HeaderMap...");
+                string found = UnityCoreUtils.CoreBasicString2String(origNATIVEHeaderMap_find(hdrmap, str_clen));
+                Logging.Info($"  Got Content-Length: {found}");
+                idhab.ProcessHeaders(ulong.Parse(found));
+            }
+            // Passthru to original DH.
+            origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate long OnDownloadHandlerAssetBundle_OnReceiveData_Delegate(IntPtr @this, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 2)] byte[] data, ulong len);
+        private static OnDownloadHandlerAssetBundle_OnReceiveData_Delegate origNATIVEDownloadHandlerAssetBundle_OnReceiveData;
+        private static unsafe long OnDownloadHandlerAssetBundle_OnReceiveData(IntPtr @this, byte[] data, ulong len)
+        {
+            Logging.Info($"OnDownloadHandlerAssetBundle_OnReceiveData[{@this.ToInt64()}]");
+            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            {
+                return idhab.OnReceiveData(data, len);
+            }
+            else
+            {
+                return origNATIVEDownloadHandlerAssetBundle_OnReceiveData(@this, data, len);
+            }
+        }
         #endregion
 
-        private static bool OnDownloadHandlerAssetBundle_CreateCached_Injected(ref IntPtr __result, DownloadHandlerAssetBundle __0, string __1, string __2, Hash128 __3, uint __4)
+        internal static void SendDelayedDHABSignals(IntPtr dhab, byte[] vs, ulong v)
         {
-            var dhab = __0;
-            var url  = __1;
-            var key  = __2;
-            var hash = __3;
-            var crc  = __4;
-            Logging.Info($"OnDownloadHandlerAssetBundle_CreateCached_Injected({dhab}, {url}, {key}, {hash}, {crc})");
-            var cachedObjPath = CacheTool.GetRawCacheDataPath(key, hash);
-            if (!File.Exists(cachedObjPath))
-            {
-                Logging.Info("Downloading...");
-                var idh = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab);
-                Logging.Info(" IDH");
-                __result = idh.Pointer;
-                Logging.Info(" PTR");
-                return false;
-            }
-            if (CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
-            {
-                __result = IntPtr.Zero;
-                return false;
-            }
-            return true;
+            Logging.Info($"SendDelayedDHABSignals[{dhab.ToInt64()}]");
+            //dhab.ReceiveContentLengthHeader(0);
+
+            //dhab.ReceiveData(new Il2CppStructArray<byte>(0), 0);
+            origNATIVEDownloadHandlerAssetBundle_OnReceiveData(dhab, vs, v);
+
+            //dhab.CompleteContent();
+            origNATIVEDownloadHandlerAssetBundle_OnCompleteContent(dhab);
         }
 
         public static bool CheckExistingFile(string cachedObjPath, string source)

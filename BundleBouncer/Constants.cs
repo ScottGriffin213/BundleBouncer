@@ -55,6 +55,13 @@ namespace BundleBouncer
                 public const int DOWNLOADHANDLERASSETBUNDLE_CREATE = 0x0033EBF0;
                 public const int LOADFROMSTREAMASYNCINTERNAL = 0x002D7940;
                 public const int CORE_BASICSTRING_CHAR_CSTR = 0x00089350;
+                public const int CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN = 0x0008FD80;
+                public const int DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA = 0x0033F400;
+                public const int DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS = 0x0033F1A0;
+                public const int DOWNLOADHANDLERASSETBUNDLE_ISDONE = 0x0033F1D0;
+                public const int DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT = 0x0033F220;
+                public const int DOWNLOADHANDLER_PROCESSHEADERS = 0x00C6D4F0;
+                public const int HEADERMAP_FIND = 0x00C6E1B0;
             }
         }
     }

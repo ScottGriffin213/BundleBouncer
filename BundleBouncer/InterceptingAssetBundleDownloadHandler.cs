@@ -24,6 +24,7 @@
 
 using BundleBouncer.Data;
 using System;
+using System.Linq;
 using System.Text;
 using UnhollowerBaseLib;
 using UnityEngine;
@@ -31,121 +32,72 @@ using UnityEngine.Networking;
 
 namespace BundleBouncer
 {
-    internal class InterceptingAssetBundleDownloadHandler : DownloadHandlerAssetBundle
+    internal class InterceptingAssetBundleDownloadHandler
     {
         private string url;
         private string method;
         private string destfile;
         private DownloadHandlerFile dl;
         private DownloadHandlerAssetBundle dhab;
+        internal IntPtr ptr;
         private ulong contentLength;
 
         public InterceptingAssetBundleDownloadHandler(string url, string method, string destfile, DownloadHandlerAssetBundle dhab)
-            : base(url, 0)
         {
             this.url = url;
             this.method = method;
             this.destfile = destfile;
             this.dl = new DownloadHandlerFile(destfile);
             this.dhab = dhab;
+            this.ptr = dhab.Pointer;
+            Logging.Info($"IDHAB - Intercepting bytes sent to {dhab}...");
         }
 
-        public InterceptingAssetBundleDownloadHandler(string url, uint crc) : base(url, crc)
-        {
-        }
 
-        public InterceptingAssetBundleDownloadHandler(string url, CachedAssetBundle cachedBundle, uint crc) : base(url, cachedBundle, crc)
-        {
-        }
-
-        public InterceptingAssetBundleDownloadHandler(IntPtr value) : base(value)
-        {
-        }
-
-        public override void CompleteContent()
-        {
-            dl.CompleteContent();
-            dhab.CompleteContent();
-        }
-        public new void Dispose()
-        {
-            dl?.Dispose();
-            dhab?.Dispose();
-        }
-#pragma warning disable CS0465 // Introducing a 'Finalize' method can interfere with destructor invocation
-        public new void Finalize()
-#pragma warning restore CS0465 // Introducing a 'Finalize' method can interfere with destructor invocation
-        {
-            dl?.Finalize();
-            dhab?.Finalize();
-        }
-        public new string GetContentType()
-        {
-            return dhab.GetContentType();
-        }
-        public new Il2CppStructArray<byte> GetData()
-        {
-            return dl.GetData();
-        }
-        public new float GetProgress()
-        {
-            return dl.GetProgress();
-        }
-        public new string GetText()
-        {
-            return null; // lolno
-        }
-        public new Encoding GetTextEncoder()
-        {
-            return null;
-        }
-        public new bool IsDone()
+        public bool IsDone()
         {
             return dl.IsDone();
         }
-        public new void ReceiveContentLength(int length)
+
+        public bool ReceiveData(Il2CppStructArray<byte> data, int length)
         {
-            this.contentLength = (ulong)length;
-            dl.ReceiveContentLength(length);
+            return dl.ReceiveData(data, length);
         }
-        public new void ReceiveContentLengthHeader(ulong length)
+
+        internal void OnCompleteContent()
         {
+            dl.CompleteContent();
+            var hash = IOTool.SHA256File(destfile);
+            var strhash = string.Concat(hash.Select(x => x.ToString("X2")));
+            Logging.Info($"IDHAB - Done! Scanning file {destfile} ({strhash})...");
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
+            {
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, "InterceptingDownloadHandlerAssetBundle");
+                Patches.SendDelayedDHABSignals(ptr, new byte[0], 0UL);
+            }
+            else
+            {
+                var downloaded = dl.data;
+                Patches.SendDelayedDHABSignals(ptr, downloaded, contentLength);
+            }
+        }
+
+        internal void ProcessHeaders(ulong length)
+        {
+            Logging.Info($"Content-Length: {length}UL");
             this.contentLength = length;
             dl.ReceiveContentLengthHeader(length);
         }
-        public new bool ReceiveData(Il2CppStructArray<byte> data, int length)
+
+        internal long OnReceiveData(byte[] data, ulong len)
         {
-            var o = dl.ReceiveData(data, length);
-            if (isDone)
-            {
-                var hash = IOTool.SHA256File(destfile);
-                if (AvatarShitList.IsAssetBundleHashBlocked(hash))
-                {
-                    BundleBouncer.NotifyUserOfBlockedBundle(hash, "InterceptingDownloadHandlerAssetBundle");
-                    dhab.ReceiveContentLengthHeader(0);
-                    dhab.ReceiveData(new Il2CppStructArray<byte>(0), 0);
-                    dhab.CompleteContent();
-                }
-                else
-                {
-                    dhab.ReceiveContentLengthHeader(this.contentLength);
-                    var downloaded = dl.data;
-                    dhab.ReceiveData(downloaded, downloaded.Length);
-                    dhab.CompleteContent();
-                }
-            }
-            return o;
+            dl.ReceiveData(data, (int)len);
+            return (long)len; //?
         }
-        public new Il2CppStructArray<byte> data { get { return GetData(); } }
-        public new bool isDone { get { return IsDone(); } }
-        public new string text { get { return GetText(); } }
-        public new AssetBundle assetBundle
+
+        internal double GetProgress()
         {
-            get
-            {
-                Logging.Info("assetBundle.get");
-                return dhab.assetBundle;
-            }
+            return dl.GetProgress();
         }
     }
 }
