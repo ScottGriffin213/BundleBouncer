@@ -254,7 +254,10 @@ namespace BundleBouncer
             if(!File.Exists(cachedObjPath))
             {
                 Logging.Info("Downloading...");
-                //return origNATIVEDownloadHandlerVFS_Create(scriptingObjectPtr, urlPtr, False)
+                // This *should* be OK, since the function sig calls for DownloadHandler...
+                var idh = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, new DownloadHandlerAssetBundle(scriptingObjectPtr));
+                return idh.Pointer;
+                /*
                 // I have no idea how to wrap or create a SOP without jumping through 50 hoops.  This is what you're getting.
                 var parentDir = Path.GetDirectoryName(cachedObjPath);
                 Directory.CreateDirectory(parentDir);
@@ -265,28 +268,37 @@ namespace BundleBouncer
                 while(!wr.isDone) { } // Force syncronicity
                 // TODO: Update world/avatar progress bar.
                 CacheTool.CreateCacheInfoFile(key, hash);
+                */
             }
-            Logging.Info($"Checking {cachedObjPath}...");
-            var sha256 = IOTool.SHA256File(cachedObjPath);
-            var hashstr = string.Concat(sha256.Select(x => x.ToString("X2")));
-            if (AvatarShitList.IsAssetBundleHashBlocked(sha256))
+            if(CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
             {
-                BundleBouncer.NotifyUserOfBlockedBundle(sha256, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached");
                 return IntPtr.Zero;
             }
             return origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
         }
-        /* Not used
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr OnDownloadHandlerAssetBundle_Create_Delegate(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc);
-        private static OnDownloadHandlerAssetBundle_Create_Delegate origNATIVEDownloadHandlerAssetBundle_Create;
-        private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc)
+
+        public static bool CheckExistingFile(string cachedObjPath, string source)
         {
-            string url = UnityCoreUtils.CoreBasicString2String(urlPtr);
-            Logging.Info($"UnityPlayer::DownloadHandlerAssetBundle::Create(sop, {url}, {crc})");
-            return origNATIVEDownloadHandlerAssetBundle_Create(scriptingObjectPtr, urlPtr, crc);
+            Logging.Info($"Checking {cachedObjPath}...");
+            var sha256 = IOTool.SHA256File(cachedObjPath);
+            var hashstr = string.Concat(sha256.Select(x => x.ToString("X2")));
+            var blocked = AvatarShitList.IsAssetBundleHashBlocked(sha256);
+            if(blocked)
+                BundleBouncer.NotifyUserOfBlockedBundle(sha256, source);
+            return blocked;
         }
-        */
+
+        /* Not used
+[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+private delegate IntPtr OnDownloadHandlerAssetBundle_Create_Delegate(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc);
+private static OnDownloadHandlerAssetBundle_Create_Delegate origNATIVEDownloadHandlerAssetBundle_Create;
+private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc)
+{
+   string url = UnityCoreUtils.CoreBasicString2String(urlPtr);
+   Logging.Info($"UnityPlayer::DownloadHandlerAssetBundle::Create(sop, {url}, {crc})");
+   return origNATIVEDownloadHandlerAssetBundle_Create(scriptingObjectPtr, urlPtr, crc);
+}
+*/
 
         private static bool OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_StrCabUi(ref UnityWebRequest __result, string __0, CachedAssetBundle __1, [Optional] uint __2)
         {
@@ -366,33 +378,6 @@ namespace BundleBouncer
             }
         }
 
-        private static bool OnUnityWebRequest_CtorStrStr(ref UnityWebRequest __instance, string __0, string __1)
-        {
-            Logging.Info($"UnityWebRequest({__0}, {__1})");
-            return true;
-        }
-
-        // [17:00:31.550] [BundleBouncer] UnityWebRequest(https://api.vrchat.cloud/api/1/file/file_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/xx/file, GET, UnityEngine.Networking.DownloadHandler, null)
-        const string WANTED_URL_PATTERN = @"^https://[^/]+/api/1/file/([^/]+)/([0-9]+)/file/?";
-        private static bool OnUnityWebRequest_CtorStrStrDHUH(ref UnityWebRequest __instance, string __0, string __1, ref DownloadHandler __2, UploadHandler __3)
-        {
-            string dhType = __2!=null ? __2.GetType().FullName : "null";
-            string uhType = __3!=null ? __3.GetType().FullName : "null";
-            Logging.Info($"UnityWebRequest({__0}, {__1}, {dhType}, {uhType})");
-
-            var url = __0;
-            var method = __1;
-            Match m;
-            if ((m = Regex.Match(url, WANTED_URL_PATTERN)) != null)
-            {
-                if (typeof(InterceptingDownloadHandler) == __2.GetType())
-                    return true;
-                var fileId = m.Groups[1].Value;
-                var fileVersion = int.Parse(m.Groups[2].Value);
-                __instance.downloadHandler = new InterceptingDownloadHandler(__2, url, method);
-            }
-            return true;
-        }
 
 
         /**
