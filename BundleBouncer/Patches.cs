@@ -25,6 +25,7 @@
 using BundleBouncer.Data;
 using BundleBouncer.Utilities;
 using ExitGames.Client.Photon;
+using HarmonyLib;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
@@ -147,6 +148,9 @@ namespace BundleBouncer
             HarmonyPatchMethod(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.InternalCreateAssetBundleCached), BindingFlags.Public | BindingFlags.Instance),
                 prefix: nameof(OnDownloadHandlerAssetBundle_InternalCreateAssetBundleCached));
 
+            HarmonyPatchMethod(typeof(DownloadHandlerAssetBundle).GetMethod(nameof(DownloadHandlerAssetBundle.CreateCached_Injected), AccessTools.all),
+                prefix: nameof(OnDownloadHandlerAssetBundle_CreateCached_Injected));
+
             // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
             PatchICall("UnityEngine.AssetBundle::LoadFromFileAsync_Internal", out origLoadFromFileAsync_Internal, nameof(OnLoadFromFileAsync_Internal));
 
@@ -173,12 +177,13 @@ namespace BundleBouncer
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMMEMORY, OnUnityPlayer_LoadFromMemory_NATIVE, out origNATIVELoadFromMemory);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool, out origNATIVEInitAssetBundleStorageFSEUlongBool);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong, out origNATIVEInitAssetBundleStorageStrUlong);
-                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
-                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATE, OnDownloadHandlerAssetBundle_Create, out origNATIVEDownloadHandlerAssetBundle_Create);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
+                
                 
             }
         }
 
+        #region Infrastructure
         private static unsafe void UsingFunctionInModule<T>(ProcessModule module, int offset, out T delegateField) where T : MulticastDelegate
         {
             Logging.Info($"Attaching to {module.ModuleName} + 0x{offset:X8}");
@@ -201,6 +206,89 @@ namespace BundleBouncer
             delegateField = Marshal.GetDelegateForFunctionPointer<T>(ptr);
         }
 
+        /**
+         * From Knah's fabulous Finitizer.
+         * https://github.com/knah/VRCMods/blob/9ad060a8aa05c1454696f2625ad6a857fec1fed6/Finitizer/FinitizerMod.cs#L106
+         */
+        private static unsafe void PatchICall<T>(string name, out T original, string patchName) where T : MulticastDelegate
+        {
+            var originalPointer = IL2CPP.il2cpp_resolve_icall(name);
+            if (originalPointer == IntPtr.Zero)
+            {
+                Logging.Warning($"ICall {name} was not found, not patching");
+                original = null;
+                return;
+            }
+
+            var target = typeof(Patches).GetMethod(patchName, BindingFlags.Static | BindingFlags.NonPublic);
+            var functionPointer = target.MethodHandle.GetFunctionPointer();
+
+            MelonUtils.NativeHookAttach((IntPtr)(&originalPointer), functionPointer);
+            //ourOriginalPointers[name] = new Tuple<IntPtr, IntPtr>(originalPointer, functionPointer);
+            original = Marshal.GetDelegateForFunctionPointer<T>(originalPointer);
+            Logging.Info($"Patched icall {name}");
+        }
+
+        /**
+         * Stolen from Behemoth (with permission)
+         */
+        private static unsafe IntPtr Il2CPPPatchMethod(MethodBase target, string detour)
+        {
+            string psig = String.Join(",", target.GetParameters().Select(x => x.ParameterType.ToString()));
+            string sig = $"{target.DeclaringType}.{target.Name}({psig})";
+            var originalMethodPointer = *(IntPtr*)UnhollowerSupport.MethodBaseToIl2CppMethodInfoPointer(target);
+            var detourPointer = typeof(Patches).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
+            MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
+            Logging.Info($"Natively attached {target.Name} to {detour}");
+            return originalMethodPointer;
+        }
+
+        private void HarmonyPatchMethod(MethodBase hookee, string prefix = null, string postfix = null)
+        {
+            string sig = mkSigFromMethod(hookee);
+            if (prefix != null)
+            {
+                try
+                {
+                    BundleBouncer.Instance.HarmonyInstance.Patch(hookee,
+                        prefix: prefix == null ? null : typeof(Patches).GetMethod(prefix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod(),
+                        postfix: postfix == null ? null : typeof(Patches).GetMethod(postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                    if (prefix != null)
+                        Logging.Info($"Patched {sig} to {prefix} (prefix)");
+                    if (postfix != null)
+                        Logging.Info($"Patched {sig} to {postfix} (postfix)");
+                }
+                catch (Exception e)
+                {
+                    Logging.Error($"Unable to patch {sig}:");
+                    Logging.Error(e.ToString());
+                }
+            }
+        }
+
+        private void CtorHarmony(ConstructorInfo hookee, string hooker_postfix)
+        {
+            string sig = mkSigFromMethod(hookee);
+            try
+            {
+                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, postfix: typeof(Patches).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
+                Logging.Info($"Patched {sig} to {hooker_postfix} (.ctor postfix)");
+            }
+            catch (Exception e)
+            {
+                Logging.Error($"Unable to patch {sig} (.ctor):");
+                Logging.Error(e.ToString());
+            }
+        }
+
+        private string mkSigFromMethod(MethodBase method)
+        {
+            string psig = String.Join(",", method.GetParameters().Select(x => x.ParameterType.ToString()));
+            return $"{method.DeclaringType}.{method.Name}({psig})";
+        }
+        #endregion
+
+        #region UnityPlayer.dll Tomfoolery
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void OnUnityPlayer_LoadFromFile_Delegate(IntPtr a1, IntPtr filenamePtr, int a3, uint crc);
         private static OnUnityPlayer_LoadFromFile_Delegate origNATIVELoadFromFile;
@@ -255,7 +343,10 @@ namespace BundleBouncer
             {
                 Logging.Info("Downloading...");
                 // This *should* be OK, since the function sig calls for DownloadHandler...
-                var idh = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, new DownloadHandlerAssetBundle(scriptingObjectPtr));
+                var dhab = new DownloadHandlerAssetBundle(scriptingObjectPtr);
+                Logging.Info("DHAB");
+                var idh = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab);
+                Logging.Info("IDH");
                 return idh.Pointer;
                 /*
                 // I have no idea how to wrap or create a SOP without jumping through 50 hoops.  This is what you're getting.
@@ -275,6 +366,33 @@ namespace BundleBouncer
                 return IntPtr.Zero;
             }
             return origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
+        }
+        #endregion
+
+        private static bool OnDownloadHandlerAssetBundle_CreateCached_Injected(ref IntPtr __result, DownloadHandlerAssetBundle __0, string __1, string __2, Hash128 __3, uint __4)
+        {
+            var dhab = __0;
+            var url  = __1;
+            var key  = __2;
+            var hash = __3;
+            var crc  = __4;
+            Logging.Info($"OnDownloadHandlerAssetBundle_CreateCached_Injected({dhab}, {url}, {key}, {hash}, {crc})");
+            var cachedObjPath = CacheTool.GetRawCacheDataPath(key, hash);
+            if (!File.Exists(cachedObjPath))
+            {
+                Logging.Info("Downloading...");
+                var idh = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab);
+                Logging.Info(" IDH");
+                __result = idh.Pointer;
+                Logging.Info(" PTR");
+                return false;
+            }
+            if (CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
+            {
+                __result = IntPtr.Zero;
+                return false;
+            }
+            return true;
         }
 
         public static bool CheckExistingFile(string cachedObjPath, string source)
@@ -300,72 +418,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
 }
 */
 
-        private static bool OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_StrCabUi(ref UnityWebRequest __result, string __0, CachedAssetBundle __1, [Optional] uint __2)
-        {
-            var uri = __0;
-            var cab = __1;
-            var crc = __2;
-            Logging.Info($"UnityWebRequestAssetBundle.GetAssetBundle(uri: {uri}, cab: {cab}, crc: {crc})");
-            return true;
-        }
-
-        // public unsafe static UnityWebRequest GetAssetBundle(string uri)
-        private static bool OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_Str(ref UnityWebRequest __result, string __0)
-        {
-            var uri = __0;
-            Logging.Info($"UnityWebRequestAssetBundle.GetAssetBundle(uri: {uri})");
-            return true;
-        }
-
-        private static bool OnUnityWebRequest_Pre_Get_Str(ref UnityWebRequest __result, string __0)
-        {
-            /*
-            Logging.Info($"UnityWebRequest.Get({__0})");
-            // return new UnityWebRequest(uri, "GET", new DownloadHandlerBuffer(), null);
-            __result = new UnityWebRequest(__0, "GET", new InterceptingDownloadHandler(new DownloadHandlerBuffer(), __0, "GET"), null);
-            */
-            return true;
-        }
-
-        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrUiUi(ref UnityWebRequest __result, string __0, uint __1, uint __2)
-        {
-            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1}, {__2})");
-            var uri = __0;
-            var version = __1;
-            var crc = __2;
-            // return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, version, crc), null);
-            return true;
-        }
-
-        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrUi(ref UnityWebRequest __result, string __0, uint __1)
-        {
-            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1})");
-            var uri = __0;
-            var crc = __1;
-            // return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, crc), null);
-            return true;
-        }
-
-        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrHaUi(ref UnityWebRequest __result, string __0, Hash128 __1, uint __2)
-        {
-            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1}, {__2})");
-            var uri = __0;
-            var hash = __1;
-            var crc = __2;
-            // return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, crc), null);
-            return true;
-        }
-
-        private static bool OnUnityWebRequest_Pre_GetAssetBundle_StrCabUi(ref UnityWebRequest __result, string __0, CachedAssetBundle __1, uint __2)
-        {
-            Logging.Info($"UnityWebRequest.GetAssetBundle({__0}, {__1}, {__2})");
-            var uri = __0;
-            var cachedAssetBundle = __1;
-            var crc = __2;
-            //return new UnityWebRequest(uri, "GET", new DownloadHandlerAssetBundle(uri, cachedAssetBundle.name, cachedAssetBundle.hash, crc), null);
-            return true;
-        }
-
         public void OnLateUpdate()
         {
             lock (scannedGameObjects)
@@ -380,42 +432,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
 
 
 
-        /**
-         * From Knah's fabulous Finitizer.
-         * https://github.com/knah/VRCMods/blob/9ad060a8aa05c1454696f2625ad6a857fec1fed6/Finitizer/FinitizerMod.cs#L106
-         */
-        private static unsafe void PatchICall<T>(string name, out T original, string patchName) where T : MulticastDelegate
-        {
-            var originalPointer = IL2CPP.il2cpp_resolve_icall(name);
-            if (originalPointer == IntPtr.Zero)
-            {
-                Logging.Warning($"ICall {name} was not found, not patching");
-                original = null;
-                return;
-            }
-
-            var target = typeof(Patches).GetMethod(patchName, BindingFlags.Static | BindingFlags.NonPublic);
-            var functionPointer = target.MethodHandle.GetFunctionPointer();
-
-            MelonUtils.NativeHookAttach((IntPtr)(&originalPointer), functionPointer);
-            //ourOriginalPointers[name] = new Tuple<IntPtr, IntPtr>(originalPointer, functionPointer);
-            original = Marshal.GetDelegateForFunctionPointer<T>(originalPointer);
-            Logging.Info($"Patched icall {name}");
-        }
-
-        /**
-         * Stolen from Behemoth (with permission)
-         */
-        private static unsafe IntPtr Hook(MethodBase target, string detour)
-        {
-            string psig = String.Join(",", target.GetParameters().Select(x => x.ParameterType.ToString()));
-            string sig = $"{target.DeclaringType}.{target.Name}({psig})";
-            var originalMethodPointer = *(IntPtr*)UnhollowerSupport.MethodBaseToIl2CppMethodInfoPointer(target);
-            var detourPointer = typeof(Patches).GetMethod(detour, BindingFlags.Static | BindingFlags.NonPublic).MethodHandle.GetFunctionPointer();
-            MelonUtils.NativeHookAttach((IntPtr)(&originalMethodPointer), detourPointer);
-            Logging.Info($"Hooked {target.Name} to {detour}");
-            return originalMethodPointer;
-        }
 
 
 
@@ -710,50 +726,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
                 return IntPtr.Zero;
             }
             return origLoadFromFileAsync_Internal(pathPtr, crc, offset);
-        }
-
-        private void HarmonyPatchMethod(MethodBase hookee, string prefix = null, string postfix = null)
-        {
-            string sig = mkSigFromMethod(hookee);
-            if (prefix != null)
-            {
-                try
-                {
-                    BundleBouncer.Instance.HarmonyInstance.Patch(hookee,
-                        prefix: prefix == null ? null : typeof(Patches).GetMethod(prefix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod(),
-                        postfix: postfix == null ? null : typeof(Patches).GetMethod(postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
-                    if (prefix != null)
-                        Logging.Info($"Patched {sig} to {prefix} (prefix)");
-                    if (postfix != null)
-                        Logging.Info($"Patched {sig} to {postfix} (postfix)");
-                }
-                catch (Exception e)
-                {
-                    Logging.Error($"Unable to patch {sig}:");
-                    Logging.Error(e.ToString());
-                }
-            }
-        }
-
-        private void CtorHarmony(ConstructorInfo hookee, string hooker_postfix)
-        {
-            string sig = mkSigFromMethod(hookee);
-            try
-            {
-                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, postfix: typeof(Patches).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
-                Logging.Info($"Patched {sig} to {hooker_postfix} (.ctor postfix)");
-            }
-            catch (Exception e)
-            {
-                Logging.Error($"Unable to patch {sig} (.ctor):");
-                Logging.Error(e.ToString());
-            }
-        }
-
-        private string mkSigFromMethod(MethodBase method)
-        {
-            string psig = String.Join(",", method.GetParameters().Select(x => x.ParameterType.ToString()));
-            return $"{method.DeclaringType}.{method.Name}({psig})";
         }
 
 

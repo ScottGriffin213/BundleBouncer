@@ -31,7 +31,7 @@ using UnityEngine.Networking;
 
 namespace BundleBouncer
 {
-    internal class InterceptingAssetBundleDownloadHandler : DownloadHandler
+    internal class InterceptingAssetBundleDownloadHandler : DownloadHandlerAssetBundle
     {
         private string url;
         private string method;
@@ -41,12 +41,25 @@ namespace BundleBouncer
         private ulong contentLength;
 
         public InterceptingAssetBundleDownloadHandler(string url, string method, string destfile, DownloadHandlerAssetBundle dhab)
+            : base(url, 0)
         {
             this.url = url;
             this.method = method;
             this.destfile = destfile;
             this.dl = new DownloadHandlerFile(destfile);
             this.dhab = dhab;
+        }
+
+        public InterceptingAssetBundleDownloadHandler(string url, uint crc) : base(url, crc)
+        {
+        }
+
+        public InterceptingAssetBundleDownloadHandler(string url, CachedAssetBundle cachedBundle, uint crc) : base(url, cachedBundle, crc)
+        {
+        }
+
+        public InterceptingAssetBundleDownloadHandler(IntPtr value) : base(value)
+        {
         }
 
         public override void CompleteContent()
@@ -86,7 +99,8 @@ namespace BundleBouncer
         {
             return null;
         }
-        public new bool IsDone() {
+        public new bool IsDone()
+        {
             return dl.IsDone();
         }
         public new void ReceiveContentLength(int length)
@@ -122,9 +136,16 @@ namespace BundleBouncer
             }
             return o;
         }
-        public new Il2CppStructArray<byte> data {get{return GetData(); } }
+        public new Il2CppStructArray<byte> data { get { return GetData(); } }
         public new bool isDone { get { return IsDone(); } }
         public new string text { get { return GetText(); } }
-        public AssetBundle assetBundle { get { return dhab.assetBundle; } }
+        public new AssetBundle assetBundle
+        {
+            get
+            {
+                Logging.Info("assetBundle.get");
+                return dhab.assetBundle;
+            }
+        }
     }
 }
