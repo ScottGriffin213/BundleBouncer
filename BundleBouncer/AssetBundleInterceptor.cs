@@ -24,10 +24,10 @@
 
 using BundleBouncer.Data;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using UnhollowerBaseLib;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -46,15 +46,16 @@ namespace BundleBouncer
         private Hash128 cacheHash;
         private uint crc;
         private bool done;
-        private ulong contentLength=0UL;
+        private ulong contentLength = 0UL;
+
+        private static HashSet<string> writing = new HashSet<string>();
 
         public AssetBundleInterceptor(string url, string method, string destfile, DownloadHandlerAssetBundle dhab, string cacheKey, Hash128 cacheHash, uint crc)
         {
             this.url = url;
             this.method = method;
             this.destfile = destfile;
-            Directory.CreateDirectory(Path.GetDirectoryName(destfile));
-            this.file = File.OpenWrite(destfile);
+            this.file = null;
             this.dhab = dhab;
             this.ptr = dhab.Pointer;
             this.bytesDownloaded = 0UL;
@@ -65,11 +66,7 @@ namespace BundleBouncer
             Logging.Info($"ABI - Intercepting bytes sent to {dhab}...");
         }
 
-
-        public bool IsDone()
-        {
-            return done;
-        }
+        public bool IsDone => done;
 
         internal void OnCompleteContent()
         {
@@ -89,6 +86,10 @@ namespace BundleBouncer
             {
                 Patches.SendDelayedDHABSignals(ptr, File.ReadAllBytes(destfile), contentLength);
             }
+            lock (writing)
+            {
+                writing.Remove(destfile);
+            }
         }
 
         internal void ProcessHeaders(ulong length, string type)
@@ -99,6 +100,19 @@ namespace BundleBouncer
 
         internal long OnReceiveData(byte[] data, ulong len)
         {
+            if (file == null)
+            {
+                if (writing.Contains(destfile))
+                {
+                    while (writing.Contains(destfile)) { Thread.Sleep(500); }
+                }
+                lock (writing)
+                {
+                    writing.Add(destfile);
+                }
+                Directory.CreateDirectory(Path.GetDirectoryName(destfile));
+                this.file = File.OpenWrite(destfile);
+            }
             this.bytesDownloaded += len;
             this.file.Write(data, 0, data.Length);
             return (long)len;
@@ -108,7 +122,7 @@ namespace BundleBouncer
         {
             if (contentLength == 0UL)
                 return 0f;
-            return bytesDownloaded/contentLength;
+            return bytesDownloaded / contentLength;
         }
     }
 }

@@ -382,7 +382,7 @@ namespace BundleBouncer
             //Logging.Info($"OnDownloadHandlerAssetBundle_IsDone[{@this.ToInt64()}]");
             if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
-                return (char)(idhab.IsDone() ? 0x01 : 0x00);
+                return (char)(idhab.IsDone? 0x01 : 0x00);
             }
             return origNATIVEDownloadHandlerAssetBundle_IsDone(@this);
         }
@@ -480,7 +480,7 @@ namespace BundleBouncer
             {
                 foreach(var intercept in new List<AssetBundleInterceptor>(intercepts.Values))
                 {
-                    if(intercept.IsDone())
+                    if(intercept.IsDone)
                     {
                         intercepts.Remove(intercept.ptr);
                     }
