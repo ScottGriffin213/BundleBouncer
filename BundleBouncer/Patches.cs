@@ -345,28 +345,14 @@ namespace BundleBouncer
             if (!File.Exists(cachedObjPath))
             {
                 Logging.Info("Downloading...");
-                // This *should* be OK, since the function sig calls for DownloadHandler...
                 var dhab = new DownloadHandlerAssetBundle(scriptingObjectPtr);
-                Logging.Info("IDHAB created.");
-                var idhab = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab);
+                //Logging.Info("IDHAB created.");
+                var idhab = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab, key, hash, crc);
                 var o = origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
                 idhab.ptr = o;
                 Patches.intercepts[o] = idhab;
-                Logging.Info($"Assigned to [{o.ToInt64()}]");
+                //Logging.Info($"Assigned to [{o.ToInt64()}]");
                 return o;
-
-                /*
-                // I have no idea how to wrap or create a SOP without jumping through 50 hoops.  This is what you're getting.
-                var parentDir = Path.GetDirectoryName(cachedObjPath);
-                Directory.CreateDirectory(parentDir);
-                // God help me.
-                UnityWebRequest wr = new UnityWebRequest(url, "GET");
-                wr.downloadHandler = new DownloadHandlerFile(cachedObjPath);
-                wr.SendWebRequest();
-                while(!wr.isDone) { } // Force syncronicity
-                // TODO: Update world/avatar progress bar.
-                CacheTool.CreateCacheInfoFile(key, hash);
-                */
             }
             if (CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
             {
@@ -380,7 +366,7 @@ namespace BundleBouncer
         private static OnDownloadHandlerAssetBundle_GetProgress_Delegate origNATIVEDownloadHandlerAssetBundle_GetProgress;
         private static unsafe double OnDownloadHandlerAssetBundle_GetProgress(IntPtr @this)
         {
-            Logging.Info($"OnDownloadHandlerAssetBundle_GetProgress[{@this.ToInt64()}]");
+            //Logging.Info($"OnDownloadHandlerAssetBundle_GetProgress[{@this.ToInt64()}]");
             if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
             {
                 return idhab.GetProgress();
@@ -393,7 +379,7 @@ namespace BundleBouncer
         private static OnDownloadHandlerAssetBundle_IsDone_Delegate origNATIVEDownloadHandlerAssetBundle_IsDone;
         private static unsafe char OnDownloadHandlerAssetBundle_IsDone(IntPtr @this)
         {
-            Logging.Info($"OnDownloadHandlerAssetBundle_IsDone[{@this.ToInt64()}]");
+            //Logging.Info($"OnDownloadHandlerAssetBundle_IsDone[{@this.ToInt64()}]");
             if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
             {
                 return (char)(idhab.IsDone() ? 0x01 : 0x00);
@@ -406,7 +392,7 @@ namespace BundleBouncer
         private static OnDownloadHandlerAssetBundle_OnCompleteContent_Delegate origNATIVEDownloadHandlerAssetBundle_OnCompleteContent;
         private static unsafe void OnDownloadHandlerAssetBundle_OnCompleteContent(IntPtr @this)
         {
-            Logging.Info($"OnDownloadHandlerAssetBundle_OnCompleteContent[{@this.ToInt64()}]");
+            //Logging.Info($"OnDownloadHandlerAssetBundle_OnCompleteContent[{@this.ToInt64()}]");
             if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
             {
                 idhab.OnCompleteContent();
@@ -426,22 +412,18 @@ namespace BundleBouncer
         private static OnDownloadHandler_ProcessHeaders_Delegate origNATIVEDownloadHandler_ProcessHeaders;
         private static unsafe void OnDownloadHandler_ProcessHeaders(IntPtr @this, IntPtr hdrmap)
         {
-            byte[] data = new byte[256];
-            for (var i = 0; i < 256; i++)
-                data[i] = Marshal.ReadByte(hdrmap+i);
-            
-            Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}] - hdrmap: {hdrmap.ToInt64()} - {Convert.ToBase64String(data)}");
+            // WORKING on 1160
+            //Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}]");
+            origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
             if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
             {
-                Logging.Info("Converting Content-Length into a CoreString...");
-                var str_clen = UnityCoreUtils.String2CoreBasicString("Content-Length").Pointer;
-                Logging.Info($"  Trying to extract HeaderMap...");
-                string found = UnityCoreUtils.CoreBasicString2String(origNATIVEHeaderMap_find(hdrmap, str_clen));
-                Logging.Info($"  Got Content-Length: {found}");
-                idhab.ProcessHeaders(ulong.Parse(found));
+                ulong clen = *(ulong*)(@this + 0x48);
+                //Logging.Info($"  Got Content-Length: {clen}");
+                var ctype = UnityCoreUtils.CoreBasicString2String(@this + 0x58);
+                //Logging.Info($"  Got Content-Length: {ctype}");
+                idhab.ProcessHeaders(clen, ctype);
             }
             // Passthru to original DH.
-            origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -449,7 +431,7 @@ namespace BundleBouncer
         private static OnDownloadHandlerAssetBundle_OnReceiveData_Delegate origNATIVEDownloadHandlerAssetBundle_OnReceiveData;
         private static unsafe long OnDownloadHandlerAssetBundle_OnReceiveData(IntPtr @this, byte[] data, ulong len)
         {
-            Logging.Info($"OnDownloadHandlerAssetBundle_OnReceiveData[{@this.ToInt64()}]");
+            //Logging.Info($"OnDownloadHandlerAssetBundle_OnReceiveData[{@this.ToInt64()}]({data.Length}, {len})");
             if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
             {
                 return idhab.OnReceiveData(data, len);
@@ -461,13 +443,13 @@ namespace BundleBouncer
         }
         #endregion
 
-        internal static void SendDelayedDHABSignals(IntPtr dhab, byte[] vs, ulong v)
+        internal static void SendDelayedDHABSignals(IntPtr dhab, byte[] data, ulong dataLen)
         {
-            Logging.Info($"SendDelayedDHABSignals[{dhab.ToInt64()}]");
+            //Logging.Info($"SendDelayedDHABSignals[{dhab.ToInt64()}](data.length: {data.Length}, dataLen: {dataLen})");
             //dhab.ReceiveContentLengthHeader(0);
 
             //dhab.ReceiveData(new Il2CppStructArray<byte>(0), 0);
-            origNATIVEDownloadHandlerAssetBundle_OnReceiveData(dhab, vs, v);
+            origNATIVEDownloadHandlerAssetBundle_OnReceiveData(dhab, data, dataLen);
 
             //dhab.CompleteContent();
             origNATIVEDownloadHandlerAssetBundle_OnCompleteContent(dhab);
@@ -484,18 +466,6 @@ namespace BundleBouncer
             return blocked;
         }
 
-        /* Not used
-[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-private delegate IntPtr OnDownloadHandlerAssetBundle_Create_Delegate(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc);
-private static OnDownloadHandlerAssetBundle_Create_Delegate origNATIVEDownloadHandlerAssetBundle_Create;
-private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptingObjectPtr, IntPtr urlPtr, uint crc)
-{
-   string url = UnityCoreUtils.CoreBasicString2String(urlPtr);
-   Logging.Info($"UnityPlayer::DownloadHandlerAssetBundle::Create(sop, {url}, {crc})");
-   return origNATIVEDownloadHandlerAssetBundle_Create(scriptingObjectPtr, urlPtr, crc);
-}
-*/
-
         public void OnLateUpdate()
         {
             lock (scannedGameObjects)
@@ -506,19 +476,16 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
                         scannedGameObjects.Remove(kvp.Key);
                 }
             }
-        }
-
-
-
-
-
-
-        //private void InternalCreateAssetBundleCached(string url, string name, Hash128 hash, uint crc)
-        private static bool OnDownloadHandlerAssetBundle_InternalCreateAssetBundleCached(string __0, string __1, Hash128 __2, uint __3)
-        {
-            // Not seen in use yet.
-            Logging.Info($"DownloadHandlerAssetBundle.InternalCreateAssetBundleCached(url: {__0}, name: {__1}, hash: {__2}, CRC: {__3})");
-            return true;
+            lock (intercepts)
+            {
+                foreach(var intercept in new List<InterceptingAssetBundleDownloadHandler>(intercepts.Values))
+                {
+                    if(intercept.IsDone())
+                    {
+                        intercepts.Remove(intercept.ptr);
+                    }
+                }
+            }
         }
 
         // 
@@ -568,18 +535,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
             return true;
         }
 
-        //public static string Method_Private_Static_String_String_0(string param_0);
-        private static bool OnUnknownStringHook1_pre(ref string __0, ref string __result)
-        {
-            Logging.Info($"OnUnknownStringHook1_pre(__0: {__0}");
-            return true;
-        }
-        private static bool OnUnknownStringHook1_post(ref string __0, ref string __result)
-        {
-            Logging.Info($"OnUnknownStringHook1_post(__0: {__0}, __result: {__result}");
-            return true;
-        }
-
         // public unsafe InterfacePublicAbstractIDisposableAsObAsUnique Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0()
         private static bool OnGetAssetBundleGetter(AssetBundleDownload __instance)
         {
@@ -598,15 +553,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
                 __instance.field_Private_String_0 = BundleBouncer.BLOCKED_AVTR_ID;
                 __instance.field_Private_String_1 = BundleBouncer.BLOCKED_FILE_URL;
             }
-            return true;
-        }
-
-        private static bool OnCheckIfAssetBundleFileTooLarge(ContentType __0, string __1, ref bool __result)
-        {
-            var contentType = __0;
-            var fileName = __1;
-            //var fileSize = __2;
-            Logging.Info($"ValidationHelpers.CheckIfAssetBundleFileTooLarge({contentType}, {fileName})");
             return true;
         }
 
@@ -667,12 +613,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
                 __result = null;
                 return false;
             }
-            return true;
-        }
-
-        private static bool OnLoadFromCacheOrDownload(string url, Hash128 hash, uint crc, WWW __result)
-        {
-            //Logging.Info($"WWW.LoadFromCacheOrDownload: {url} (Hash: <{hash}>, CRC: {crc}) [TODO]");
             return true;
         }
 
@@ -806,8 +746,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
             return origLoadFromFileAsync_Internal(pathPtr, crc, offset);
         }
 
-
-
         private static bool OnLoadFromFile_1(string __0, ref AssetBundle __result)
         {
             string path = __0;
@@ -836,34 +774,6 @@ private static unsafe IntPtr OnDownloadHandlerAssetBundle_Create(IntPtr scriptin
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, SHA256: {hashstr})");
-                BBUI.NotifyUser($"Blocked crasher (see log)");
-                // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
-                __result = null;
-                return false;
-            }
-            return true;
-        }
-
-        private static bool OnLoadFromFile_3(string __0, uint __1, ulong __2, ref AssetBundle __result)
-        {
-            string path = __0;
-            uint crc = __1;
-            ulong offset = __2;
-
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    stream.Position = (long)offset;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
-            string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
-            Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromFile...");
-            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
-            {
-                Logging.Gottem($"Crasher blocked: {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr})");
                 BBUI.NotifyUser($"Blocked crasher (see log)");
                 // TODO - This is probably a bad idea. Swap with internal avatar, mayhaps?
                 __result = null;

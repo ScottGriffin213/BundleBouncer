@@ -24,6 +24,7 @@
 
 using BundleBouncer.Data;
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using UnhollowerBaseLib;
@@ -37,36 +38,45 @@ namespace BundleBouncer
         private string url;
         private string method;
         private string destfile;
-        private DownloadHandlerFile dl;
+        private FileStream file;
         private DownloadHandlerAssetBundle dhab;
         internal IntPtr ptr;
-        private ulong contentLength;
+        private ulong bytesDownloaded;
+        private string cacheKey;
+        private Hash128 cacheHash;
+        private uint crc;
+        private bool done;
+        private ulong contentLength=0UL;
 
-        public InterceptingAssetBundleDownloadHandler(string url, string method, string destfile, DownloadHandlerAssetBundle dhab)
+        public InterceptingAssetBundleDownloadHandler(string url, string method, string destfile, DownloadHandlerAssetBundle dhab, string cacheKey, Hash128 cacheHash, uint crc)
         {
             this.url = url;
             this.method = method;
             this.destfile = destfile;
-            this.dl = new DownloadHandlerFile(destfile);
+            Directory.CreateDirectory(Path.GetDirectoryName(destfile));
+            this.file = File.OpenWrite(destfile);
             this.dhab = dhab;
             this.ptr = dhab.Pointer;
+            this.bytesDownloaded = 0UL;
+            this.cacheKey = cacheKey;
+            this.cacheHash = cacheHash;
+            this.crc = crc;
+            this.done = false;
             Logging.Info($"IDHAB - Intercepting bytes sent to {dhab}...");
         }
 
 
         public bool IsDone()
         {
-            return dl.IsDone();
-        }
-
-        public bool ReceiveData(Il2CppStructArray<byte> data, int length)
-        {
-            return dl.ReceiveData(data, length);
+            return done;
         }
 
         internal void OnCompleteContent()
         {
-            dl.CompleteContent();
+            done = true;
+            file.Dispose();
+            CacheTool.CreateCacheInfoFile(cacheKey, cacheHash);
+            //dl = null;
             var hash = IOTool.SHA256File(destfile);
             var strhash = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"IDHAB - Done! Scanning file {destfile} ({strhash})...");
@@ -77,27 +87,28 @@ namespace BundleBouncer
             }
             else
             {
-                var downloaded = dl.data;
-                Patches.SendDelayedDHABSignals(ptr, downloaded, contentLength);
+                Patches.SendDelayedDHABSignals(ptr, File.ReadAllBytes(destfile), contentLength);
             }
         }
 
-        internal void ProcessHeaders(ulong length)
+        internal void ProcessHeaders(ulong length, string type)
         {
-            Logging.Info($"Content-Length: {length}UL");
+            //Logging.Info($"Content-Length: {length}UL");
             this.contentLength = length;
-            dl.ReceiveContentLengthHeader(length);
         }
 
         internal long OnReceiveData(byte[] data, ulong len)
         {
-            dl.ReceiveData(data, (int)len);
-            return (long)len; //?
+            this.bytesDownloaded += len;
+            this.file.Write(data, 0, data.Length);
+            return (long)len;
         }
 
         internal double GetProgress()
         {
-            return dl.GetProgress();
+            if (contentLength == 0UL)
+                return 0f;
+            return bytesDownloaded/contentLength;
         }
     }
 }

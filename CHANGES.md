@@ -4,6 +4,9 @@
 
 * Core
   * Now intercepts Unity internals in order to capture bundles just prior to loading.
+* **Known issues**
+  * Progress bars do not work due to internal Unity weirdness. WIP.
+  * **This changeset is very experimental and will cause strange problems. User beware.**
 
 ## 1.2.7
 

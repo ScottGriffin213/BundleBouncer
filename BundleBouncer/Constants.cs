@@ -41,27 +41,27 @@ namespace BundleBouncer
         ///<summary>
         /// Used throughout the code.
         ///</summary>
-        public const string VERSION_STRING = "1.2.8";
+        public const string VERSION_STRING = "1.3.0";
 
 
         public static class Offsets {
             public static class UnityPlayer {
-                public const int LOADFROMFILE = 0x002D7520;
-                public const int LOADFROMFILEASYNC = 0x002D7620;
-                public const int LOADFROMMEMORY = 0x002D7700;
-                public const int ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL = 0x002E24B0;
-                public const int ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG = 0x002E2640;
-                public const int DOWNLOADHANDLERASSETBUNDLE_CREATECACHED = 0x0033ED30;
-                public const int DOWNLOADHANDLERASSETBUNDLE_CREATE = 0x0033EBF0;
-                public const int LOADFROMSTREAMASYNCINTERNAL = 0x002D7940;
-                public const int CORE_BASICSTRING_CHAR_CSTR = 0x00089350;
-                public const int CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN = 0x0008FD80;
-                public const int DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA = 0x0033F400;
-                public const int DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS = 0x0033F1A0;
-                public const int DOWNLOADHANDLERASSETBUNDLE_ISDONE = 0x0033F1D0;
-                public const int DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT = 0x0033F220;
-                public const int DOWNLOADHANDLER_PROCESSHEADERS = 0x00C6D4F0;
-                public const int HEADERMAP_FIND = 0x00C6E1B0;
+                internal const int LOADFROMFILE = 0x002D7520;
+                internal const int LOADFROMFILEASYNC = 0x002D7620;
+                internal const int LOADFROMMEMORY = 0x002D7700;
+                internal const int ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL = 0x002E24B0;
+                internal const int ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG = 0x002E2640;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_CREATECACHED = 0x0033ED30;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_CREATE = 0x0033EBF0;
+                internal const int LOADFROMSTREAMASYNCINTERNAL = 0x002D7940;
+                internal const int CORE_BASICSTRING_CHAR_CSTR = 0x00089350;
+                internal const int CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN = 0x0008FD80;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA = 0x0033F400;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS = 0x0033F1A0;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_ISDONE = 0x0033F1D0;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT = 0x0033F220;
+                internal const int DOWNLOADHANDLER_PROCESSHEADERS = 0x00C6D4F0;
+                internal const int HEADERMAP_FIND = 0x00C6E1B0;
             }
         }
     }
