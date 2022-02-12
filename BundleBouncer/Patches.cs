@@ -86,7 +86,7 @@ namespace BundleBouncer
 
         private static Dictionary<string, DateTime> scannedGameObjects = new Dictionary<string, DateTime>();
 
-        private static Dictionary<IntPtr, InterceptingAssetBundleDownloadHandler> intercepts = new Dictionary<IntPtr, InterceptingAssetBundleDownloadHandler>();
+        private static Dictionary<IntPtr, AssetBundleInterceptor> intercepts = new Dictionary<IntPtr, AssetBundleInterceptor>();
 
         public Patches(BundleBouncer bundleBouncer)
         {
@@ -347,7 +347,7 @@ namespace BundleBouncer
                 Logging.Info("Downloading...");
                 var dhab = new DownloadHandlerAssetBundle(scriptingObjectPtr);
                 //Logging.Info("IDHAB created.");
-                var idhab = new InterceptingAssetBundleDownloadHandler(url, "GET", cachedObjPath, dhab, key, hash, crc);
+                var idhab = new AssetBundleInterceptor(url, "GET", cachedObjPath, dhab, key, hash, crc);
                 var o = origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
                 idhab.ptr = o;
                 Patches.intercepts[o] = idhab;
@@ -367,7 +367,7 @@ namespace BundleBouncer
         private static unsafe double OnDownloadHandlerAssetBundle_GetProgress(IntPtr @this)
         {
             //Logging.Info($"OnDownloadHandlerAssetBundle_GetProgress[{@this.ToInt64()}]");
-            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
                 return idhab.GetProgress();
             }
@@ -380,7 +380,7 @@ namespace BundleBouncer
         private static unsafe char OnDownloadHandlerAssetBundle_IsDone(IntPtr @this)
         {
             //Logging.Info($"OnDownloadHandlerAssetBundle_IsDone[{@this.ToInt64()}]");
-            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
                 return (char)(idhab.IsDone() ? 0x01 : 0x00);
             }
@@ -393,7 +393,7 @@ namespace BundleBouncer
         private static unsafe void OnDownloadHandlerAssetBundle_OnCompleteContent(IntPtr @this)
         {
             //Logging.Info($"OnDownloadHandlerAssetBundle_OnCompleteContent[{@this.ToInt64()}]");
-            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
                 idhab.OnCompleteContent();
             }
@@ -415,7 +415,7 @@ namespace BundleBouncer
             // WORKING on 1160
             //Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}]");
             origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
-            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
                 ulong clen = *(ulong*)(@this + 0x48);
                 //Logging.Info($"  Got Content-Length: {clen}");
@@ -432,7 +432,7 @@ namespace BundleBouncer
         private static unsafe long OnDownloadHandlerAssetBundle_OnReceiveData(IntPtr @this, byte[] data, ulong len)
         {
             //Logging.Info($"OnDownloadHandlerAssetBundle_OnReceiveData[{@this.ToInt64()}]({data.Length}, {len})");
-            if (intercepts.TryGetValue(@this, out InterceptingAssetBundleDownloadHandler idhab))
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
                 return idhab.OnReceiveData(data, len);
             }
@@ -478,7 +478,7 @@ namespace BundleBouncer
             }
             lock (intercepts)
             {
-                foreach(var intercept in new List<InterceptingAssetBundleDownloadHandler>(intercepts.Values))
+                foreach(var intercept in new List<AssetBundleInterceptor>(intercepts.Values))
                 {
                     if(intercept.IsDone())
                     {

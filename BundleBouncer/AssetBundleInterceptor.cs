@@ -33,7 +33,7 @@ using UnityEngine.Networking;
 
 namespace BundleBouncer
 {
-    internal class InterceptingAssetBundleDownloadHandler
+    internal class AssetBundleInterceptor
     {
         private string url;
         private string method;
@@ -48,7 +48,7 @@ namespace BundleBouncer
         private bool done;
         private ulong contentLength=0UL;
 
-        public InterceptingAssetBundleDownloadHandler(string url, string method, string destfile, DownloadHandlerAssetBundle dhab, string cacheKey, Hash128 cacheHash, uint crc)
+        public AssetBundleInterceptor(string url, string method, string destfile, DownloadHandlerAssetBundle dhab, string cacheKey, Hash128 cacheHash, uint crc)
         {
             this.url = url;
             this.method = method;
@@ -62,7 +62,7 @@ namespace BundleBouncer
             this.cacheHash = cacheHash;
             this.crc = crc;
             this.done = false;
-            Logging.Info($"IDHAB - Intercepting bytes sent to {dhab}...");
+            Logging.Info($"ABI - Intercepting bytes sent to {dhab}...");
         }
 
 
@@ -79,10 +79,10 @@ namespace BundleBouncer
             //dl = null;
             var hash = IOTool.SHA256File(destfile);
             var strhash = string.Concat(hash.Select(x => x.ToString("X2")));
-            Logging.Info($"IDHAB - Done! Scanning file {destfile} ({strhash})...");
+            Logging.Info($"ABI - Done! Scanning file {destfile} ({strhash})...");
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
-                BundleBouncer.NotifyUserOfBlockedBundle(hash, "InterceptingDownloadHandlerAssetBundle");
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, "AssetBundleInterceptor");
                 Patches.SendDelayedDHABSignals(ptr, new byte[0], 0UL);
             }
             else
