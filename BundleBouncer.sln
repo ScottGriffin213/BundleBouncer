@@ -5,7 +5,12 @@ VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BundleBouncer", "BundleBouncer\BundleBouncer.csproj", "{4F0467DF-826A-46E0-B2A0-6EE7940E416E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BundleBouncer.Shitlist", "BundleBouncer.Shitlist\BundleBouncer.Shitlist.csproj", "{1259F19F-5ADF-45F3-B048-9688F8C2B48F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BundleBouncer.Shitlist", "BundleBouncer.Shitlist\BundleBouncer.Shitlist.csproj", "{1259F19F-5ADF-45F3-B048-9688F8C2B48F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2E77F799-46A3-4B18-8925-0A4E2B6EEDB4}"
+	ProjectSection(SolutionItems) = preProject
+		lib\AssetTools.NET\AssetTools.NET\AssetsTools.NET.csproj = lib\AssetTools.NET\AssetTools.NET\AssetsTools.NET.csproj
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,6 +5,7 @@
     <Deterministic>true</Deterministic>
     <OutputPath>dist</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
