@@ -21,7 +21,7 @@
 
 ---
 
-This project is a quick and dirty avatar ID blocker, designed to prevent corrupted assetbundles from crashing your game by preventing them from being downloaded at all, or at the very least blocking them from being loaded.  It currently relies on known avatar IDs and bundle hashes, but we're working on automated detection and reporting.
+This project is an advanced assetbundle scanning system, designed to prevent maliciously corrupted assetbundles from crashing your game by preventing them from being downloaded at all, or at the very least blocking them from being loaded.  It makes use of a wide range of technologies, including trie-lookup hash matching, VirusTotal's [YARA](http://virustotal.github.io/yara/) signature matching engine, and [AssetsTools.NET](https://github.com/nesrak1/AssetsTools.NET).
 
 We know there are clients out there with some of this featureset, but we're tired of basic safety features like this being locked up behind invite-only Discords and Patreons.
 
@@ -30,6 +30,8 @@ Quit being dicks.  You know who you are.
 ## Notes
 
 * **Using ANY mods can get you banned from VRChat.** Don't talk about using mods, and don't be obvious around people you don't trust.
+* While BundleBouncer tries to block as much as it can, it still relies on known signatures and hashes for much of it's power.  **False negatives (and positives) are possible.**
+* BundleBouncer is now tied into a significant part of Unity's crusty underbelly.  This can result in occasional weirdness.
 * Some C# files in this project are generated from sets of data not included in this repository (to prevent skiddies getting access to all the bad avatars we know of), so **the files seen here are _not_ a complete representation of the codebase**.
   * However, the files in this project **are** representative of everything in the DLLs. Compiling this code *should* result in a DLL mostly identical to the one released as a binary (beyond some compiler gibberish).
 * For security, malicious avatar IDs are [hashed](https://en.wikipedia.org/wiki/Cryptographic_hash_function) and mildly obfuscated so skiddies can't easily grab a list of them.
@@ -39,13 +41,15 @@ Quit being dicks.  You know who you are.
 ## Installing
 
 * Install [VRChatUtilityKit](https://github.com/SleepyVRC/Mods#vrchatutilitykit)
-* Install BundleBouncer.dll from Releases into MelonLoader `Mods/` directory
-* Optionally, pre-download BundleBouncer.Shitlist.dll from Releases into a subfolder of your VRChat install called `Dependencies/`.
+* Install [UIExpansionKit](https://github.com/knah/VRCMods)
+* Install BundleBouncer.dll from [Releases](https://github.com/ScottGriffin213/BundleBouncer/releases/latest) into MelonLoader `Mods/` directory.
+* Optionally, pre-download BundleBouncer.Shitlist.dll from [LATEST_DEFINITIONS](https://github.com/ScottGriffin213/BundleBouncer/releases/tag/LATEST_DEFINITIONS) into a subfolder of your VRChat install called `Dependencies/`.
+* Optionally, pre-download Global-YARA-Rules.bin from [LATEST_DEFINITIONS](https://github.com/ScottGriffin213/BundleBouncer/releases/tag/LATEST_DEFINITIONS) into `UserData/BundleBouncer/`.
 
 ## Adding an Avatar ID
 NOTE: There are a bunch of avatars that are automatically blocked by the mod.
 
-1. Open or create `VRChat\UserData\BundleBouncer\Avatars.txt` in your favorite text editor that isn't Word or Wordpad.
+1. Open or create `VRChat\UserData\BundleBouncer\My-Blocked-Avatars.txt` in your favorite text editor that isn't Word or Wordpad.
 2. Add the avatar ID (usually of format `avtr_<gibberish>`) to a new line.
 3. Save and close the file.
 4. [Let us know about it.](#shitlist-additions)
@@ -87,12 +91,12 @@ Please send any crasher, lagger, or otherwise malicious avatar IDs to scgriffin2
 Include the following:
 
 * Asset ID (`avtr_` or `file_`)
-* Assetbundle and/or its SHA256 checksum, if known
+* Assetbundle and/or its SHA256 checksum, if known (use `sha256sum filename`)
 * Avatar Name, if available
 * Pictures, if available
-* Description of malicious behaviour
+* Description of malicious behaviour (screenspace shader, assetbundle crasher, etc)
 * World(s) encountered in
-* The name you wish to be credited as, if applicable.
+* The name you wish to be credited as, if you want.
 
 ## Contact
 
@@ -104,6 +108,11 @@ The public source code (which is contained in this repository) is MIT-licensed. 
 
 The full buildsystem and avatar dataset is proprietary for security reasons. Copyright &copy;2021-2022 "Scott Griffin". All rights reserved.
 
+We make use of dnYara and libyara for signature matching.  See [LICENSE.dnYara](licenses/LICENSE.dnYara) for dnYara's license and [CHANGES.dnYara.md](licenses/CHANGES.dnYara.md) for our changes to dnYara.
+
+We also make use of [AssetsTools.NET](https://github.com/nesrak1/AssetsTools.NET) for smoke-testing AssetBundles.
+
+Mono.Cecil is a dependency of AssetsTools.NET. We're fairly sure it's not actually used, but it's bundled into the mod, just in case.
 ## Contributors
 
 * "Scott Griffin"
@@ -113,9 +122,12 @@ The full buildsystem and avatar dataset is proprietary for security reasons. Cop
 
 * [AdvancedSafety](https://github.com/knah/VRCMods/tree/master/AdvancedSafety) by Knah - IL2CPP interface code
 * [Finitizer](https://github.com/knah/VRCMods/tree/master/Finitizer) by Knah - IL2CPP icall hooking code
+* Airbus CERT - Made dnYara
+* AssetTools.NET
 * Behemoth - More help with IL2CPP
 * Benji, Requi - Handholding, ideas, help with backend particulars
-* Various skiddies - Outright stole and modified code for some sketchier API calls.
 * Jewordi - Testing, ideas, being a bro
 * StackOverflow - Code outsourcing
 * VRCMG Discord - Putting up with my dumb questions
+* Various skiddies - Outright stole and modified code for some sketchier API calls.
+* VirusTotal - Made YARA
