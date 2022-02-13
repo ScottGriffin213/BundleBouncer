@@ -1,5 +1,5 @@
 ﻿/**
- * BundleBouncer Detours and Patches
+ * BundleBouncer Asset Bundle Intereceptor
  * 
  * Copyright (c) 2022 BundleBouncer Contributors
  * 
