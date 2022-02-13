@@ -73,10 +73,10 @@ namespace BundleBouncer
                     userRules = compiler.Compile(); // TODO: Combine somehow
                     Logging.Info($"YARA: Loaded {userRules.RuleCount} rules, {userRules.NamespacesCount} namespaces, {userRules.StringsCount} strings from your personal ruleset.");
                 }
-            } 
+            }
             else
             {
-                Logging.Info($"YARA: Directory {bb.YaraUserRulesDir} does not exist, not loading user-provided rules.");
+                Logging.Info($"YARA: Directory {bb.YaraUserRulesDir} does not exist; Will not load user-provided rules.");
             }
 
             // YARA scanner
@@ -85,29 +85,31 @@ namespace BundleBouncer
 
         internal static bool ScanFile(string filename, string source, byte[] hash = null, string hashstr = null)
         {
-            if(hash == null)
+            if (hash == null)
                 hash = IOTool.SHA256File(filename);
-            if(hashstr == null)
+            if (hashstr == null)
                 hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
-            
+
             Logging.Info($"Checking {filename} ({hashstr})...");
 
             // Simple hash check.  Fast, so we do this first.
-            if(AvatarShitList.IsAssetBundleHashBlocked(hash)){
+            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
+            {
                 BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source);
                 return true;
             }
 
-            // Check against YARA rules.  Fast.
+            // Check against YARA rules.  Fast-ish.
             // A few of these check the header before we try anything else.
-            if(MatchesYaraRules(filename,source,hash,hashstr)){
+            if (MatchesYaraRules(filename, source, hash, hashstr))
+            {
                 //CleanupAssets();
                 BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source);
                 return true;
             }
 
             // Try loading from AssetTools. Slow, but needed by some Yara rules.
-            if(!TryLoadingBundle(filename, source, hash, hashstr, out BundleFileInstance bfi))
+            if (!TryLoadingBundle(filename, source, hash, hashstr, out BundleFileInstance bfi))
             {
                 CleanupAssets();
                 BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source);
@@ -146,7 +148,9 @@ namespace BundleBouncer
                 }
                 */
                 return true;
-            } catch(Exception e) {
+            }
+            catch (Exception e)
+            {
                 Logging.Error("Received error!");
                 Logging.Error(e.ToString());
                 return true;
@@ -155,7 +159,7 @@ namespace BundleBouncer
 
         private static void QuickHeaderCheck(string filename)
         {
-            using(var s = File.OpenRead(filename)) 
+            using (var s = File.OpenRead(filename))
             {
                 using (var rdr = new ValidatingBinaryReader(s))
                 {
@@ -184,7 +188,7 @@ namespace BundleBouncer
             foreach (var scanResult in matches)
             {
                 var id = scanResult.MatchingRule.Identifier;
-                BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source+"/YARA:"+id);
+                BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source + "/YARA:" + id);
                 if (scanResult.Matches.Count == 1)
                 {
                     Logging.Gottem($"File {filename} matched YARA rule {id}.{scanResult.Matches.First().Key}!");
