@@ -170,6 +170,23 @@ namespace BundleBouncer
             }
 
             // Fire up YARA.
+            if(!Directory.Exists("Dependencies"))
+                Directory.CreateDirectory("Dependencies");
+            // Slight adaptation of knah's code in TSAC
+            try 
+            {
+                using (var rsc = typeof(BundleBouncer).Assembly.GetManifestResourceStream(typeof(BundleBouncer), "libyara.dll"))
+                {
+                    using (var outfile = File.OpenWrite(Path.Combine("Dependencies", "libyara.dll")))
+                    {
+                        rsc.CopyTo(outfile);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                Logging.Warning("Could not write libyara.dll. If you're running multiple instances of VRChat, this is normal.");
+            }
             AssetScanner.Init(this);
 
             this.Patches = new Patches(this);

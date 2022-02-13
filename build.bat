@@ -3,16 +3,16 @@
 set VRCHAT_DIR=G:\SteamLibrary\steamapps\common\VRChat\MelonLoader
 echo VRCHAT_DIR=%VRCHAT_DIR%
 
-cd lib\dnYara
-
-
 cd lib\ilrepack
 call gradlew.bat msbuild
 cd ..\..
 dotnet build -c Release BundleBouncer\BundleBouncer.csproj
 dotnet build -c Release BundleBouncer.Shitlist\BundleBouncer.Shitlist.csproj
-copy /Y BundleBouncer.Shitlist\dist\net472\BundleBouncer.Shitlist.dll dist\
-lib\ilrepack\ILRepack\bin\Release\ILRepack.exe /out:dist\BundleBouncer.dll /internalize ^
+mkdir dist\Dependencies
+mkdir dist\Mods
+::mkdir dist\UserData\
+copy /Y BundleBouncer.Shitlist\dist\net472\BundleBouncer.Shitlist.dll dist\Dependencies\
+lib\ilrepack\ILRepack\bin\Release\ILRepack.exe /out:dist\Mods\BundleBouncer.dll /internalize ^
     /lib:%VRCHAT_DIR% ^
     /lib:%VRCHAT_DIR%\Managed ^
     BundleBouncer\dist\net472\BundleBouncer.dll ^

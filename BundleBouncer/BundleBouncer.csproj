@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="images\png\BundleBouncer-512.png" />
+    <None Remove="libyara.dll" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="images\png\BundleBouncer-512.png" />
@@ -983,5 +984,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\dnYara4Core\dnYara4Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="libyara.dll">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
