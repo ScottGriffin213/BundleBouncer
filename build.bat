@@ -15,7 +15,12 @@ copy /Y BundleBouncer.Shitlist\dist\net472\BundleBouncer.Shitlist.dll dist\Depen
 lib\ilrepack\ILRepack\bin\Release\ILRepack.exe /out:dist\Mods\BundleBouncer.dll /internalize ^
     /lib:%VRCHAT_DIR% ^
     /lib:%VRCHAT_DIR%\Managed ^
+    BundleBouncer\dist\net472\AssetsTools.NET.dll ^
     BundleBouncer\dist\net472\BundleBouncer.dll ^
     BundleBouncer\dist\net472\BouncyCastle.Crypto.dll ^
     BundleBouncer\dist\net472\dnYARA.dll ^
-    BundleBouncer\dist\net472\dnYARA.Interop.dll
+    BundleBouncer\dist\net472\dnYARA.Interop.dll ^
+    BundleBouncer\dist\net472\Mono.Cecil.dll ^
+    BundleBouncer\dist\net472\Mono.Cecil.Mdb.dll ^
+    BundleBouncer\dist\net472\Mono.Cecil.Pdb.dll ^
+    BundleBouncer\dist\net472\Mono.Cecil.Rocks.dll

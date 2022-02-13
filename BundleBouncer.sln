@@ -9,9 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BundleBouncer.Shitlist", "B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2E77F799-46A3-4B18-8925-0A4E2B6EEDB4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dnYara4Core", "dnYara4Core\dnYara4Core.csproj", "{07AA9FDD-F457-4C3A-B169-8B8AD603E9A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dnYara4Core", "dnYara4Core\dnYara4Core.csproj", "{07AA9FDD-F457-4C3A-B169-8B8AD603E9A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dnYara4Core.Interop", "dnYara4Core.Interop\dnYara4Core.Interop.csproj", "{0158D2A1-FBBA-48B4-BBA7-6CE698EDF308}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dnYara4Core.Interop", "dnYara4Core.Interop\dnYara4Core.Interop.csproj", "{0158D2A1-FBBA-48B4-BBA7-6CE698EDF308}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssetsTools.NET", "lib\AssetTools.NET\AssetTools.NET\AssetsTools.NET.csproj", "{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{0158D2A1-FBBA-48B4-BBA7-6CE698EDF308}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0158D2A1-FBBA-48B4-BBA7-6CE698EDF308}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0158D2A1-FBBA-48B4-BBA7-6CE698EDF308}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
