@@ -184,6 +184,7 @@ namespace BundleBouncer
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT, OnDownloadHandlerAssetBundle_OnCompleteContent, out origNATIVEDownloadHandlerAssetBundle_OnCompleteContent);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA, OnDownloadHandlerAssetBundle_OnReceiveData, out origNATIVEDownloadHandlerAssetBundle_OnReceiveData);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLER_PROCESSHEADERS, OnDownloadHandler_ProcessHeaders, out origNATIVEDownloadHandler_ProcessHeaders);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLER_HASCONTENTLENGTH, OnDownloadHandler_HasContentLength, out origNATIVEDownloadHandler_HasContentLength);
             }
         }
 
@@ -414,6 +415,22 @@ namespace BundleBouncer
             else
             {
                 origNATIVEDownloadHandlerAssetBundle_OnCompleteContent(@this);
+            }
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate bool OnDownloadHandler_HasContentLength_Delegate(IntPtr @this);
+        private static OnDownloadHandler_HasContentLength_Delegate origNATIVEDownloadHandler_HasContentLength;
+        private static unsafe bool OnDownloadHandler_HasContentLength(IntPtr @this)
+        {
+            //Logging.Info($"OnDownloadHandle_HasContentLength[{@this.ToInt64()}]");
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
+            {
+                return idhab.HasContentLength();
+            }
+            else
+            {
+                return origNATIVEDownloadHandler_HasContentLength(@this);
             }
         }
 

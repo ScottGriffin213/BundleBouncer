@@ -131,5 +131,10 @@ namespace BundleBouncer
         {
             return bytesDownloaded;
         }
+
+        internal bool HasContentLength()
+        {
+            return contentLength > 0UL;
+        }
     }
 }
