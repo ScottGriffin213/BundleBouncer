@@ -179,6 +179,7 @@ namespace BundleBouncer
                 // IDHAB shit
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS, OnDownloadHandlerAssetBundle_GetProgress, out origNATIVEDownloadHandlerAssetBundle_GetProgress);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETMEMORYSIZE, OnDownloadHandlerAssetBundle_GetMemorySize, out origNATIVEDownloadHandlerAssetBundle_GetMemorySize);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ISDONE, OnDownloadHandlerAssetBundle_IsDone, out origNATIVEDownloadHandlerAssetBundle_IsDone);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT, OnDownloadHandlerAssetBundle_OnCompleteContent, out origNATIVEDownloadHandlerAssetBundle_OnCompleteContent);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA, OnDownloadHandlerAssetBundle_OnReceiveData, out origNATIVEDownloadHandlerAssetBundle_OnReceiveData);
@@ -372,6 +373,19 @@ namespace BundleBouncer
                 return idhab.GetProgress();
             }
             return origNATIVEDownloadHandlerAssetBundle_GetProgress(@this);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate ulong OnDownloadHandlerAssetBundle_GetMemorySize_Delegate(IntPtr @this);
+        private static OnDownloadHandlerAssetBundle_GetMemorySize_Delegate origNATIVEDownloadHandlerAssetBundle_GetMemorySize;
+        private static unsafe ulong OnDownloadHandlerAssetBundle_GetMemorySize(IntPtr @this)
+        {
+            //Logging.Info($"OnDownloadHandlerAssetBundle_GetMemorySize[{@this.ToInt64()}]");
+            if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
+            {
+                return idhab.GetMemorySize();
+            }
+            return origNATIVEDownloadHandlerAssetBundle_GetMemorySize(@this);
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

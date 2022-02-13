@@ -61,6 +61,7 @@ namespace BundleBouncer
                 internal const int DOWNLOADHANDLERASSETBUNDLE_ISDONE = 0x0033F1D0;
                 internal const int DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT = 0x0033F220;
                 internal const int DOWNLOADHANDLER_PROCESSHEADERS = 0x00C6D4F0;
+                internal const int DOWNLOADHANDLERASSETBUNDLE_GETMEMORYSIZE = 0x0033F180;
                 internal const int HEADERMAP_FIND = 0x00C6E1B0;
             }
         }

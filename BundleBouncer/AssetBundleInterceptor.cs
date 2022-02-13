@@ -126,5 +126,10 @@ namespace BundleBouncer
                 return 0f;
             return bytesDownloaded / contentLength;
         }
+
+        internal ulong GetMemorySize()
+        {
+            return bytesDownloaded;
+        }
     }
 }
