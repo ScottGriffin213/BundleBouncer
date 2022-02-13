@@ -84,9 +84,11 @@ namespace BundleBouncer
         static HighlightsFXStandalone shitterHighlighter;
 
         private SemVersion MinimumMLVersion = new SemVersion(0, 5, 3);
-
+        
         public const string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
         public const string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
+        public const string LATEST_YARA_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/Global-YARA-Ruleset.bin";
+        public const string LATEST_YARA_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/Global-YARA-Ruleset.bin.sha256sum";
         public static readonly string BLOCKED_AVTR_ID = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
         public static readonly string BLOCKED_FILE_URL = "https://0.0.0.0/blocked.dat"; // FIXME
 
@@ -150,6 +152,7 @@ namespace BundleBouncer
             }
 
             SyncShitlistDLL();
+            SyncYaraRuleset();
 
             LoadPlayerShitlists();
             if (KnownSkiddies.Count > 0)
@@ -405,6 +408,34 @@ namespace BundleBouncer
             Logging.Info("Loading shitlist...");
             var asm = Assembly.LoadFrom(ShitlistDll);
             AvatarShitList.shitListProvider = (IShitListProvider)(asm.GetTypes().Where(x => x.Name == "ShitlistProvider").First().GetConstructor(new Type[0]).Invoke(null));
+        }
+
+
+        internal void SyncYaraRuleset()
+        {
+            // Purposefully blocking.
+            var needsDL = !File.Exists(YaraCompiledRuleset);
+            var www = new System.Net.WebClient();
+            string remote_hash = www.DownloadString(LATEST_YARA_CHECKSUM).Trim();
+            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(IOTool.SHA256File(YaraCompiledRuleset).Select(x => x.ToString("X2")));
+            //Logging.Info($"Definitions File Exists: {needsDL}");
+            //Logging.Info($"Config - Sync Definitions: {Instance.Config.SyncDefinitions}");
+            //Logging.Info($"Remote hash: {remote_hash}");
+            //Logging.Info($"Local hash: {local_hash}");
+            if (!needsDL && Instance.Config.SyncDefinitions)
+            {
+                if (local_hash != remote_hash)
+                {
+                    needsDL = true;
+                }
+            }
+            if (needsDL)
+            {
+                Logging.Info($"Updating to yara ruleset of hash {remote_hash}...");
+                www.DownloadFile(LATEST_YARA_URL, YaraCompiledRuleset);
+            }
+            local_hash = String.Concat(IOTool.SHA256File(YaraCompiledRuleset).Select(x => x.ToString("X2")));
+            Logging.Info($"Hash of {YaraCompiledRuleset} after update checks: {local_hash}");
         }
 
         internal static void SetUserAvatar(string userid, EAvatarType avType, dynamic avDict)
