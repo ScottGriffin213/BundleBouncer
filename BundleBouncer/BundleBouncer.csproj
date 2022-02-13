@@ -979,7 +979,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="dnYara" Version="2.1.0" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\dnYara4Core\dnYara4Core.csproj" />
   </ItemGroup>
 </Project>

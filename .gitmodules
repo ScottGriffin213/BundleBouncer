@@ -4,3 +4,6 @@
 [submodule "lib/ilrepack"]
 	path = lib/ilrepack
 	url = https://github.com/gluck/il-repack.git
+[submodule "lib/dnYara"]
+	path = lib/dnYara
+	url = https://github.com/airbus-cert/dnYara.git

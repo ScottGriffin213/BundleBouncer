@@ -57,6 +57,8 @@ namespace BundleBouncer
         public string UserAvatarBlockListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
         public string UserAvatarAllowListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Avatars.txt"); } }
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
+        public string YaraCompiledRuleset { get { return Path.Combine(UserDataDir, "Global-YARA-Ruleset.bin"); } }
+        public string YaraUserRulesDir { get { return Path.Combine(UserDataDir, "User-YARA-Rules"); } }
         public static string ShitlistDll { get; private set; }
 
 
@@ -167,6 +169,8 @@ namespace BundleBouncer
                 Logging.Info($"Loaded {AvatarShitList.UserAvatarAllowList.Count} entries from {UserAvatarAllowListFile}");
             }
 
+            // Fire up YARA.
+            AssetScanner.Init(this);
 
             this.Patches = new Patches(this);
 

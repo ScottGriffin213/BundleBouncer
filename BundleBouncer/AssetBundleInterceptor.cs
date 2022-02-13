@@ -77,9 +77,10 @@ namespace BundleBouncer
             var hash = IOTool.SHA256File(destfile);
             var strhash = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"ABI - Done! Scanning file {destfile} ({strhash})...");
-            if (AvatarShitList.IsAssetBundleHashBlocked(hash))
+            // Scan local file with YARA and check hash against shitlist.
+            if (AssetScanner.ScanFile(destfile, "AssetBundleInterceptor"))
             {
-                BundleBouncer.NotifyUserOfBlockedBundle(hash, "AssetBundleInterceptor");
+                // Faux download error.
                 Patches.SendDelayedDHABSignals(ptr, new byte[0], 0UL);
             }
             else
@@ -104,6 +105,7 @@ namespace BundleBouncer
             {
                 if (writing.Contains(destfile))
                 {
+                    // Spin wheels while waiting for lock to release.
                     while (writing.Contains(destfile)) { Thread.Sleep(500); }
                 }
                 lock (writing)

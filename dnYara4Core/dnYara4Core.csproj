@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <Deterministic>true</Deterministic>
-    <OutputPath>dist</OutputPath>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BundleBouncer\BundleBouncer.csproj" />
+    <ProjectReference Include="..\dnYara4Core.Interop\dnYara4Core.Interop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Mono.Posix">
       <HintPath>G:\SteamLibrary\steamapps\common\VRChat\MelonLoader\Managed\Mono.Posix.dll</HintPath>
       <Private>false</Private>

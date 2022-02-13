@@ -354,7 +354,7 @@ namespace BundleBouncer
                 //Logging.Info($"Assigned to [{o.ToInt64()}]");
                 return o;
             }
-            if (CheckExistingFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
+            if (AssetScanner.ScanFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
             {
                 return IntPtr.Zero;
             }
@@ -453,17 +453,6 @@ namespace BundleBouncer
 
             //dhab.CompleteContent();
             origNATIVEDownloadHandlerAssetBundle_OnCompleteContent(dhab);
-        }
-
-        public static bool CheckExistingFile(string cachedObjPath, string source)
-        {
-            Logging.Info($"Checking {cachedObjPath}...");
-            var sha256 = IOTool.SHA256File(cachedObjPath);
-            var hashstr = string.Concat(sha256.Select(x => x.ToString("X2")));
-            var blocked = AvatarShitList.IsAssetBundleHashBlocked(sha256);
-            if(blocked)
-                BundleBouncer.NotifyUserOfBlockedBundle(sha256, source);
-            return blocked;
         }
 
         public void OnLateUpdate()
