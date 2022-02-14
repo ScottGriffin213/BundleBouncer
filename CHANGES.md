@@ -4,9 +4,11 @@
 
 * Core
   * Now intercepts Unity internals in order to capture bundles just prior to loading.
+  * Added [YARA](http://virustotal.github.io/yara/) binary scanning engine from VirusTotal and Airbus CERT.
+  * Added [AssetTools.NET](https://github.com/nesrak1/AssetsTools.NET) for detailed inspection of assetbundles.
 * **Known issues**
+  * **This changeset is very experimental and invasive, and will likely cause strange problems. User beware.**
   * Progress bars do not work due to internal Unity weirdness. WIP.
-  * **This changeset is very experimental and will likely cause strange problems. User beware.**
 
 ## 1.2.7
 
