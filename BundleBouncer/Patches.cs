@@ -25,7 +25,6 @@
 using BundleBouncer.Data;
 using BundleBouncer.Utilities;
 using ExitGames.Client.Photon;
-using HarmonyLib;
 using MelonLoader;
 using Newtonsoft.Json;
 using System;
@@ -33,11 +32,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using UnhollowerBaseLib;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -175,7 +172,7 @@ namespace BundleBouncer
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMMEMORY, OnUnityPlayer_LoadFromMemory_NATIVE, out origNATIVELoadFromMemory);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool, out origNATIVEInitAssetBundleStorageFSEUlongBool);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong, out origNATIVEInitAssetBundleStorageStrUlong);
-                
+
                 // ABI shit
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS, OnDownloadHandlerAssetBundle_GetProgress, out origNATIVEDownloadHandlerAssetBundle_GetProgress);
@@ -399,7 +396,7 @@ namespace BundleBouncer
             //Logging.Info($"OnDownloadHandlerAssetBundle_IsDone[{@this.ToInt64()}]");
             if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
-                return (char)(idhab.IsDone? 0x01 : 0x00);
+                return (char)(idhab.IsDone ? 0x01 : 0x00);
             }
             return origNATIVEDownloadHandlerAssetBundle_IsDone(@this);
         }
@@ -456,7 +453,8 @@ namespace BundleBouncer
                 //Logging.Info($"  Got Content-Length: {ctype}");
                 idhab.ProcessHeaders(clen, ctype);
                 //Logging.Info($"ProcessHeaders: ret {o} I");
-            } else
+            }
+            else
             {
                 //Logging.Info($"ProcessHeaders: ret {o}");
             }
@@ -505,9 +503,9 @@ namespace BundleBouncer
             }
             lock (intercepts)
             {
-                foreach(var intercept in new List<AssetBundleInterceptor>(intercepts.Values))
+                foreach (var intercept in new List<AssetBundleInterceptor>(intercepts.Values))
                 {
-                    if(intercept.IsDone)
+                    if (intercept.IsDone)
                     {
                         intercepts.Remove(intercept.ptr);
                     }
@@ -887,13 +885,13 @@ namespace BundleBouncer
                             dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
                             var avdata = playerHashtable["249"];
                             var userid = avdata["user"]["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
-                            if (HarmonyUtils.HasProp(avdata, "avatarDict"))
+                            if (ReflectionUtils.HasProp(avdata, "avatarDict"))
                             {
                                 BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata["avatarDict"]["id"].ToString());
                                 if (!CheckAvDict(avdata["avatarDict"], userid, __0.Code, false))
                                     return false;
                             }
-                            if (HarmonyUtils.HasProp(avdata, "favatarDict"))
+                            if (ReflectionUtils.HasProp(avdata, "favatarDict"))
                             {
                                 BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata["favatarDict"]["id"].ToString());
                                 if (!CheckAvDict(avdata["favatarDict"], userid, __0.Code, true))
@@ -908,13 +906,13 @@ namespace BundleBouncer
                             dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
                             var avdata = playerHashtable["251"];
                             var userid = avdata["user"]["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
-                            if (HarmonyUtils.HasProp(avdata, "avatarDict"))
+                            if (ReflectionUtils.HasProp(avdata, "avatarDict"))
                             {
                                 BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata["avatarDict"]["id"].ToString());
                                 if (!CheckAvDict(avdata["avatarDict"], avdata["user"]["id"], __0.Code, false))
                                     return false;
                             }
-                            if (HarmonyUtils.HasProp(avdata, "favatarDict"))
+                            if (ReflectionUtils.HasProp(avdata, "favatarDict"))
                             {
                                 BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata["favatarDict"]["id"].ToString());
                                 if (!CheckAvDict(avdata["favatarDict"], avdata["user"]["id"], __0.Code, true))

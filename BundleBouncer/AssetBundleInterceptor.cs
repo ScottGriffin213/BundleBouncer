@@ -24,7 +24,6 @@
  * SOFTWARE.
  */
 
-using BundleBouncer.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -73,9 +72,9 @@ namespace BundleBouncer
 
         internal void OnCompleteContent()
         {
-            #if ABI_DEBUG
+#if ABI_DEBUG
             Logging.Info("OnCompleteContent");
-            #endif
+#endif
             done = true;
             file.Dispose();
             CacheTool.CreateCacheInfoFile(cacheKey, cacheHash);
@@ -101,9 +100,9 @@ namespace BundleBouncer
 
         internal void ProcessHeaders(ulong length, string type)
         {
-            #if ABI_DEBUG
+#if ABI_DEBUG
             Logging.Info($"ProcessHeaders({length}, {type})");
-            #endif
+#endif
             //Logging.Info($"Content-Length: {length}UL");
             this.contentLength = length;
         }
@@ -122,16 +121,16 @@ namespace BundleBouncer
             var idfk = *(IntPtr*)ptr + 16;
             if (idfk != IntPtr.Zero)
             {
-                var callback = Marshal.GetDelegateForFunctionPointer<DownloadHandler_SendProgressReport_Callback>(*(IntPtr*)idfk+16);
+                var callback = Marshal.GetDelegateForFunctionPointer<DownloadHandler_SendProgressReport_Callback>(*(IntPtr*)idfk + 16);
                 callback(idfk);
             }
         }
 
         internal long OnReceiveData(byte[] data, ulong len)
         {
-            #if ABI_DEBUG
+#if ABI_DEBUG
             Logging.Info($"OnReceiveData({data.LongLength}, {len})");
-            #endif
+#endif
             if (file == null)
             {
                 if (writing.Contains(destfile))
@@ -155,15 +154,15 @@ namespace BundleBouncer
 
         private unsafe void HACK_InjectProgress(ulong bytesDownloaded)
         {
-            Marshal.WriteInt64(ptr+8, (long)bytesDownloaded);
+            Marshal.WriteInt64(ptr + 8, (long)bytesDownloaded);
         }
 
         internal double GetProgress()
         {
             SendProgressReport();
-            #if ABI_DEBUG
+#if ABI_DEBUG
             Logging.Info($"GetProgress: {bytesDownloaded}/{contentLength}B");
-            #endif
+#endif
             if (contentLength == 0UL)
                 return 0f;
 
@@ -172,9 +171,9 @@ namespace BundleBouncer
 
         internal ulong GetMemorySize()
         {
-            #if ABI_DEBUG
+#if ABI_DEBUG
             Logging.Info($"GetMemorySize: {bytesDownloaded}/{contentLength}B");
-            #endif
+#endif
             return bytesDownloaded;
         }
 
