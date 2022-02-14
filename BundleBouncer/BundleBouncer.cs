@@ -56,8 +56,8 @@ namespace BundleBouncer
         public string OldShitListFile { get { return Path.Combine(UserDataDir, "Avatars.txt"); } }
         public string UserAvatarBlockListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
         public string UserAvatarAllowListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Avatars.txt"); } }
-        public string UserAssetHashAllowListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Asset-Hashes.txt"); } }
-        public string UserAssetHashBlockListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Asset-Hashes.txt"); } }
+        public string UserAssetHashAllowListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Asset-Hashes.txt"); } }
+        public string UserAssetHashBlockListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Asset-Hashes.txt"); } }
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
         public string YaraCompiledRuleset { get { return Path.Combine(UserDataDir, "Global-YARA-Ruleset.bin"); } }
         public string YaraUserRulesDir { get { return Path.Combine(UserDataDir, "User-YARA-Rules"); } }
