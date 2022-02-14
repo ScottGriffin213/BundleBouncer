@@ -91,12 +91,18 @@ namespace BundleBouncer
             if (hashstr == null)
                 hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
 
+            if(AvatarShitList.IsAssetBundleHashWhitelisted(hash))
+            {
+                Logging.Info($"Skipping whitelisted file {filename} ({hashstr}).");
+                return false;
+            }
+
             Logging.Info($"Checking {filename} ({hashstr})...");
 
             // Simple hash check.  Fast, so we do this first.
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
-                BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source);
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
                 return true;
             }
 
@@ -105,7 +111,7 @@ namespace BundleBouncer
             if (MatchesYaraRules(filename, source, hash, hashstr))
             {
                 //CleanupAssets();
-                BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source);
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
                 return true;
             }
 
@@ -113,7 +119,7 @@ namespace BundleBouncer
             if (!TryLoadingBundle(filename, source, hash, hashstr, out BundleFileInstance bfi))
             {
                 CleanupAssets();
-                BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source);
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
                 return true;
             }
             CleanupAssets();
@@ -154,7 +160,7 @@ namespace BundleBouncer
             {
                 Logging.Error("Received error!");
                 Logging.Error(e.ToString());
-                return true;
+                return false;
             }
         }
 

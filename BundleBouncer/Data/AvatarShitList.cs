@@ -29,13 +29,13 @@ namespace BundleBouncer.Data
     public class AvatarShitList
     {
         // Loaded from UserData/BundleBouncer/My-Blocked-Avatars.txt in BundleBouncer.OnApplicationStart()
-        public static HashSet<string> UserAvatarShitList;
+        public static UserAvatarSet UserAvatarBlockList;
 
         // Loaded from UserData/BundleBouncer/My-Allowed-Avatars.txt in BundleBouncer.OnApplicationStart()
-        public static HashSet<string> UserAvatarAllowList;
+        public static UserAvatarSet UserAvatarAllowList;
 
-        public static HashSet<byte[]> UserAssetBundleWhitelist;
-        public static HashSet<byte[]> UserAssetBundleShitlist;
+        public static UserHashSet UserAssetHashAllowList;
+        public static UserHashSet UserAssetHashBlockList;
 
         // Loaded from Dependencies/BundleBouncer.Shitlist.dll
         public static IShitListProvider shitListProvider;
@@ -73,7 +73,7 @@ namespace BundleBouncer.Data
                 return true;
 
             // Check against user shitlist
-            if (UserAvatarShitList.Contains(avID))
+            if (UserAvatarBlockList.Contains(avID))
                 return true;
 
             return false;
@@ -85,7 +85,7 @@ namespace BundleBouncer.Data
             if (shitListProvider.IsAssetBundleHashWhitelisted(hash))
                 return true;
 
-            if(UserAssetBundleWhitelist.Contains(hash))
+            if(UserAssetHashAllowList.Contains(hash))
                 return true;
 
             return false;
@@ -95,7 +95,7 @@ namespace BundleBouncer.Data
         {
             if(shitListProvider.IsAssetBundleHashBlacklisted(hash))
                 return true;
-            if(UserAssetBundleShitlist.Contains(hash))
+            if(UserAssetHashBlockList.Contains(hash))
                 return true;
             return false;
         }

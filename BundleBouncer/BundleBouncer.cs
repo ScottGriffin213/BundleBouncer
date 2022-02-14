@@ -56,6 +56,8 @@ namespace BundleBouncer
         public string OldShitListFile { get { return Path.Combine(UserDataDir, "Avatars.txt"); } }
         public string UserAvatarBlockListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Avatars.txt"); } }
         public string UserAvatarAllowListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Avatars.txt"); } }
+        public string UserAssetHashAllowListFile { get { return Path.Combine(UserDataDir, "My-Blocked-Asset-Hashes.txt"); } }
+        public string UserAssetHashBlockListFile { get { return Path.Combine(UserDataDir, "My-Allowed-Asset-Hashes.txt"); } }
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
         public string YaraCompiledRuleset { get { return Path.Combine(UserDataDir, "Global-YARA-Ruleset.bin"); } }
         public string YaraUserRulesDir { get { return Path.Combine(UserDataDir, "User-YARA-Rules"); } }
@@ -133,24 +135,6 @@ namespace BundleBouncer
                 }
             }
 
-            if (!File.Exists(UserAvatarBlockListFile))
-            {
-                File.WriteAllLines(UserAvatarBlockListFile, new string[] { "# Add avatar IDs below this line, but without the #.", "" });
-                Logging.Info($"Created {UserAvatarBlockListFile}");
-            }
-
-            if (!File.Exists(UserAvatarAllowListFile))
-            {
-                File.WriteAllLines(UserAvatarAllowListFile, new string[] { "# Add avatar IDs below this line, but without the #.", "" });
-                Logging.Info($"Created {UserAvatarAllowListFile}");
-            }
-
-            if (!File.Exists(PlayerShitlistFile))
-            {
-                File.WriteAllText(PlayerShitlistFile, "[]");
-                Logging.Info($"Created {PlayerShitlistFile}");
-            }
-
             SyncShitlistDLL();
             SyncYaraRuleset();
 
@@ -160,17 +144,27 @@ namespace BundleBouncer
                 Logging.Info($"Loaded {KnownSkiddies.Count} entries from {PlayerShitlistFile}");
             }
 
-            AvatarShitList.UserAvatarShitList = File.ReadAllLines(UserAvatarBlockListFile).Select(x => x.Trim().ToLowerInvariant()).Where(x => x != "" && !x.StartsWith("#")).ToHashSet();
-            if (AvatarShitList.UserAvatarShitList.Count > 0)
-            {
-                Logging.Info($"Loaded {AvatarShitList.UserAvatarShitList.Count} entries from {UserAvatarBlockListFile}");
-            }
+            AvatarShitList.UserAvatarBlockList = new UserAvatarSet(UserAvatarBlockListFile, "avatar ID", "avatar IDs", "user avatar blocklist", new string[]{
+                    "User Blocked Avatar List", 
+                    "Add one avatar ID per line.",
+                    "Lines beginning with # are comments and will not be parsed."
+                });
+            AvatarShitList.UserAvatarAllowList = new UserAvatarSet(UserAvatarAllowListFile, "avatar ID", "avatar IDs", "user avatar allowlist", new string[]{
+                    "User Allowed Avatar List", 
+                    "Add one avatar ID per line.",
+                    "Lines beginning with # are comments and will not be parsed."
+                });
 
-            AvatarShitList.UserAvatarAllowList = File.ReadAllLines(UserAvatarAllowListFile).Select(x => x.Trim().ToLowerInvariant()).Where(x => x != "" && !x.StartsWith("#")).ToHashSet();
-            if (AvatarShitList.UserAvatarAllowList.Count > 0)
-            {
-                Logging.Info($"Loaded {AvatarShitList.UserAvatarAllowList.Count} entries from {UserAvatarAllowListFile}");
-            }
+            AvatarShitList.UserAssetHashBlockList = new UserHashSet(UserAssetHashBlockListFile, "hash", "hashes", "user assetbundle hash blocklist", new string[]{
+                    "User Blocked Asset Hashes", 
+                    "Add one SHA256 checksum per line, in hexadecimal. (e.g. B478EDD1E837C83AE319A2788186A71751ECBBEBF6C8A8E57ED42349B863A5F1)",
+                    "Lines beginning with # are comments and will not be parsed."
+                });
+            AvatarShitList.UserAssetHashAllowList = new UserHashSet(UserAssetHashAllowListFile, "hash", "hashes", "user assetbundle hash allowlist", new string[]{
+                    "User Allowed Asset Hashes", 
+                    "Add one SHA256 checksum per line, in hexadecimal. (e.g. B478EDD1E837C83AE319A2788186A71751ECBBEBF6C8A8E57ED42349B863A5F1)",
+                    "Lines beginning with # are comments and will not be parsed."
+                });
 
             // Fire up YARA.
             if(!Directory.Exists("Dependencies"))

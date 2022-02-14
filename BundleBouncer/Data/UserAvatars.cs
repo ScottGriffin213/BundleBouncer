@@ -24,7 +24,7 @@
 
 namespace BundleBouncer.Data
 {
-    internal class UserAvatars : AvatarInfo
+    internal class UserAvatars
     {
         public string main = null;
         public string fallback = null;
