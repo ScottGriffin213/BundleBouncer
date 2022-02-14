@@ -1,4 +1,6 @@
-﻿/**
+﻿//#define ABI_DEBUG
+
+/**
  * BundleBouncer Asset Bundle Intereceptor
  * 
  * Copyright (c) 2022 BundleBouncer Contributors
@@ -27,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -70,6 +73,9 @@ namespace BundleBouncer
 
         internal void OnCompleteContent()
         {
+            #if ABI_DEBUG
+            Logging.Info("OnCompleteContent");
+            #endif
             done = true;
             file.Dispose();
             CacheTool.CreateCacheInfoFile(cacheKey, cacheHash);
@@ -95,12 +101,37 @@ namespace BundleBouncer
 
         internal void ProcessHeaders(ulong length, string type)
         {
+            #if ABI_DEBUG
+            Logging.Info($"ProcessHeaders({length}, {type})");
+            #endif
             //Logging.Info($"Content-Length: {length}UL");
             this.contentLength = length;
         }
 
+        delegate void DownloadHandler_SendProgressReport_Callback(IntPtr @this);
+        internal unsafe void SendProgressReport()
+        {
+            // Goddammit Unity.
+            /*
+            v2 = *((_QWORD *)this + 16);
+            if ( v2 )
+              (*(void (__fastcall **)(__int64))(*(_QWORD *)v2 + 16i64))(v2);
+            else
+              return 0.0;
+            */
+            var idfk = *(IntPtr*)ptr + 16;
+            if (idfk != IntPtr.Zero)
+            {
+                var callback = Marshal.GetDelegateForFunctionPointer<DownloadHandler_SendProgressReport_Callback>(*(IntPtr*)idfk+16);
+                callback(idfk);
+            }
+        }
+
         internal long OnReceiveData(byte[] data, ulong len)
         {
+            #if ABI_DEBUG
+            Logging.Info($"OnReceiveData({data.LongLength}, {len})");
+            #endif
             if (file == null)
             {
                 if (writing.Contains(destfile))
@@ -115,20 +146,35 @@ namespace BundleBouncer
                 Directory.CreateDirectory(Path.GetDirectoryName(destfile));
                 this.file = File.OpenWrite(destfile);
             }
-            this.bytesDownloaded += len;
+            bytesDownloaded += (ulong)data.LongLength;
+            // Godfucking
+            HACK_InjectProgress(bytesDownloaded);
             this.file.Write(data, 0, data.Length);
             return (long)len;
         }
 
+        private unsafe void HACK_InjectProgress(ulong bytesDownloaded)
+        {
+            Marshal.WriteInt64(ptr+8, (long)bytesDownloaded);
+        }
+
         internal double GetProgress()
         {
+            SendProgressReport();
+            #if ABI_DEBUG
+            Logging.Info($"GetProgress: {bytesDownloaded}/{contentLength}B");
+            #endif
             if (contentLength == 0UL)
                 return 0f;
+
             return bytesDownloaded / contentLength;
         }
 
         internal ulong GetMemorySize()
         {
+            #if ABI_DEBUG
+            Logging.Info($"GetMemorySize: {bytesDownloaded}/{contentLength}B");
+            #endif
             return bytesDownloaded;
         }
 

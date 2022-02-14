@@ -176,7 +176,7 @@ namespace BundleBouncer
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool, out origNATIVEInitAssetBundleStorageFSEUlongBool);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong, out origNATIVEInitAssetBundleStorageStrUlong);
                 
-                // IDHAB shit
+                // ABI shit
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS, OnDownloadHandlerAssetBundle_GetProgress, out origNATIVEDownloadHandlerAssetBundle_GetProgress);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETMEMORYSIZE, OnDownloadHandlerAssetBundle_GetMemorySize, out origNATIVEDownloadHandlerAssetBundle_GetMemorySize);
@@ -373,7 +373,9 @@ namespace BundleBouncer
             {
                 return idhab.GetProgress();
             }
-            return origNATIVEDownloadHandlerAssetBundle_GetProgress(@this);
+            var o = origNATIVEDownloadHandlerAssetBundle_GetProgress(@this);
+            //Logging.Info($"Native GetProgress: {o}");
+            return o;
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -439,13 +441,13 @@ namespace BundleBouncer
         private static OnHeaderMap_find_Delegate origNATIVEHeaderMap_find;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate void OnDownloadHandler_ProcessHeaders_Delegate(IntPtr @this, IntPtr hdrmap);
+        private delegate long OnDownloadHandler_ProcessHeaders_Delegate(IntPtr @this, IntPtr hdrmap);
         private static OnDownloadHandler_ProcessHeaders_Delegate origNATIVEDownloadHandler_ProcessHeaders;
-        private static unsafe void OnDownloadHandler_ProcessHeaders(IntPtr @this, IntPtr hdrmap)
+        private static unsafe long OnDownloadHandler_ProcessHeaders(IntPtr @this, IntPtr hdrmap)
         {
             // WORKING on 1160
             //Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}]");
-            origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
+            var o = origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
             if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
                 ulong clen = *(ulong*)(@this + 0x48);
@@ -453,8 +455,13 @@ namespace BundleBouncer
                 var ctype = UnityCoreUtils.CoreBasicString2String(@this + 0x58);
                 //Logging.Info($"  Got Content-Length: {ctype}");
                 idhab.ProcessHeaders(clen, ctype);
+                //Logging.Info($"ProcessHeaders: ret {o} I");
+            } else
+            {
+                //Logging.Info($"ProcessHeaders: ret {o}");
             }
             // Passthru to original DH.
+            return o;
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
