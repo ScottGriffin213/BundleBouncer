@@ -26,7 +26,6 @@
 
 using AssetsTools.NET.Extra;
 using BundleBouncer.Data;
-using dnYara;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,9 +36,9 @@ namespace BundleBouncer
     internal class AssetScanner
     {
         private static BundleBouncer bb;
-        private static YaraContext yaraContext;
-        private static CompiledRules rules;
-        private static CompiledRules userRules;
+        private static dnYara.YaraContext yaraContext;
+        private static dnYara.CompiledRules rules;
+        private static dnYara.CompiledRules userRules;
         private static dnYara.Scanner scanner;
         private static AssetsManager assetsManager;
 
@@ -59,12 +58,12 @@ namespace BundleBouncer
 
         private static void SetupYara()
         {
-            yaraContext = new YaraContext();
-            rules = new CompiledRules(bb.YaraCompiledRuleset);
+            yaraContext = new dnYara.YaraContext();
+            rules = new dnYara.CompiledRules(bb.YaraCompiledRuleset);
             Logging.Info($"YARA: Loaded {rules.RuleCount} rules, {rules.NamespacesCount} namespaces, {rules.StringsCount} strings from the global ruleset.");
             if (Directory.Exists(bb.YaraUserRulesDir))
             {
-                using (var compiler = new Compiler())
+                using (var compiler = new dnYara.Compiler())
                 {
                     compiler.DeclareExternalStringVariable("bundle_name");
                     foreach (var rulefile in Directory.GetFiles(bb.YaraUserRulesDir, "*.yara", SearchOption.AllDirectories))
@@ -185,7 +184,7 @@ namespace BundleBouncer
 
         private static bool MatchesYaraRules(string filename, string source, byte[] hash, string hashstr/*, BundleFileInstance bfi*/)
         {
-            var matches = new List<ScanResult>();
+            var matches = new List<dnYara.ScanResult>();
             if (rules != null)
                 matches.AddRange(scanner.ScanFile(filename, rules));
             if (userRules != null)
