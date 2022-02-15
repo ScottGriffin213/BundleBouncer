@@ -104,11 +104,11 @@ Include the following:
 
 ## License
 
-The public source code (which is contained in this repository) is MIT-licensed. Feel free to send Merge Requests (MRs) and report issues!
+The public source code (which is contained in this repository) is [MIT](LICENSE)-licensed. Feel free to send Merge Requests (MRs) and report issues!
 
 The full buildsystem and avatar dataset is proprietary for security reasons. Copyright &copy;2021-2022 "Scott Griffin". All rights reserved.
 
-We make use of dnYara and libyara for signature matching.  See [LICENSE.dnYara](licenses/LICENSE.dnYara) for dnYara's license and [CHANGES.dnYara.md](licenses/CHANGES.dnYara.md) for our changes to dnYara.
+We make use of dnYara and libyara for signature matching.  See [here](legal/dnYARA.LICENSE.txt) for dnYara's license and [here](legal/dnYARA.CHANGES.md) for our changes to dnYara.
 
 We also make use of [AssetsTools.NET](https://github.com/nesrak1/AssetsTools.NET) for smoke-testing AssetBundles.
 

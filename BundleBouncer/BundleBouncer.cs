@@ -61,6 +61,7 @@ namespace BundleBouncer
         public string PlayerShitlistFile { get { return Path.Combine(UserDataDir, "Player-Blacklist.json"); } }
         public string YaraCompiledRuleset { get { return Path.Combine(UserDataDir, "Global-YARA-Ruleset.bin"); } }
         public string YaraUserRulesDir { get { return Path.Combine(UserDataDir, "User-YARA-Rules"); } }
+        public string YaraUserRulesReadmePath { get { return Path.Combine(YaraUserRulesDir, "_YARA-Rules-Readme.md"); } }
         public static string ShitlistDll { get; private set; }
 
 
@@ -86,7 +87,7 @@ namespace BundleBouncer
         static HighlightsFXStandalone shitterHighlighter;
 
         private SemVersion MinimumMLVersion = new SemVersion(0, 5, 3);
-        
+
         public const string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
         public const string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
         public const string LATEST_YARA_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/Global-YARA-Ruleset.bin";
@@ -99,7 +100,7 @@ namespace BundleBouncer
             Logging.LI = LoggerInstance;
 
             // Idiot checks
-            var chunks = MelonLoader.BuildInfo.Version.Split('.').Select(x=>int.Parse(x)).ToArray();
+            var chunks = MelonLoader.BuildInfo.Version.Split('.').Select(x => int.Parse(x)).ToArray();
             if (new Semver.SemVersion(chunks[0], chunks[1], chunks[2]) < MinimumMLVersion)
             {
                 Logging.Error($"You are using MelonLoader {MelonLoader.BuildInfo.Version}, which has problems with BundleBouncer.  Please update.");
@@ -120,6 +121,29 @@ namespace BundleBouncer
             {
                 Directory.CreateDirectory(LogDir);
                 Logging.Info($"Created {LogDir}");
+            }
+
+            if (!Directory.Exists(YaraUserRulesDir))
+            {
+                Directory.CreateDirectory(YaraUserRulesDir);
+                Logging.Info($"Created {YaraUserRulesDir}");
+            }
+            if (!File.Exists(YaraUserRulesReadmePath))
+            {
+                try
+                {
+                    using (var rsc = typeof(BundleBouncer).Assembly.GetManifestResourceStream(typeof(BundleBouncer), "_YARA-Rules-Readme.md"))
+                    {
+                        using (var outfile = File.OpenWrite(YaraUserRulesReadmePath))
+                        {
+                            rsc.CopyTo(outfile);
+                        }
+                    }
+                }
+                catch (IOException)
+                {
+                    Logging.Warning("Could not write libyara.dll. If you're running multiple instances of VRChat, this is normal.");
+                }
             }
 
             if (File.Exists(OldShitListFile))
@@ -145,32 +169,32 @@ namespace BundleBouncer
             }
 
             AvatarShitList.UserAvatarBlockList = new UserAvatarSet(UserAvatarBlockListFile, "avatar ID", "avatar IDs", "user avatar blocklist", new string[]{
-                    "User Blocked Avatar List", 
+                    "User Blocked Avatar List",
                     "Add one avatar ID per line.",
                     "Lines beginning with # are comments and will not be parsed."
                 });
             AvatarShitList.UserAvatarAllowList = new UserAvatarSet(UserAvatarAllowListFile, "avatar ID", "avatar IDs", "user avatar allowlist", new string[]{
-                    "User Allowed Avatar List", 
+                    "User Allowed Avatar List",
                     "Add one avatar ID per line.",
                     "Lines beginning with # are comments and will not be parsed."
                 });
 
             AvatarShitList.UserAssetHashBlockList = new UserHashSet(UserAssetHashBlockListFile, "hash", "hashes", "user assetbundle hash blocklist", new string[]{
-                    "User Blocked Asset Hashes", 
+                    "User Blocked Asset Hashes",
                     "Add one SHA256 checksum per line, in hexadecimal. (e.g. B478EDD1E837C83AE319A2788186A71751ECBBEBF6C8A8E57ED42349B863A5F1)",
                     "Lines beginning with # are comments and will not be parsed."
                 });
             AvatarShitList.UserAssetHashAllowList = new UserHashSet(UserAssetHashAllowListFile, "hash", "hashes", "user assetbundle hash allowlist", new string[]{
-                    "User Allowed Asset Hashes", 
+                    "User Allowed Asset Hashes",
                     "Add one SHA256 checksum per line, in hexadecimal. (e.g. B478EDD1E837C83AE319A2788186A71751ECBBEBF6C8A8E57ED42349B863A5F1)",
                     "Lines beginning with # are comments and will not be parsed."
                 });
 
             // Fire up YARA.
-            if(!Directory.Exists("Dependencies"))
+            if (!Directory.Exists("Dependencies"))
                 Directory.CreateDirectory("Dependencies");
             // Slight adaptation of knah's code in TSAC
-            try 
+            try
             {
                 using (var rsc = typeof(BundleBouncer).Assembly.GetManifestResourceStream(typeof(BundleBouncer), "libyara.dll"))
                 {
