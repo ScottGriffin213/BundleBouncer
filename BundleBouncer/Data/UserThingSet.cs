@@ -80,7 +80,7 @@ namespace BundleBouncer.Data
         {
             using (var w = new StreamWriter(filename))
             {
-                if (FileHeader != null && FileHeader.Length == 0)
+                if (FileHeader != null && FileHeader.Length > 0)
                 {
                     foreach (var hdrl in FileHeader)
                     {
