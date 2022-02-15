@@ -47,12 +47,12 @@ Quit being dicks.  You know who you are.
 * Optionally, pre-download Global-YARA-Rules.bin from [LATEST_DEFINITIONS](https://github.com/ScottGriffin213/BundleBouncer/releases/tag/LATEST_DEFINITIONS) into `UserData/BundleBouncer/`.
 
 ## Adding an Avatar ID
-NOTE: There are a bunch of avatars that are automatically blocked by the mod.
+**NOTE:** There are [a bunch](https://github.com/ScottGriffin213/BundleBouncer/blob/main/BundleBouncer.Shitlist/ShitlistProvider.cs) of avatars that are automatically blocked by the mod.
 
-1. Open or create `VRChat\UserData\BundleBouncer\My-Blocked-Avatars.txt` in your favorite text editor that isn't Word or Wordpad.
+1. Open or create `VRChat\UserData\BundleBouncer\My-Blocked-Avatars.txt` in your favorite text editor. (Don't use WordPad, OpenOffice Write, or Word, they are word processors!)
 2. Add the avatar ID (usually of format `avtr_<gibberish>`) to a new line.
 3. Save and close the file.
-4. [Let us know about it.](#shitlist-additions)
+4. [Send the avatar ID to Scott!](#shitlist-additions)
 
 The file should look like this when you're done:
 
