@@ -9,8 +9,8 @@
 	<a href="https://github.com/ScottGriffin213/BundleBouncer/releases/latest"><img src="https://img.shields.io/github/v/release/ScottGriffin213/BundleBouncer?label=latest&style=for-the-badge"></a>
 	<a href="https://github.com/ScottGriffin213/BundleBouncer/releases"><img src="https://img.shields.io/github/downloads/ScottGriffin213/BundleBouncer/total.svg?style=for-the-badge"></a>
 	<a href="https://github.com/ScottGriffin213/BundleBouncer/graphs/contributors"><img src="https://img.shields.io/github/contributors/ScottGriffin213/BundleBouncer?style=for-the-badge"></a>
-	<a href="https://github.com/ScottGriffin213/BundleBouncer/graphs/contributors"><img alt="GitHub" src="https://img.shields.io/github/license/ScottGriffin213/BundleBouncer?style=for-the-badge"></a>
-  <a href="https://discord.gg/jt8xppHeQq"><img alt="Discord" src="https://img.shields.io/discord/935695835012952085?style=for-the-badge"></a>
+	<a href="https://github.com/ScottGriffin213/BundleBouncer/blob/main/LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge"></a>
+	<a href="https://discord.gg/jt8xppHeQq"><img alt="Discord" src="https://img.shields.io/discord/935695835012952085?style=for-the-badge"></a>
 </p>
 
 <p align="center">
