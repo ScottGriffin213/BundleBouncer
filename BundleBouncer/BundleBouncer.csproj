@@ -9,9 +9,11 @@
   <ItemGroup>
     <None Remove="images\png\BundleBouncer-512.png" />
     <None Remove="libyara.dll" />
+    <None Remove="_YARA-Rules-Readme.md" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="images\png\BundleBouncer-512.png" />
+    <EmbeddedResource Include="_YARA-Rules-Readme.md" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Accessibility">

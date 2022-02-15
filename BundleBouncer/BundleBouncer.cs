@@ -139,6 +139,7 @@ namespace BundleBouncer
                             rsc.CopyTo(outfile);
                         }
                     }
+                    Logging.Info($"Wrote {YaraUserRulesReadmePath}");
                 }
                 catch (IOException)
                 {
@@ -301,7 +302,10 @@ namespace BundleBouncer
 
         private static void LoadPlayerShitlists()
         {
-            KnownSkiddies = JsonConvert.DeserializeObject<HashSet<string>>(File.ReadAllText(Instance.PlayerShitlistFile));
+            if(File.Exists(Instance.PlayerShitlistFile))
+                KnownSkiddies = JsonConvert.DeserializeObject<HashSet<string>>(File.ReadAllText(Instance.PlayerShitlistFile));
+            else
+                KnownSkiddies = new HashSet<string>();
         }
 
         internal static void NotifyUserOfBlockedAvatar(string avatarID, string source, Dictionary<string, string> extra = null)
