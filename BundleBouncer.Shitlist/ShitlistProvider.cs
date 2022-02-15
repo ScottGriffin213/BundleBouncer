@@ -43,7 +43,7 @@ namespace BundleBouncer.Shitlist
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-15T20:25:16.534004";
+        public const string GENERATED_AT = "2022-02-15T21:20:52.367801";
 
         public const int LEN_BLACKLISTED_AVIDS = 40;
         public const int LEN_WHITELISTED_AVIDS = 1;
@@ -57,6 +57,10 @@ namespace BundleBouncer.Shitlist
 
         bool IShitListProvider.IsAssetBundleHashBlacklisted(byte[] a)
         {
+            if (a.Length != 32)
+            {
+                return false;
+            }
             if (a[0] == 6 && a[1] == 108 && a[2] == 121 && a[3] == 72 && a[4] == 78 && a[5] == 58 && a[6] == 86 && a[7] == 26 && a[8] == 155 && a[9] == 251 && a[10] == 237 && a[11] == 46 && a[12] == 55 && a[13] == 232 && a[14] == 4 && a[15] == 144 && a[16] == 177 && a[17] == 45 && a[18] == 209 && a[19] == 217 && a[20] == 102 && a[21] == 104 && a[22] == 42 && a[23] == 59 && a[24] == 24 && a[25] == 79 && a[26] == 227 && a[27] == 246 && a[28] == 220 && a[29] == 79 && a[30] == 25 && a[31] == 124)
             {
                 return true;
@@ -212,11 +216,19 @@ namespace BundleBouncer.Shitlist
 
         bool IShitListProvider.IsAssetBundleHashWhitelisted(byte[] a)
         {
+            if (a.Length != 32)
+            {
+                return false;
+            }
             return false;
         }
 
         bool IShitListProvider.IsAvatarIDHashBlacklisted(byte[] a)
         {
+            if (a.Length != 32)
+            {
+                return false;
+            }
             if (a[0] == 2 && a[1] == 215 && a[2] == 19 && a[3] == 12 && a[4] == 142 && a[5] == 80 && a[6] == 43 && a[7] == 131 && a[8] == 95 && a[9] == 71 && a[10] == 190 && a[11] == 208 && a[12] == 227 && a[13] == 16 && a[14] == 249 && a[15] == 142 && a[16] == 250 && a[17] == 64 && a[18] == 165 && a[19] == 150 && a[20] == 94 && a[21] == 58 && a[22] == 157 && a[23] == 211 && a[24] == 233 && a[25] == 26 && a[26] == 144 && a[27] == 208 && a[28] == 247 && a[29] == 81 && a[30] == 40 && a[31] == 4)
             {
                 return true;
@@ -394,7 +406,11 @@ namespace BundleBouncer.Shitlist
 
         bool IShitListProvider.IsAvatarIDWhitelisted(string a)
         {
-            return a[0] == 'd' && a[1] == 'f' && a[2] == 'g' && a[3] == 'd' && a[4] == 'f' && a[5] == 'g' && a[6] == 'd' && a[7] == 'g' && a[8] == 'd' && a[9] == 'f';
+            if (a.Length == 10)
+            {
+                return a[0] == 'd' && a[1] == 'f' && a[2] == 'g' && a[3] == 'd' && a[4] == 'f' && a[5] == 'g' && a[6] == 'd' && a[7] == 'g' && a[8] == 'd' && a[9] == 'f';
+            }
+            return false;
         }
 
     }
