@@ -23,8 +23,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace BundleBouncer
 {
@@ -40,6 +43,34 @@ namespace BundleBouncer
         public void Dispose()
         {
             this.br.Dispose();
+        }
+
+        internal string GetCString(string failedDesc, ulong minlen=0UL, ulong maxlen=ulong.MaxValue, Encoding encoding=null)
+        {
+            List<byte> buf = new List<byte>();
+            byte b;
+            while(true)
+            {
+                if((ulong)buf.LongCount() > maxlen)
+                    throw new FailedValidation(failedDesc);
+                b = br.ReadByte();
+                if(b == 0x00)
+                    break;
+                buf.Add(b);
+            }
+            if((ulong)buf.LongCount() < minlen)
+                throw new FailedValidation(failedDesc);
+            return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
+        }
+
+        internal string GetPascalString(string failedDesc, byte minlen=0, byte maxlen=byte.MaxValue, Encoding encoding=null)
+        {
+            byte[] buf = br.ReadBytes(br.ReadByte());
+            if((byte)buf.Length < minlen)
+                throw new FailedValidation(failedDesc);
+            if((byte)buf.Length > maxlen)
+                throw new FailedValidation(failedDesc);
+            return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
         }
 
         internal void NextBytesMustEqual(byte[] requiredBytes, string failedDesc)
