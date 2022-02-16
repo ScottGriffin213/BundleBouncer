@@ -43,11 +43,11 @@ namespace BundleBouncer.Shitlist
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-16T05:04:34.458535";
+        public const string GENERATED_AT = "2022-02-16T05:10:10.061487";
 
         public const int LEN_BLACKLISTED_AVIDS = 41;
         public const int LEN_WHITELISTED_AVIDS = 1;
-        public const int LEN_BLACKLISTED_HASHES = 37;
+        public const int LEN_BLACKLISTED_HASHES = 38;
         public const int LEN_WHITELISTED_HASHES = 0;
 
         // The following is a bunch of generated if-trees created by putting
@@ -118,6 +118,10 @@ namespace BundleBouncer.Shitlist
                 return true;
             }
             else if (a[0] == 83 && a[1] == 158 && a[2] == 57 && a[3] == 85 && a[4] == 56 && a[5] == 130 && a[6] == 241 && a[7] == 99 && a[8] == 144 && a[9] == 117 && a[10] == 24 && a[11] == 184 && a[12] == 77 && a[13] == 19 && a[14] == 119 && a[15] == 201 && a[16] == 18 && a[17] == 83 && a[18] == 164 && a[19] == 150 && a[20] == 214 && a[21] == 176 && a[22] == 188 && a[23] == 168 && a[24] == 176 && a[25] == 252 && a[26] == 202 && a[27] == 105 && a[28] == 236 && a[29] == 51 && a[30] == 110 && a[31] == 155)
+            {
+                return true;
+            }
+            else if (a[0] == 101 && a[1] == 65 && a[2] == 63 && a[3] == 102 && a[4] == 36 && a[5] == 169 && a[6] == 226 && a[7] == 30 && a[8] == 225 && a[9] == 5 && a[10] == 212 && a[11] == 15 && a[12] == 234 && a[13] == 9 && a[14] == 27 && a[15] == 29 && a[16] == 237 && a[17] == 162 && a[18] == 110 && a[19] == 218 && a[20] == 133 && a[21] == 95 && a[22] == 17 && a[23] == 240 && a[24] == 42 && a[25] == 5 && a[26] == 127 && a[27] == 148 && a[28] == 193 && a[29] == 85 && a[30] == 130 && a[31] == 209)
             {
                 return true;
             }
