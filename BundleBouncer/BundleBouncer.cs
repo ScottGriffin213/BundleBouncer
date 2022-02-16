@@ -462,6 +462,21 @@ namespace BundleBouncer
 
         internal static void SetUserAvatar(string userid, EAvatarType avType, dynamic avDict)
         {
+            if(AvatarUsers.TryGetValue(userid, out UserAvatars currentAvs)) 
+            {
+                var oldavID = currentAvs.Get(avType);
+                if(Avatars.ContainsKey(oldavID)) 
+                {
+                    if(Avatars[oldavID].Users.Contains(userid)) 
+                    {
+                        Avatars[oldavID].Users.Remove(userid);
+                    }
+                }
+            }
+            foreach(var kvp in Avatars.Where(d => d.Value.Users.Count==0).ToList())
+            {
+                Avatars.Remove(kvp.Key);
+            }
             string avID = avDict["id"];
             if (!Avatars.ContainsKey(avID))
             {

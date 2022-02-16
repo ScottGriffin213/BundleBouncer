@@ -33,6 +33,7 @@ namespace BundleBouncer.Data
         public string Name;
         public HashSet<string> AssetIDs = new HashSet<string>();
         public HashSet<string> Users = new HashSet<string>();
+        public HashSet<byte[]> Hashes = new HashSet<byte[]>();
 
         internal void FromDynamic(dynamic avDict)
         {
