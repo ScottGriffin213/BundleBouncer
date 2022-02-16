@@ -43,7 +43,7 @@ namespace BundleBouncer.Shitlist
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-16T04:36:54.306505";
+        public const string GENERATED_AT = "2022-02-16T05:04:34.458535";
 
         public const int LEN_BLACKLISTED_AVIDS = 41;
         public const int LEN_WHITELISTED_AVIDS = 1;
