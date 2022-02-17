@@ -42,6 +42,10 @@ namespace BundleBouncer
         private static dnYara.Scanner scanner;
         private static AssetsManager assetsManager;
 
+        // Used to determine which scan cache entries get nuked.
+        private static Queue<byte[]> previousScans = new Queue<byte[]>();
+        private static Dictionary<byte[], EScanResult> previouslyScanned = new Dictionary<byte[], EScanResult>();
+
         internal static void Init(BundleBouncer bb)
         {
             AssetScanner.bb = bb;
@@ -65,7 +69,8 @@ namespace BundleBouncer
             {
                 using (var compiler = new dnYara.Compiler())
                 {
-                    compiler.DeclareExternalStringVariable("bundle_name");
+                    compiler.DeclareExternalStringVariable("type", EScanObjectType.ASSETBUNDLE.ToString()); // ASSET_BUNDLE ...
+                    compiler.DeclareExternalStringVariable("name", ""); // prefab_v1...
                     foreach (var rulefile in Directory.GetFiles(bb.YaraUserRulesDir, "*.yara", SearchOption.AllDirectories))
                     {
                         compiler.AddRuleFile(rulefile);
@@ -86,14 +91,40 @@ namespace BundleBouncer
         internal static bool ScanFile(string filename, string source, byte[] hash = null, string hashstr = null)
         {
             if (hash == null)
+            {
                 hash = IOTool.SHA256File(filename);
+            }
             if (hashstr == null)
+            {
                 hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
+            }
+            if (previouslyScanned.TryGetValue(hash, out EScanResult result))
+            {
+                return result == EScanResult.FAILED;
+            }
+            var r = InternalScanResult(filename, source, hash, hashstr);
+            if (previouslyScanned.ContainsKey(hash))
+            {
+                previousScans = new Queue<byte[]>(previousScans.Where(x => !x.Equals(hash)));
+                previouslyScanned.Remove(hash);
+            }
+            if (previousScans.Count >= 200)
+            {
+                var oldhash = previousScans.Dequeue();
+                previouslyScanned.Remove(oldhash);
+            }
+            previouslyScanned[hash] = r;
+            previousScans.Enqueue(hash);
+            return r == EScanResult.FAILED;
+        }
 
-            if(AvatarShitList.IsAssetBundleHashWhitelisted(hash))
+        private static EScanResult InternalScanResult(string filename, string source, byte[] hash, string hashstr)
+        {
+
+            if (AvatarShitList.IsAssetBundleHashWhitelisted(hash))
             {
                 Logging.Info($"Skipping whitelisted file {filename} ({hashstr}).");
-                return false;
+                return EScanResult.PASSED;
             }
 
             Logging.Info($"Checking {filename} ({hashstr})...");
@@ -102,7 +133,7 @@ namespace BundleBouncer
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))
             {
                 BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
-                return true;
+                return EScanResult.FAILED;
             }
 
             // Check against YARA rules.  Fast-ish.
@@ -111,7 +142,7 @@ namespace BundleBouncer
             {
                 //CleanupAssets();
                 BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
-                return true;
+                return EScanResult.FAILED;
             }
 
             // Try loading from AssetTools. Slow, but needed by some Yara rules.
@@ -119,10 +150,10 @@ namespace BundleBouncer
             {
                 CleanupAssets();
                 BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
-                return true;
+                return EScanResult.FAILED;
             }
             CleanupAssets();
-            return false;
+            return EScanResult.PASSED;
         }
 
         private static bool TryLoadingBundle(string filename, string source, byte[] hash, string hashstr, out BundleFileInstance bfi)
@@ -169,8 +200,6 @@ namespace BundleBouncer
             {
                 using (var rdr = new ValidatingBinaryReader(s))
                 {
-                    rdr.NextBytesMustEqual(new byte[] { (byte)'U', (byte)'n', (byte)'i', (byte)'t', (byte)'y', (byte)'F', (byte)'S' }, "Magic");
-                    var version = (uint)rdr.GetU32("Format version", min: 6, max: 7);
 
                 }
             }
