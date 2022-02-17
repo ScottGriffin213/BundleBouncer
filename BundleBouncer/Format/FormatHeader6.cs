@@ -4,16 +4,16 @@ namespace BundleBouncer.Format
 {
     internal class FormatHeader6
     {
-
+        // These two were generated using devtools/gather.py, which collects data from cache.
         private static readonly HashSet<string> ALLOWED_MIN_PLAYER_VERSIONS = new HashSet<string>() { "5.x.x" };
         private static readonly HashSet<string> ALLOWED_CUR_PLAYER_VERSIONS = new HashSet<string>() { "2017.4.15f1", "2017.4.28f1", "2018.4.20f1", "2019.4.31f1" };
 
-        private string minPlayerVersion;
-        private string curPlayerVersion;
-        private ulong totalFileSize;
-        private uint compressedSize;
-        private uint decompressedSize;
-        private uint flags;
+        public string minPlayerVersion;
+        public string curPlayerVersion;
+        public ulong  totalFileSize;
+        public uint   compressedSize;
+        public uint   decompressedSize;
+        public uint   flags;
 
         public FormatHeader6()
         {
@@ -29,7 +29,6 @@ namespace BundleBouncer.Format
             }
 
             fieldName = "format_header.cur_player_version";
-            // 2018.4.20f1
             curPlayerVersion = vbr.GetCString(fieldName, 8, 30);
             if (!ALLOWED_CUR_PLAYER_VERSIONS.Contains(curPlayerVersion))
             {
@@ -40,10 +39,10 @@ namespace BundleBouncer.Format
             totalFileSize = vbr.GetU64(fieldName, 256);
 
             fieldName = "format_header.compressed_size";
-            compressedSize = vbr.GetU32(fieldName, 256);
+            compressedSize = vbr.GetU32(fieldName, 100);
 
             fieldName = "format_header.decompressed_size";
-            decompressedSize = vbr.GetU32(fieldName, 256);
+            decompressedSize = vbr.GetU32(fieldName, 100);
 
             fieldName = "format_header.flags";
             flags = vbr.GetU32(fieldName);
