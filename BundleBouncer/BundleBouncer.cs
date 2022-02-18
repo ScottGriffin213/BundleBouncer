@@ -295,6 +295,34 @@ namespace BundleBouncer
             Logging.Info($"User {usrID} added to your user shitlist.");
         }
 
+        internal static void RemoveFromSkiddieShitlist(string usrID)
+        {
+            // Try to find VRCPlayer
+            var match = GetPlayers().Where(x => x.prop_APIUser_0.id == usrID).FirstOrDefault();
+            if (match == null)
+            {
+                return;
+            }
+            
+            DoffAvatarOfShame(match);
+
+            if(DetectedSkiddies.Contains(match))
+                DetectedSkiddies.Remove(match);
+
+            if (KnownSkiddies.Contains(usrID))
+                KnownSkiddies.Remove(usrID);
+
+            // Save
+            SavePlayerShitlist();
+
+            Logging.Info($"User {usrID} removed from your user shitlist.");
+        }
+   
+        internal static bool IsOnSkiddieShitlist(string usrID)
+        {
+            return KnownSkiddies.Contains(usrID);
+        }
+
         private static void SavePlayerShitlist()
         {
             File.WriteAllText(Instance.PlayerShitlistFile, JsonConvert.SerializeObject(KnownSkiddies));
