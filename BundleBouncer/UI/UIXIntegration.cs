@@ -5,21 +5,33 @@ using System.Text;
 using System.Threading.Tasks;
 using UIExpansionKit;
 using UIExpansionKit.API;
+using UnhollowerRuntimeLib;
 using UnityEngine;
 using UnityEngine.UI;
 using VRChatUtilityKit;
 
 namespace BundleBouncer.UI
 {
+    // Mostly adapted from AdvancedSafety
     public static class UIXIntegration
     {
         private static Text qmShitlistUserText;
 
         public static void OnApplicationStart()
         {
-            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Unshitlist User", OnUnshitlistUser, OnConsumeUnshitlistUser);
+            Logging.Info("Initializing UIX...");
+            ClassInjector.RegisterTypeInIl2Cpp<QMShitlistButtonHandler>(logSuccess: true);
+            ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Shitlist User", OnUnshitlistUser, OnConsumeUnshitlistUser);
             //ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Blocklist Avatar", OnUnshitlistAvatar, OnConsumeUnshitlistAvatar);
+
+            //VRChatUtilityKit.Utilities.VRCUtils.OnUiManagerInit += VRCUtils_OnUiManagerInit;
         }
+        /*
+        private static void VRCUtils_OnUiManagerInit()
+        {
+            VRCUiManager.prop_VRCUiManager_0.method
+        }
+        */
 
         /*
         private static void OnUnshitlistAvatar()

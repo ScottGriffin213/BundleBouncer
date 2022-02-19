@@ -218,6 +218,14 @@ namespace BundleBouncer
             NetworkEvents.OnPlayerJoined += NetworkEvents_OnPlayerJoined;
             NetworkEvents.OnPlayerLeft += NetworkEvents_OnPlayerLeft;
             NetworkEvents.OnInstanceChanged += NetworkEvents_OnInstanceChanged;
+
+            // Again, mostly adapted from AdvancedSafety
+            if(MelonHandler.Mods.Any(mod => mod.Info.Name == "UI Expansion Kit"))
+            {
+                typeof(UI.UIXIntegration)
+                    .GetMethod(nameof(UI.UIXIntegration.OnApplicationStart), BindingFlags.Static | BindingFlags.Public)
+                        .Invoke(null, new object[0]);
+            }
         }
 
         public override void OnLateUpdate()
