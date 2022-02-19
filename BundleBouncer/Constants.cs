@@ -43,6 +43,26 @@ namespace BundleBouncer
         ///</summary>
         public const string VERSION_STRING = "1.3.0";
 
+        /// <summary>
+        /// Which minPlayer header values are permitted in AssetBundles
+        /// </summary>
+        public static readonly System.Collections.Generic.HashSet<string> ASSETBUNDLE_HEADER_ALLOWED_MIN_PLAYER_VERSIONS = new System.Collections.Generic.HashSet<string>()
+        {
+            "5.x.x",
+        };
+
+        /// <summary>
+        /// Which file engine versions are permitted in AssetBundles
+        /// </summary>
+        public static readonly System.Collections.Generic.HashSet<string> ASSETBUNDLE_HEADER_ALLOWED_CUR_PLAYER_VERSIONS = new System.Collections.Generic.HashSet<string>()
+        {
+            "2017.4.15f1",
+            "2017.4.28f1",
+            "2018.4.20f1",
+            "2019.4.29f1",
+            "2019.4.30f1",
+            "2019.4.31f1",
+        };
 
         public static class Offsets {
             public static class UnityPlayer {
