@@ -30,14 +30,14 @@ namespace BundleBouncer.Format
         internal void Read(ValidatingBinaryReader vbr)
         {
             string fieldName = "format_header.min_player_version";
-            minPlayerVersion = vbr.GetCString(fieldName, 4, 30);
+            minPlayerVersion = vbr.GetCString(fieldName, Constants.MIN_PLAYER_VERSION_LENGTH_MIN, Constants.MIN_PLAYER_VERSION_LENGTH_MAX);
             if (!Constants.ASSETBUNDLE_HEADER_ALLOWED_MIN_PLAYER_VERSIONS.Contains(minPlayerVersion))
             {
                 throw new FailedValidation(fieldName, $"Unrecognized min player version: {minPlayerVersion}");
             }
 
             fieldName = "format_header.cur_player_version";
-            curPlayerVersion = vbr.GetCString(fieldName, 8, 30);
+            curPlayerVersion = vbr.GetCString(fieldName, Constants.CUR_PLAYER_VERSION_LENGTH_MIN, Constants.CUR_PLAYER_VERSION_LENGTH_MAX);
             if (!Constants.ASSETBUNDLE_HEADER_ALLOWED_CUR_PLAYER_VERSIONS.Contains(curPlayerVersion))
             {
                 Logging.Warning($"{fieldName} - Unrecognized current player version: {curPlayerVersion}");

@@ -59,10 +59,17 @@ namespace BundleBouncer
             "2017.4.15f1",
             "2017.4.28f1",
             "2018.4.20f1",
+            "2018.4.9f1",
             "2019.4.29f1",
             "2019.4.30f1",
             "2019.4.31f1",
+            "5.6.3p1",
         };
+        
+        public const uint MIN_PLAYER_VERSION_LENGTH_MIN = 5;
+        public const uint MIN_PLAYER_VERSION_LENGTH_MAX = 5;
+        public const uint CUR_PLAYER_VERSION_LENGTH_MIN = 7;
+        public const uint CUR_PLAYER_VERSION_LENGTH_MAX = 11;
 
         public static class Offsets {
             public static class UnityPlayer {
