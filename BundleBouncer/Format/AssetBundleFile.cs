@@ -9,9 +9,9 @@ namespace BundleBouncer.Format
     internal class AssetBundleFile
     {
         private readonly HashSet<string> allowedMagic = new HashSet<string>(){
-            "UnityFS"    
+            "UnityFS"
         };
-        
+
         private string magic;
         private uint version;
         private FormatHeader6 formatHeader;
@@ -25,17 +25,17 @@ namespace BundleBouncer.Format
         {
             string fieldName = "file_header.magic";
             magic = vbr.GetCString(fieldName);
-            if(!allowedMagic.Contains(magic))
+            if (!allowedMagic.Contains(magic))
             {
                 throw new FailedValidation(fieldName, $"Bad magic string: {magic}");
             }
 
             fieldName = "file_header.version";
             version = vbr.GetU32(fieldName, min: 6, max: 7);
-            switch(version)
+            switch (version)
             {
                 case 6:
-                    case 7:
+                case 7:
                     this.formatHeader = new FormatHeader6();
                     break;
             }

@@ -39,7 +39,7 @@ namespace BundleBouncer.Utilities
             {
                 if (_bbIcon == null)
                 {
-                    using (var stream = typeof(BBUI).Assembly.GetManifestResourceStream("BundleBouncer-512.png"))
+                    using (var stream = typeof(BundleBouncer).Assembly.GetManifestResourceStream(typeof(BundleBouncer), "BundleBouncer-512.png"))
                     {
                         using (var memstream = new System.IO.MemoryStream((int)stream.Length))
                         {

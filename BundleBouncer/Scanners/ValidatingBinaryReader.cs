@@ -75,7 +75,7 @@ namespace BundleBouncer
 
         internal uint GetU32(string fieldName, uint min = uint.MinValue, uint max = uint.MaxValue)
         {
-            var value = BitConverter.ToUInt32(br.ReadBytes(4), 0);
+            var value = ToUInt32(br.ReadBytes(4));
             if (value < min)
                 throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
             if (value > max)
@@ -85,13 +85,46 @@ namespace BundleBouncer
 
         internal ulong GetU64(string fieldName, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
         {
-            var value = BitConverter.ToUInt64(br.ReadBytes(4), 0);
+            var value = ToUInt64(br.ReadBytes(8));
             if (value < min)
                 throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
             if (value > max)
                 throw new FailedValidation(fieldName, $"value greater than max: {value} > {max}");
             return value;
         }
+
+        private ushort ToUInt16(byte[] bytes)
+        {
+            if(bytes.Length!=4)
+                throw new InvalidOperationException();
+            return (ushort)(((ushort)bytes[1])
+                   | ((ushort)bytes[0] << 8));
+        }
+
+        private uint ToUInt32(byte[] bytes)
+        {
+            if(bytes.Length!=4)
+                throw new InvalidOperationException();
+            return ((uint)bytes[3])
+                   | ((uint)bytes[2] << 8)
+                   | ((uint)bytes[1] << 16)
+                   | ((uint)bytes[0] << 24);
+        }
+
+        private ulong ToUInt64(byte[] b)
+        {
+            if(b.Length!=8)
+                throw new InvalidOperationException();
+            return ((ulong)b[7])
+                 | ((ulong)b[6] << 8)
+                 | ((ulong)b[5] << 16)
+                 | ((ulong)b[4] << 24)
+                 | ((ulong)b[3] << 32)
+                 | ((ulong)b[2] << 40)
+                 | ((ulong)b[1] << 48)
+                 | ((ulong)b[0] << 56);
+        }
+
         internal void AlignTo(uint bytes)
         {
             br.BaseStream.Position += bytes - (br.BaseStream.Position % bytes);
