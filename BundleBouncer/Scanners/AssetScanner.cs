@@ -26,6 +26,7 @@
 
 using AssetsTools.NET.Extra;
 using BundleBouncer.Data;
+using BundleBouncer.Format;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -146,14 +147,43 @@ namespace BundleBouncer
             }
 
             // Try loading from AssetTools. Slow, but needed by some Yara rules.
+            /* Seems to cause lots of memleaks.  Disabled for now.
             if (!TryLoadingBundle(filename, source, hash, hashstr, out BundleFileInstance bfi))
             {
                 CleanupAssets();
                 BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
                 return EScanResult.FAILED;
             }
+            */
+            if (!TryParsingBundle(filename, source, hash, hashstr))
+            {
+                //CleanupAssets();
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
+                return EScanResult.FAILED;
+            }
             CleanupAssets();
             return EScanResult.PASSED;
+        }
+
+        private static bool TryParsingBundle(string filename, string source, byte[] hash, string hashstr)
+        {
+            try
+            {
+                using (FileStream s = File.OpenRead(filename))
+                {
+                    using (var vbr = new ValidatingBinaryReader(s))
+                    {
+                        var abf = new AssetBundleFile();
+                        abf.Read(vbr);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Error(e);
+                return false;
+            }
+            return true;
         }
 
         private static bool TryLoadingBundle(string filename, string source, byte[] hash, string hashstr, out BundleFileInstance bfi)
