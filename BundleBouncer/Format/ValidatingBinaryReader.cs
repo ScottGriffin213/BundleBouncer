@@ -45,30 +45,30 @@ namespace BundleBouncer
             this.br.Dispose();
         }
 
-        internal string GetCString(string fieldName, ulong minlen=0UL, ulong maxlen=ulong.MaxValue, Encoding encoding=null)
+        internal string GetCString(string fieldName, ulong minlen = 0UL, ulong maxlen = ulong.MaxValue, Encoding encoding = null)
         {
             List<byte> buf = new List<byte>();
             byte b;
-            while(true)
+            while (true)
             {
-                if((ulong)buf.LongCount() > maxlen)
+                if ((ulong)buf.LongCount() > maxlen)
                     throw new FailedValidation(fieldName, $"max-length exceeded: {buf.LongCount()} > {maxlen}");
                 b = br.ReadByte();
-                if(b == 0x00)
+                if (b == 0x00)
                     break;
                 buf.Add(b);
             }
-            if((ulong)buf.LongCount() < minlen)
+            if ((ulong)buf.LongCount() < minlen)
                 throw new FailedValidation(fieldName, $"min-length failure: {buf.LongCount()} < {minlen}");
             return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
         }
 
-        internal string GetPascalString(string fieldName, byte minlen=0, byte maxlen=byte.MaxValue, Encoding encoding=null)
+        internal string GetPascalString(string fieldName, byte minlen = 0, byte maxlen = byte.MaxValue, Encoding encoding = null)
         {
             byte[] buf = br.ReadBytes(br.ReadByte());
-            if((byte)buf.Length < minlen)
+            if ((byte)buf.Length < minlen)
                 throw new FailedValidation(fieldName, $"min-length failure: {buf.LongCount()} < {maxlen}");
-            if((byte)buf.Length > maxlen)
+            if ((byte)buf.Length > maxlen)
                 throw new FailedValidation(fieldName, $"max-length exceeded: {buf.LongCount()} > {maxlen}");
             return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
         }
@@ -95,25 +95,35 @@ namespace BundleBouncer
 
         private ushort ToUInt16(byte[] bytes)
         {
-            if(bytes.Length!=4)
+            if (bytes.Length != 4)
                 throw new InvalidOperationException();
             return (ushort)(((ushort)bytes[1])
-                   | ((ushort)bytes[0] << 8));
+                          | ((ushort)bytes[0] << 8));
         }
 
         private uint ToUInt32(byte[] bytes)
         {
-            if(bytes.Length!=4)
+            if (bytes.Length != 4)
                 throw new InvalidOperationException();
             return ((uint)bytes[3])
-                   | ((uint)bytes[2] << 8)
-                   | ((uint)bytes[1] << 16)
-                   | ((uint)bytes[0] << 24);
+                 | ((uint)bytes[2] << 8)
+                 | ((uint)bytes[1] << 16)
+                 | ((uint)bytes[0] << 24);
+        }
+
+        private int ToInt32(byte[] bytes)
+        {
+            if (bytes.Length != 4)
+                throw new InvalidOperationException();
+            return ((int)bytes[3])
+                 | ((int)bytes[2] << 8)
+                 | ((int)bytes[1] << 16)
+                 | ((int)bytes[0] << 24);
         }
 
         private ulong ToUInt64(byte[] b)
         {
-            if(b.Length!=8)
+            if (b.Length != 8)
                 throw new InvalidOperationException();
             return ((ulong)b[7])
                  | ((ulong)b[6] << 8)
@@ -128,6 +138,29 @@ namespace BundleBouncer
         internal void AlignTo(uint bytes)
         {
             br.BaseStream.Position += bytes - (br.BaseStream.Position % bytes);
+        }
+
+        internal int GetS32(string fieldName, int min = int.MinValue, int max = int.MaxValue)
+        {
+            var value = ToInt32(br.ReadBytes(4));
+            if (value < min)
+                throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
+            if (value > max)
+                throw new FailedValidation(fieldName, $"value greater than max: {value} > {max}");
+            return value;
+        }
+
+        internal byte[] GetBytes(string fieldName, int count)
+        {
+            try
+            {
+                return br.ReadBytes(count);
+            }
+            catch (Exception e)
+            {
+                Logging.Error(e);
+                throw new FailedValidation(fieldName, $"Could not read {count} bytes from stream");
+            }
         }
     }
 

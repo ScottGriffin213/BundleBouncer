@@ -1,5 +1,5 @@
 meta:
-  id: asset_bundle_file
+  id: asset_bundle_file_header
   title: 'Unity3D AssetBundle File'
   endian: be
   license: 'MIT'
@@ -21,7 +21,7 @@ types:
         encoding: 'utf-8'
       - id: format_version
         type: u4
-        doc: 'Generally 6 or 7 for VRC'
+        doc: 'Generally 6 or 7'
   format_header_v3:
     seq:
       - id: min_player_version
@@ -70,3 +70,7 @@ types:
         type: u4
       - id: flags
         type: u4
+      # Align16
+      - if: _root.file_header.format_version >= 7
+        size: (16 - _io.pos) % 16 # https://github.com/kaitai-io/kaitai_struct/issues/12#issuecomment-277757932
+        #id: padding # Comment out if you don't need it

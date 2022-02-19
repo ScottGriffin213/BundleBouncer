@@ -4,6 +4,10 @@ namespace BundleBouncer.Format
 {
     internal class FormatHeader6
     {
+        private const int MIN_COMPRESSED_SIZE = 50;
+        private const int MIN_DECOMPRESSED_SIZE = 50;
+        private const int MIN_TOTAL_FILE_SIZE = 256;
+
         // These two were generated using devtools/gather.py, which collects data from cache.
         private static readonly HashSet<string> ALLOWED_MIN_PLAYER_VERSIONS = new HashSet<string>() { "5.x.x" };
         private static readonly HashSet<string> ALLOWED_CUR_PLAYER_VERSIONS = new HashSet<string>() { "2017.4.15f1", "2017.4.28f1", "2018.4.20f1", "2019.4.31f1" };
@@ -17,6 +21,14 @@ namespace BundleBouncer.Format
 
         public FormatHeader6()
         {
+        }
+
+        public uint compressionType 
+        { 
+            get 
+            { 
+                return flags & 0x3F; 
+            } 
         }
 
         internal void Read(ValidatingBinaryReader vbr)
@@ -36,16 +48,20 @@ namespace BundleBouncer.Format
             }
 
             fieldName = "format_header.total_file_size";
-            totalFileSize = vbr.GetU64(fieldName, 256);
+            totalFileSize = vbr.GetU64(fieldName, MIN_TOTAL_FILE_SIZE);
 
             fieldName = "format_header.compressed_size";
-            compressedSize = vbr.GetU32(fieldName, 100);
+            compressedSize = vbr.GetU32(fieldName, MIN_COMPRESSED_SIZE);
 
             fieldName = "format_header.decompressed_size";
-            decompressedSize = vbr.GetU32(fieldName, 100);
+            decompressedSize = vbr.GetU32(fieldName, MIN_DECOMPRESSED_SIZE);
 
             fieldName = "format_header.flags";
             flags = vbr.GetU32(fieldName);
+            if(compressionType > 3)
+            {
+                throw new FailedValidation(fieldName, $"Invalid compression type {compressionType}");
+            }
         }
     }
 }

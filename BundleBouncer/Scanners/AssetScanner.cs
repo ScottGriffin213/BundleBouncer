@@ -24,7 +24,7 @@
 * SOFTWARE.
 */
 
-using AssetsTools.NET.Extra;
+//using AssetsTools.NET.Extra;
 using BundleBouncer.Data;
 using BundleBouncer.Format;
 using System;
@@ -41,7 +41,7 @@ namespace BundleBouncer
         private static dnYara.CompiledRules rules;
         private static dnYara.CompiledRules userRules;
         private static dnYara.Scanner scanner;
-        private static AssetsManager assetsManager;
+        //private static AssetsManager assetsManager;
 
         // Used to determine which scan cache entries get nuked.
         private static Queue<byte[]> previousScans = new Queue<byte[]>();
@@ -56,7 +56,7 @@ namespace BundleBouncer
 
         private static void SetupAssetTools()
         {
-            assetsManager = new AssetsManager();
+            //assetsManager = new AssetsManager();
             // Not needed
             //assetsManager.LoadClassDatabase("path/to/classdata.tpk");
         }
@@ -185,7 +185,7 @@ namespace BundleBouncer
             }
             return true;
         }
-
+        /*
         private static bool TryLoadingBundle(string filename, string source, byte[] hash, string hashstr, out BundleFileInstance bfi)
         {
             bfi = null;
@@ -193,27 +193,6 @@ namespace BundleBouncer
             {
                 // TODO QuickHeaderCheck(filename);
                 assetsManager.LoadBundleFile(filename);
-                /*
-                bfi = assetsManager.LoadBundleFile(filename, false);
-                BundleHelper.UnpackInfoOnly(bfi.file);
-                for(int i = 0;i<bfi.file.NumFiles;i++)
-                {
-                    if (!bfi.file.IsAssetsFile(i))
-                    {
-                        Logging.Warning($"{filename}[{i}] is not AssetFile");
-                    }
-                    else
-                    {
-                        var af = assetsManager.LoadAssetsFileFromBundle(bfi, i);
-                        for(int j = 0; j < af.table.assetFileInfoCount; j++)
-                        {
-                            var afi = af.table.assetFileInfo[j];
-                            assetsManager.GetTypeInstance(af, afi);
-                        }
-                    }
-                    break; // >0 result in false positives.
-                }
-                */
                 return true;
             }
             catch (Exception e)
@@ -223,22 +202,12 @@ namespace BundleBouncer
                 return false;
             }
         }
-
-        private static void QuickHeaderCheck(string filename)
-        {
-            using (var s = File.OpenRead(filename))
-            {
-                using (var rdr = new ValidatingBinaryReader(s))
-                {
-
-                }
-            }
-        }
+        */
 
         private static void CleanupAssets()
         {
-            assetsManager.UnloadAll(true);
-            assetsManager.UnloadAllAssetsFiles(true);
+            //assetsManager.UnloadAll(true);
+            //assetsManager.UnloadAllAssetsFiles(true);
         }
 
         private static bool MatchesYaraRules(string filename, string source, byte[] hash, string hashstr/*, BundleFileInstance bfi*/)
