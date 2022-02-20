@@ -43,11 +43,11 @@ namespace BundleBouncer.Shitlist
             Logging.Info($"  Whitelisted AssetBundle Hashes.: {LEN_WHITELISTED_HASHES}");
         }
 
-        public const string GENERATED_AT = "2022-02-20T20:00:02.211412";
+        public const string GENERATED_AT = "2022-02-20T22:13:08.199126";
 
-        public const int LEN_BLACKLISTED_AVIDS = 40;
+        public const int LEN_BLACKLISTED_AVIDS = 41;
         public const int LEN_WHITELISTED_AVIDS = 1;
-        public const int LEN_BLACKLISTED_HASHES = 39;
+        public const int LEN_BLACKLISTED_HASHES = 40;
         public const int LEN_WHITELISTED_HASHES = 0;
 
         // The following is a bunch of generated if-trees created by putting
@@ -183,6 +183,10 @@ namespace BundleBouncer.Shitlist
                 {
                     return true;
                 }
+                else if (a[1] == 189 && a[2] == 202 && a[3] == 220 && a[4] == 58 && a[5] == 75 && a[6] == 93 && a[7] == 215 && a[8] == 142 && a[9] == 14 && a[10] == 147 && a[11] == 37 && a[12] == 190 && a[13] == 60 && a[14] == 168 && a[15] == 218 && a[16] == 249 && a[17] == 108 && a[18] == 143 && a[19] == 9 && a[20] == 52 && a[21] == 162 && a[22] == 19 && a[23] == 45 && a[24] == 237 && a[25] == 240 && a[26] == 182 && a[27] == 242 && a[28] == 103 && a[29] == 103 && a[30] == 107 && a[31] == 65)
+                {
+                    return true;
+                }
                 else if (a[1] == 200 && a[2] == 202 && a[3] == 196 && a[4] == 20 && a[5] == 30 && a[6] == 200 && a[7] == 232 && a[8] == 177 && a[9] == 202 && a[10] == 56 && a[11] == 124 && a[12] == 15 && a[13] == 108 && a[14] == 135 && a[15] == 204 && a[16] == 116 && a[17] == 178 && a[18] == 90 && a[19] == 71 && a[20] == 232 && a[21] == 98 && a[22] == 152 && a[23] == 82 && a[24] == 121 && a[25] == 35 && a[26] == 114 && a[27] == 26 && a[28] == 179 && a[29] == 228 && a[30] == 245 && a[31] == 40)
                 {
                     return true;
@@ -242,6 +246,10 @@ namespace BundleBouncer.Shitlist
                 return false;
             }
             if (a[0] == 2 && a[1] == 215 && a[2] == 19 && a[3] == 12 && a[4] == 142 && a[5] == 80 && a[6] == 43 && a[7] == 131 && a[8] == 95 && a[9] == 71 && a[10] == 190 && a[11] == 208 && a[12] == 227 && a[13] == 16 && a[14] == 249 && a[15] == 142 && a[16] == 250 && a[17] == 64 && a[18] == 165 && a[19] == 150 && a[20] == 94 && a[21] == 58 && a[22] == 157 && a[23] == 211 && a[24] == 233 && a[25] == 26 && a[26] == 144 && a[27] == 208 && a[28] == 247 && a[29] == 81 && a[30] == 40 && a[31] == 4)
+            {
+                return true;
+            }
+            else if (a[0] == 3 && a[1] == 173 && a[2] == 70 && a[3] == 57 && a[4] == 148 && a[5] == 190 && a[6] == 190 && a[7] == 245 && a[8] == 81 && a[9] == 83 && a[10] == 100 && a[11] == 138 && a[12] == 76 && a[13] == 84 && a[14] == 192 && a[15] == 27 && a[16] == 27 && a[17] == 135 && a[18] == 140 && a[19] == 229 && a[20] == 173 && a[21] == 96 && a[22] == 225 && a[23] == 180 && a[24] == 120 && a[25] == 211 && a[26] == 243 && a[27] == 80 && a[28] == 136 && a[29] == 68 && a[30] == 162 && a[31] == 219)
             {
                 return true;
             }
