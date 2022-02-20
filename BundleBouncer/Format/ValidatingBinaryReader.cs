@@ -45,37 +45,38 @@ namespace BundleBouncer
             this.br.Dispose();
         }
 
-        internal string GetCString(string fieldName, ulong minlen = 0UL, ulong maxlen = ulong.MaxValue, Encoding encoding = null)
+        internal string GetCString(string fieldName, ulong minlen = 0UL, ulong maxlen = int.MaxValue, Encoding encoding = null)
         {
-            List<byte> buf = new List<byte>();
-            byte b;
+            ulong len = 0;
+            var origPos = br.BaseStream.Position;
             while (true)
             {
-                if ((ulong)buf.LongCount() > maxlen)
-                    throw new FailedValidation(fieldName, $"max-length exceeded: {buf.LongCount()} > {maxlen}");
-                b = br.ReadByte();
-                if (b == 0x00)
+                if (len > maxlen)
+                    throw new FailedValidation(fieldName, $"cstring length greater than max: start={origPos}, max={maxlen}");
+                len++;
+                if (br.ReadByte() == 0)
                     break;
-                buf.Add(b);
             }
-            if ((ulong)buf.LongCount() < minlen)
-                throw new FailedValidation(fieldName, $"min-length failure: {buf.LongCount()} < {minlen}");
-            return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
+            if (len < minlen)
+                throw new FailedValidation(fieldName, $"cstring length less than min: {len} < {minlen}");
+            br.BaseStream.Position = origPos;
+            return (encoding ?? Encoding.UTF8).GetString(GetBytes(fieldName, (int)len).Take((int)len-1).ToArray());
         }
 
         internal string GetPascalString(string fieldName, byte minlen = 0, byte maxlen = byte.MaxValue, Encoding encoding = null)
         {
-            byte[] buf = br.ReadBytes(br.ReadByte());
-            if ((byte)buf.Length < minlen)
-                throw new FailedValidation(fieldName, $"min-length failure: {buf.LongCount()} < {maxlen}");
-            if ((byte)buf.Length > maxlen)
-                throw new FailedValidation(fieldName, $"max-length exceeded: {buf.LongCount()} > {maxlen}");
+            var len = GetBytes(fieldName, 1)[0];
+            if (len < minlen)
+                throw new FailedValidation(fieldName, $"length {len} less than min {minlen}");
+            if (len > maxlen)
+                throw new FailedValidation(fieldName, $"length {len} greater than max {maxlen}");
+            byte[] buf = GetBytes(fieldName, len);
             return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
         }
 
         internal uint GetU32(string fieldName, uint min = uint.MinValue, uint max = uint.MaxValue)
         {
-            var value = ToUInt32(br.ReadBytes(4));
+            var value = ToUInt32(GetBytes(fieldName, 4));
             if (value < min)
                 throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
             if (value > max)
@@ -85,7 +86,7 @@ namespace BundleBouncer
 
         internal ulong GetU64(string fieldName, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
         {
-            var value = ToUInt64(br.ReadBytes(8));
+            var value = ToUInt64(GetBytes(fieldName, 8));
             if (value < min)
                 throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
             if (value > max)
@@ -142,7 +143,7 @@ namespace BundleBouncer
 
         internal int GetS32(string fieldName, int min = int.MinValue, int max = int.MaxValue)
         {
-            var value = ToInt32(br.ReadBytes(4));
+            var value = ToInt32(GetBytes(fieldName, 4));
             if (value < min)
                 throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
             if (value > max)
