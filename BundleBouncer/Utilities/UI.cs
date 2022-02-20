@@ -43,6 +43,7 @@ namespace BundleBouncer.Utilities
                     {
                         using (var memstream = new System.IO.MemoryStream((int)stream.Length))
                         {
+                            stream.CopyTo(memstream);
                             _bbIcon = LoadSpriteFromBytes(memstream.ToArray());
                         }
                     }
@@ -113,12 +114,17 @@ namespace BundleBouncer.Utilities
         public static Sprite LoadSpriteFromBytes(byte[] bytes)
         {
             Texture2D tex = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-            if (!Il2CppImageConversionManager.LoadImage(tex, bytes)) {
+            if (!ImageConversion.LoadImage(tex, bytes)) {
                 Logging.Warning("Failed to load sprite");
                 return null;
             }
+            tex.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+            tex.wrapMode = TextureWrapMode.Clamp;
 
-            Sprite sprite = Sprite.CreateSprite(tex, new Rect(0.0f, 0.0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100.0f, 0, 0, new Vector4(), false);
+            var rect = new Rect(0.0f, 0.0f, tex.width, tex.height);
+            var anchor = new Vector2(0.5f, 0.5f);
+            var border = new Vector4();
+            Sprite sprite = Sprite.CreateSprite_Injected(tex, ref rect, ref anchor, 100.0f, 0, 0, ref border, false);
             sprite.hideFlags |= HideFlags.DontUnloadUnusedAsset;
             return sprite;
         }
