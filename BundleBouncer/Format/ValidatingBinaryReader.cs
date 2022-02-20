@@ -74,6 +74,16 @@ namespace BundleBouncer
             return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
         }
 
+        internal ushort GetU16(string fieldName, ushort min = ushort.MinValue, ushort max = ushort.MaxValue)
+        {
+            var value = ToUInt16(GetBytes(fieldName, 2));
+            if (value < min)
+                throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
+            if (value > max)
+                throw new FailedValidation(fieldName, $"value greater than max: {value} > {max}");
+            return value;
+        }
+
         internal uint GetU32(string fieldName, uint min = uint.MinValue, uint max = uint.MaxValue)
         {
             var value = ToUInt32(GetBytes(fieldName, 4));

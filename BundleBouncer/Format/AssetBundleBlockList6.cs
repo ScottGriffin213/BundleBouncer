@@ -9,6 +9,7 @@ namespace BundleBouncer.Format
     internal class AssetBundleBlockList6
     {
         private byte[] checksum;
+        private AssetBundleBlockRow6[] blocks;
 
         internal AssetBundleBlockList6()
         {
@@ -26,6 +27,14 @@ namespace BundleBouncer.Format
                 Logging.Warning($"{fieldName} == {nblocks}, may cause lag or OOMEs.");
             }
 
+            blocks = new AssetBundleBlockRow6[nblocks];
+            for(uint i = 0; i < nblocks; i++)
+            {
+                var curRow = new AssetBundleBlockRow6();
+                curRow.index = i;
+                curRow.Read(vbr);
+                blocks[i] = curRow;
+            }
         }
     }
 }
