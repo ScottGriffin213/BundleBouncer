@@ -1,5 +1,8 @@
-﻿using System;
+﻿using AssetsTools.NET.Extra.Decompressors.LZ4;
+using SevenZip.Compression.LZMA;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -43,10 +46,42 @@ namespace BundleBouncer.Format
             }
             this.formatHeader.Read(vbr);
 
-            if(version >= 7)
+            if (version >= 7)
             {
                 vbr.AlignTo(16);
             }
+
+            var blockstream = new ValidatingBinaryReader(SetupDecompressionStream("blocks", vbr));
+            ReadBlockInfo(blockstream, GetBundleInfoOffset());
+        }
+
+        private void ReadBlockInfo(ValidatingBinaryReader vbr, long offset)
+        {
+            // TODO
+        }
+
+        private Stream SetupDecompressionStream(string fieldName, ValidatingBinaryReader vbr)
+        {
+            var stream = vbr.BaseStream;
+            switch (this.formatHeader.compressionType)
+            {
+                case 0: // No compression
+                    return stream;
+                case 1: // Basic LZMA
+                    using (var ms = new MemoryStream(vbr.GetBytes($"{fieldName}(LZMA).size", (int)formatHeader.compressedSize)))
+                    {
+                        stream.CopyTo(ms);
+                        return SevenZipHelper.StreamDecompress(ms);
+                    }
+                case 2:
+                case 3:
+                    using (var ms = new MemoryStream(vbr.GetBytes($"{fieldName}(LZ4).size", (int)formatHeader.compressedSize)))
+                    {
+                        stream.CopyTo(ms);
+                        return new Lz4DecoderStream(ms);
+                    }
+            }
+            throw new FailedValidation(fieldName, $"Invalid compression scheme {formatHeader.compressionType}");
         }
 
         // From AssetTools.NET

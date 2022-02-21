@@ -34,9 +34,11 @@ namespace BundleBouncer
     internal class ValidatingBinaryReader : IDisposable
     {
         private BinaryReader br;
+        internal Stream BaseStream { get; private set; }
 
         internal ValidatingBinaryReader(Stream s)
         {
+            BaseStream=s;
             this.br = new BinaryReader(s);
         }
 
