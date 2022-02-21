@@ -26,6 +26,7 @@ using BundleBouncer.Data;
 using BundleBouncer.Utilities;
 using MelonLoader;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using Semver;
 using System;
 using System.Collections.Generic;
@@ -62,7 +63,7 @@ namespace BundleBouncer
         public string YaraCompiledRuleset { get { return Path.Combine(UserDataDir, "Global-YARA-Ruleset.bin"); } }
         public string YaraUserRulesDir { get { return Path.Combine(UserDataDir, "User-YARA-Rules"); } }
         public string YaraUserRulesReadmePath { get { return Path.Combine(YaraUserRulesDir, "_YARA-Rules-Readme.md"); } }
-        public static string ShitlistDll { get; private set; }
+        public string ShitlistDll { get { return Path.Combine("Dependencies", "BundleBouncer.Shitlist.dll"); } }
 
 
         internal Patches Patches { get; private set; }
@@ -88,10 +89,16 @@ namespace BundleBouncer
 
         private SemVersion MinimumMLVersion = new SemVersion(0, 5, 3);
 
+        private static PgpPublicKey PublicKey = null;
+        
         public const string LATEST_SHITLIST_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll";
         public const string LATEST_SHITLIST_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sha256sum";
+        public const string LATEST_SHITLIST_SIG = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/BundleBouncer.Shitlist.dll.sig";
+
         public const string LATEST_YARA_URL = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/Global-YARA-Ruleset.bin";
         public const string LATEST_YARA_CHECKSUM = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/Global-YARA-Ruleset.bin.sha256sum";
+        public const string LATEST_YARA_SIG = "https://github.com/ScottGriffin213/BundleBouncer/releases/download/LATEST_DEFINITIONS/Global-YARA-Ruleset.bin.sig";
+
         public static readonly string BLOCKED_AVTR_ID = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
         public static readonly string BLOCKED_FILE_URL = "https://0.0.0.0/blocked.dat"; // FIXME
 
@@ -438,48 +445,32 @@ namespace BundleBouncer
 
         internal void SyncShitlistDLL()
         {
-            // Purposefully blocking.
+            if(!syncFileWithRemote("shitlist definitions", LATEST_SHITLIST_URL, LATEST_SHITLIST_CHECKSUM, LATEST_SHITLIST_SIG, ShitlistDll))
+            {
+                AvatarShitList.shitListProvider = null;
+                return;
+            }
 
-            ShitlistDll = Path.Combine("Dependencies", "BundleBouncer.Shitlist.dll");
-            var needsDL = !File.Exists(ShitlistDll);
-            var www = new System.Net.WebClient();
-            string remote_hash = www.DownloadString(LATEST_SHITLIST_CHECKSUM).Trim();
-            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(IOTool.SHA256File(ShitlistDll).Select(x => x.ToString("X2")));
-            //Logging.Info($"Definitions File Exists: {needsDL}");
-            //Logging.Info($"Config - Sync Definitions: {Instance.Config.SyncDefinitions}");
-            //Logging.Info($"Remote hash: {remote_hash}");
-            //Logging.Info($"Local hash: {local_hash}");
-            if (!needsDL && Instance.Config.SyncDefinitions)
-            {
-                if (local_hash != remote_hash)
-                {
-                    needsDL = true;
-                }
-            }
-            if (needsDL)
-            {
-                Logging.Info($"Updating to shitlist of hash {remote_hash}...");
-                www.DownloadFile(LATEST_SHITLIST_URL, ShitlistDll);
-            }
-            local_hash = String.Concat(IOTool.SHA256File(ShitlistDll).Select(x => x.ToString("X2")));
-            Logging.Info($"Hash of {ShitlistDll} after update checks: {local_hash}");
             Logging.Info("Loading shitlist...");
             var asm = Assembly.LoadFrom(ShitlistDll);
             AvatarShitList.shitListProvider = (IShitListProvider)(asm.GetTypes().Where(x => x.Name == "ShitlistProvider").First().GetConstructor(new Type[0]).Invoke(null));
         }
 
-
         internal void SyncYaraRuleset()
         {
+            syncFileWithRemote("YARA definitions", LATEST_YARA_URL, LATEST_YARA_CHECKSUM, LATEST_YARA_SIG, YaraCompiledRuleset);
+        }
+
+        private bool syncFileWithRemote(string filedesc, string remote_file_url, string remote_checksum_url, string remote_pgp_sig, string localFilename)
+        {
             // Purposefully blocking.
-            var needsDL = !File.Exists(YaraCompiledRuleset);
+            bool doSigCheck = remote_pgp_sig!=null && Constants.PGP_PUBKEY!=null;
+            var needsDL = !File.Exists(localFilename);
             var www = new System.Net.WebClient();
-            string remote_hash = www.DownloadString(LATEST_YARA_CHECKSUM).Trim();
-            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(IOTool.SHA256File(YaraCompiledRuleset).Select(x => x.ToString("X2")));
-            //Logging.Info($"Definitions File Exists: {needsDL}");
-            //Logging.Info($"Config - Sync Definitions: {Instance.Config.SyncDefinitions}");
-            //Logging.Info($"Remote hash: {remote_hash}");
-            //Logging.Info($"Local hash: {local_hash}");
+            string remote_hash = www.DownloadString(remote_checksum_url).Trim();
+            string local_hash = needsDL ? "[Doesn't exist]" : String.Concat(IOTool.SHA256File(localFilename).Select(x => x.ToString("X2")));
+            byte[] remote_sig = (!doSigCheck) ? null : www.DownloadData(remote_pgp_sig);
+
             if (!needsDL && Instance.Config.SyncDefinitions)
             {
                 if (local_hash != remote_hash)
@@ -489,11 +480,49 @@ namespace BundleBouncer
             }
             if (needsDL)
             {
-                Logging.Info($"Updating to yara ruleset of hash {remote_hash}...");
-                www.DownloadFile(LATEST_YARA_URL, YaraCompiledRuleset);
+                Logging.Info($"Updating to {filedesc} of hash {remote_hash}...");
+                www.DownloadFile(remote_file_url, localFilename);
+                if (doSigCheck)
+                {
+                    if(!checkSig(remote_sig, localFilename))
+                    {
+                        Logging.Error($"Failed to verify {filedesc} PGP signature.");
+                        return false;
+                    }
+                    Logging.Info($"Verified {filedesc} PGP signature.");
+                    doSigCheck=false;
+                }
             }
-            local_hash = String.Concat(IOTool.SHA256File(YaraCompiledRuleset).Select(x => x.ToString("X2")));
-            Logging.Info($"Hash of {YaraCompiledRuleset} after update checks: {local_hash}");
+            local_hash = String.Concat(IOTool.SHA256File(localFilename).Select(x => x.ToString("X2")));
+            Logging.Info($"Hash of {filedesc} after update checks: {local_hash}");
+            if (doSigCheck)
+            {
+                if(!checkSig(remote_sig, localFilename))
+                {
+                    Logging.Error($"Failed to verify {filedesc} PGP signature.");
+                    return false;
+                }
+                Logging.Info($"Verified {filedesc} PGP signature.");
+                doSigCheck=false;
+            }
+            return true;
+        }
+
+        private static bool checkSig(byte[] remote_sig_armored, string local_file_name)
+        {
+            if(PublicKey==null)
+                PublicKey = CryptoUtils.bytesToPubkey(Constants.PGP_PUBKEY);
+            using(var sigstream = new MemoryStream(remote_sig_armored))
+            {
+                using (Stream instr = File.OpenRead(local_file_name))
+                {
+                    if(!CryptoUtils.VerifySignature(local_file_name, sigstream, PublicKey))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         internal static void SetUserAvatar(string userid, EAvatarType avType, dynamic avDict)
