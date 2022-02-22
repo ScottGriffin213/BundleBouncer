@@ -51,11 +51,11 @@ namespace BundleBouncer.Format
                 vbr.AlignTo(16);
             }
 
-            var blockstream = new ValidatingBinaryReader(SetupDecompressionStream("blocks", vbr));
-            ReadBlockInfo(blockstream, GetBundleInfoOffset());
+            using (var blockstream = new ValidatingBinaryReader(SetupDecompressionStream("blocks", vbr)))
+                ReadBlockInfo(blockstream);
         }
 
-        private void ReadBlockInfo(ValidatingBinaryReader vbr, long offset)
+        private void ReadBlockInfo(ValidatingBinaryReader vbr)
         {
             // TODO
         }
@@ -63,23 +63,28 @@ namespace BundleBouncer.Format
         private Stream SetupDecompressionStream(string fieldName, ValidatingBinaryReader vbr)
         {
             var stream = vbr.BaseStream;
+            stream.Position = GetBundleInfoOffset();
             switch (this.formatHeader.compressionType)
             {
-                case 0: // No compression
+                case 0:
+                    Logging.Info("No compression");
                     return stream;
                 case 1: // Basic LZMA
+                    Logging.Info("Decompressing LZMA...");
                     using (var ms = new MemoryStream(vbr.GetBytes($"{fieldName}(LZMA).size", (int)formatHeader.compressedSize)))
                     {
-                        stream.CopyTo(ms);
                         return SevenZipHelper.StreamDecompress(ms);
                     }
                 case 2:
                 case 3:
+                    Logging.Info("Decompressing LZ4...");
+                    var uncompressedBytes = new byte[formatHeader.decompressedSize];
                     using (var ms = new MemoryStream(vbr.GetBytes($"{fieldName}(LZ4).size", (int)formatHeader.compressedSize)))
                     {
-                        stream.CopyTo(ms);
-                        return new Lz4DecoderStream(ms);
+                        using (var lz4 = new Lz4DecoderStream(ms))
+                        lz4.Read(uncompressedBytes, 0, (int)formatHeader.decompressedSize);
                     }
+                    return new MemoryStream(uncompressedBytes);
             }
             throw new FailedValidation(fieldName, $"Invalid compression scheme {formatHeader.compressionType}");
         }
