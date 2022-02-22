@@ -40,7 +40,8 @@ namespace BundleBouncer
         private static dnYara.YaraContext yaraContext;
         private static dnYara.CompiledRules rules;
         private static dnYara.CompiledRules userRules;
-        private static dnYara.Scanner scanner;
+        private static dnYara.CustomScanner stock_rules_scanner;
+        private static dnYara.CustomScanner user_rules_scanner;
         //private static AssetsManager assetsManager;
 
         // Used to determine which scan cache entries get nuked.
@@ -51,14 +52,6 @@ namespace BundleBouncer
         {
             AssetScanner.bb = bb;
             SetupYara();
-            SetupAssetTools();
-        }
-
-        private static void SetupAssetTools()
-        {
-            //assetsManager = new AssetsManager();
-            // Not needed
-            //assetsManager.LoadClassDatabase("path/to/classdata.tpk");
         }
 
         private static void SetupYara()
@@ -66,6 +59,8 @@ namespace BundleBouncer
             yaraContext = new dnYara.YaraContext();
             rules = new dnYara.CompiledRules(bb.YaraCompiledRuleset);
             Logging.Info($"YARA: Loaded {rules.RuleCount} rules, {rules.NamespacesCount} namespaces, {rules.StringsCount} strings from the global ruleset.");
+            stock_rules_scanner = new dnYara.CustomScanner(rules);
+
             if (Directory.Exists(bb.YaraUserRulesDir))
             {
                 using (var compiler = new dnYara.Compiler())
@@ -78,15 +73,15 @@ namespace BundleBouncer
                     }
                     userRules = compiler.Compile(); // TODO: Combine somehow
                     Logging.Info($"YARA: Loaded {userRules.RuleCount} rules, {userRules.NamespacesCount} namespaces, {userRules.StringsCount} strings from your personal ruleset.");
+
+                    // YARA scanner
+                    user_rules_scanner = new dnYara.CustomScanner(userRules);
                 }
             }
             else
             {
                 Logging.Info($"YARA: Directory {bb.YaraUserRulesDir} does not exist; Will not load user-provided rules.");
             }
-
-            // YARA scanner
-            scanner = new dnYara.Scanner();
         }
 
         internal static bool ScanFile(string filename, string source, byte[] hash = null, string hashstr = null)
@@ -101,6 +96,7 @@ namespace BundleBouncer
             }
             if (previouslyScanned.TryGetValue(hash, out EScanResult result))
             {
+                Logging.Info($"{hashstr} - Scanned already, using cached result of {result}.");
                 return result == EScanResult.FAILED;
             }
             var r = InternalScanResult(filename, source, hash, hashstr);
@@ -146,15 +142,6 @@ namespace BundleBouncer
                 return EScanResult.FAILED;
             }
 
-            // Try loading from AssetTools. Slow, but needed by some Yara rules.
-            /* Seems to cause lots of memleaks.  Disabled for now.
-            if (!TryLoadingBundle(filename, source, hash, hashstr, out BundleFileInstance bfi))
-            {
-                CleanupAssets();
-                BundleBouncer.NotifyUserOfBlockedBundle(hash, source);
-                return EScanResult.FAILED;
-            }
-            */
             if (!TryParsingBundle(filename, source, hash, hashstr))
             {
                 //CleanupAssets();
@@ -174,9 +161,24 @@ namespace BundleBouncer
                     using (var vbr = new ValidatingBinaryReader(s))
                     {
                         var abf = new AssetBundleFile();
+                        abf.OnBlockRead = (BlockRow6 block, byte[] bytes) => {
+                            var blockid = $"block{block.index}";
+                            using(var ms = new MemoryStream(bytes))
+                                if(MatchesYaraRules(filename, source, hash, hashstr, ms, EScanObjectType.UNKNOWNBLOCK, blockid))
+                                    throw new FailedValidation(blockid, "YARA rule(s) matched.");
+                        };
                         abf.Read(vbr);
+                        Logging.Info($"Scanning {abf.blockTable.blocks.Length} blocks with YARA:");
+                        foreach(var block in abf.blockTable.blocks)
+                        {
+                        }
                     }
                 }
+            }
+            catch(FailedValidation failure)
+            {
+                Logging.Error(failure);
+                return false;
             }
             catch (Exception e)
             {
@@ -210,19 +212,32 @@ namespace BundleBouncer
             //assetsManager.UnloadAllAssetsFiles(true);
         }
 
-        private static bool MatchesYaraRules(string filename, string source, byte[] hash, string hashstr/*, BundleFileInstance bfi*/)
+        private static bool MatchesYaraRules(string filename, string source, byte[] hash, string hashstr)
+        {
+            using(var fs = File.OpenRead(filename))
+                return MatchesYaraRules(filename, source, hash, hashstr, fs, EScanObjectType.ASSETBUNDLE, "");
+        }
+
+        private static bool MatchesYaraRules(string filename, string source, byte[] hash, string hashstr, Stream s, EScanObjectType type, string rscname)
         {
             var matches = new List<dnYara.ScanResult>();
+            var ev = new dnYara.ExternalVariables();
+            var objType = Enum.GetName(typeof(EScanObjectType), type);
+            ev.StringVariables["type"] = objType;
+            ev.StringVariables["name"] = rscname;
+            Logging.Info($"Scanning {objType} {rscname}...");
             if (rules != null)
-                matches.AddRange(scanner.ScanFile(filename, rules));
+                matches.AddRange(stock_rules_scanner.ScanStream(s, ev));
             if (userRules != null)
-                matches.AddRange(scanner.ScanFile(filename, userRules));
+                matches.AddRange(user_rules_scanner.ScanStream(s, ev));
             if (matches.Count == 0)
                 return false;
             foreach (var scanResult in matches)
             {
                 var id = scanResult.MatchingRule.Identifier;
-                BundleBouncer.NotifyUserOfBlockedBundle(IOTool.SHA256File(filename), source + "/YARA:" + id);
+                BundleBouncer.NotifyUserOfBlockedBundle(hash, source + "/YARA:" + id);
+                if (rscname != "")
+                    filename += "/" + rscname;
                 if (scanResult.Matches.Count == 1)
                 {
                     Logging.Gottem($"File {filename} matched YARA rule {id}.{scanResult.Matches.First().Key}!");

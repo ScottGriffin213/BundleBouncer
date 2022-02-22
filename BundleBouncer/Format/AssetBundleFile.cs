@@ -15,9 +15,14 @@ namespace BundleBouncer.Format
             "UnityFS"
         };
 
-        private string magic;
-        private uint version;
-        private FormatHeader6 formatHeader;
+        internal string magic;
+        internal uint version;
+        internal FormatHeader6 formatHeader;
+        internal BlockTable6 blockTable;
+        internal DirectoryTable6 dirTable;
+
+        internal Action<BlockRow6, byte[]> OnBlockRead = null;
+        internal Action<DirectoryRow6, byte[]> OnDirectoryRead = null;
 
         public AssetBundleFile()
         {
@@ -57,7 +62,10 @@ namespace BundleBouncer.Format
 
         private void ReadBlockInfo(ValidatingBinaryReader vbr)
         {
-            // TODO
+            this.blockTable = new BlockTable6();
+            this.blockTable.Read(vbr);
+            this.dirTable = new DirectoryTable6();
+            this.dirTable.Read(vbr);
         }
 
         private Stream SetupDecompressionStream(string fieldName, ValidatingBinaryReader vbr)
@@ -86,7 +94,7 @@ namespace BundleBouncer.Format
                     }
                     return new MemoryStream(uncompressedBytes);
             }
-            throw new FailedValidation(fieldName, $"Invalid compression scheme {formatHeader.compressionType}");
+            throw new FailedValidation(fieldName, $"Invalid compression scheme 0x{formatHeader.compressionType:X2}");
         }
 
         // From AssetTools.NET

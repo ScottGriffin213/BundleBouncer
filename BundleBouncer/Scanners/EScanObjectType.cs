@@ -4,6 +4,7 @@
     {
         ASSETBUNDLE,
         UNKNOWNASSET,
-        UNKNOWNRESOURCE
+        UNKNOWNRESOURCE,
+        UNKNOWNBLOCK
     }
 }

@@ -2,7 +2,7 @@
 
 namespace BundleBouncer.Format
 {
-    internal class AssetBundleBlockRow6
+    internal class BlockRow6
     {
         internal uint index = 0;
         internal uint decompressedSize = 0;
@@ -17,7 +17,7 @@ namespace BundleBouncer.Format
             }
         }
 
-        public AssetBundleBlockRow6()
+        public BlockRow6()
         {
         }
 

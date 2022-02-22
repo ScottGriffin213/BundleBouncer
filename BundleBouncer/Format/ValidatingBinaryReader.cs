@@ -108,7 +108,7 @@ namespace BundleBouncer
 
         private ushort ToUInt16(byte[] bytes)
         {
-            if (bytes.Length != 4)
+            if (bytes.Length != 2)
                 throw new InvalidOperationException();
             return (ushort)(((ushort)bytes[1])
                           | ((ushort)bytes[0] << 8));
@@ -148,6 +148,20 @@ namespace BundleBouncer
                  | ((ulong)b[0] << 56);
         }
 
+        private long ToInt64(byte[] b)
+        {
+            if (b.Length != 8)
+                throw new InvalidOperationException();
+            return ((long)b[7])
+                 | ((long)b[6] << 8)
+                 | ((long)b[5] << 16)
+                 | ((long)b[4] << 24)
+                 | ((long)b[3] << 32)
+                 | ((long)b[2] << 40)
+                 | ((long)b[1] << 48)
+                 | ((long)b[0] << 56);
+        }
+
         internal void AlignTo(uint bytes)
         {
             br.BaseStream.Position += bytes - (br.BaseStream.Position % bytes);
@@ -156,6 +170,16 @@ namespace BundleBouncer
         internal int GetS32(string fieldName, int min = int.MinValue, int max = int.MaxValue)
         {
             var value = ToInt32(GetBytes(fieldName, 4));
+            if (value < min)
+                throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
+            if (value > max)
+                throw new FailedValidation(fieldName, $"value greater than max: {value} > {max}");
+            return value;
+        }
+
+        internal long GetS64(string fieldName, long min = long.MinValue, long max = long.MaxValue)
+        {
+            var value = ToInt64(GetBytes(fieldName, 8));
             if (value < min)
                 throw new FailedValidation(fieldName, $"value less than min: {value} < {min}");
             if (value > max)
