@@ -2,6 +2,7 @@
 
 ## 1.3.0 - In Development
 
+* Updated for VRChat build 1169.
 * Core
   * Now intercepts Unity internals in order to capture bundles just prior to loading.
   * Added [YARA](http://virustotal.github.io/yara/) binary scanning engine from VirusTotal and Airbus CERT.

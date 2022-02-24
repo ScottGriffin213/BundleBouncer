@@ -156,6 +156,7 @@ namespace BundleBouncer
         {
             try
             {
+                var fileSize = (ulong)(new FileInfo(filename).Length);
                 using (FileStream s = File.OpenRead(filename))
                 {
                     using (var vbr = new ValidatingBinaryReader(s))
@@ -167,7 +168,7 @@ namespace BundleBouncer
                                 if(MatchesYaraRules(filename, source, hash, hashstr, ms, EScanObjectType.UNKNOWNBLOCK, blockid))
                                     throw new FailedValidation(blockid, "YARA rule(s) matched.");
                         };
-                        abf.Read(vbr);
+                        abf.Read(vbr, fileSize);
                         Logging.Info($"Scanning {abf.blockTable.blocks.Length} blocks with YARA:");
                         foreach(var block in abf.blockTable.blocks)
                         {

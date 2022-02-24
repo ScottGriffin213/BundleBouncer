@@ -1,4 +1,5 @@
-﻿using AssetsTools.NET.Extra.Decompressors.LZ4;
+﻿using AssetsTools.NET.Extra;
+using AssetsTools.NET.Extra.Decompressors.LZ4;
 using SevenZip.Compression.LZMA;
 using System;
 using System.Collections.Generic;
@@ -28,9 +29,9 @@ namespace BundleBouncer.Format
 
         }
 
-        public void Read(ValidatingBinaryReader vbr)
+        public void Read(ValidatingBinaryReader vbr, ulong fileSize)
         {
-            fileSize = (ulong)vbr.BaseStream.Length;
+            this.fileSize = fileSize;
 
             string fieldName = "file_header.magic";
             magic = vbr.GetCString(fieldName);
@@ -59,11 +60,13 @@ namespace BundleBouncer.Format
 
             using (var blockstream = new ValidatingBinaryReader(SetupDecompressionStream("blocks", vbr, GetBundleInfoOffset(), (byte)this.formatHeader.compressionType)))
                 ReadBlockInfo(blockstream);
+
+            vbr.BaseStream.Position = GetFileDataOffset();
             var blockStart = (ulong)vbr.BaseStream.Position;
             ulong blockEnd;
             foreach (var block in this.blockTable.blocks)
             {
-                Logging.Info($"Block {block.index} @ {blockStart}: flags: {block.flags:X4}, uncompressed: {block.decompressedSize}B, compressed: {block.compressedSize}B");
+                Logging.Info($"Block {block.index} @ {blockStart}: flags: 0x{block.flags:X4}, uncompressed: {block.decompressedSize}B, compressed: {block.compressedSize}B, compression-type: {block.compressionType}");
                 fieldName = $"blocks[{block.index}].start";
                 if (blockStart > fileSize)
                 {
@@ -94,17 +97,50 @@ namespace BundleBouncer.Format
                     if (blockEnd > fileSize)
                         throw new FailedValidation(fieldName, $"Block end is beyond the end of the file (0x{blockEnd:X16} > 0x{fileSize:X16})");
                 }
-                using (var stream = SetupDecompressionStream(fieldName, vbr, block.compressedSize, block.compressionType))
+                if (block.isCompressed)
                 {
-                    var data = new byte[block.decompressedSize];
-                    stream.Read(data, 0, (int)block.decompressedSize);
-                    OnBlockRead(block, data);
+                    using (var ms = new MemoryStream(new byte[block.decompressedSize]))
+                    {
+                        /*
+                        using (var stream = SetupDecompressionStream(fieldName, vbr, block.compressedSize, block.compressionType))
+                        {
+                            stream.Position = 0;
+                            var data = new byte[block.decompressedSize];
+                            stream.Read(data, 0, (int)block.decompressedSize);
+                            OnBlockRead(block, data);
+                        }
+                        */
+                        switch (block.compressionType)
+                        {
+                            case 0:
+                                vbr.BaseStream.CopyToCompat(ms, block.compressedSize);
+                                break;
+                            case 1:
+                                SevenZipHelper.StreamDecompress(vbr.BaseStream, ms, block.compressedSize, block.decompressedSize);
+                                break;
+                            case 2:
+                            case 3:
+                                using (MemoryStream tempMs = new MemoryStream())
+                                {
+                                    vbr.BaseStream.CopyToCompat(tempMs, block.compressedSize);
+                                    tempMs.Position = 0;
+
+                                    using (Lz4DecoderStream decoder = new Lz4DecoderStream(tempMs))
+                                    {
+                                        decoder.CopyToCompat(ms, block.decompressedSize);
+                                    }
+                                }
+                                break;
+                        }
+                        OnBlockRead?.Invoke(block, ms.ToArray());
+                    }
                 }
             }
         }
 
         private void ReadBlockInfo(ValidatingBinaryReader vbr)
         {
+            vbr.BaseStream.Position = 0;
             this.blockTable = new BlockTable6();
             this.blockTable.Read(vbr);
             this.dirTable = new DirectoryTable6();
