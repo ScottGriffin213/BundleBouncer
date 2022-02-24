@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UIExpansionKit;
 using UIExpansionKit.API;
+using UIExpansionKit.API.Controls;
 using UnhollowerRuntimeLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,13 +17,18 @@ namespace BundleBouncer.UI
     public static class UIXIntegration
     {
         private static Text qmShitlistUserText;
+        //private static IMenuButton shitlistAvatarButton;
+        //private static IMenuButton shitlistUserButton;
 
         public static void OnApplicationStart()
         {
             Logging.Info("Initializing UIX...");
             ClassInjector.RegisterTypeInIl2Cpp<QMShitlistButtonHandler>(logSuccess: true);
+#pragma warning disable CS0618 // TODO: Update to UIX 1.0 when it hits the API.
             ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Shitlist User", OnUnshitlistUser, OnConsumeUnshitlistUser);
-            //ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Blocklist Avatar", OnUnshitlistAvatar, OnConsumeUnshitlistAvatar);
+#pragma warning restore CS0618
+            //shitlistUserButton = ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Shitlist User", OnUnshitlistUser);
+            //shitlistAvatarButton = ExpansionKitApi.GetExpandedMenu(ExpandedMenu.UserQuickMenu).AddSimpleButton("Blocklist Avatar", OnUnshitlistAvatar);
 
             //VRChatUtilityKit.Utilities.VRCUtils.OnUiManagerInit += VRCUtils_OnUiManagerInit;
         }
