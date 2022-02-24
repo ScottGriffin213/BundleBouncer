@@ -9,16 +9,13 @@ namespace BundleBouncer.Format
         internal uint compressedSize = 0;
         internal ushort flags = 0;
 
-        internal byte compressionType
-        {
-            get
-            {
-                return (byte)(flags & 0x3F);
-            }
-        }
+        public byte compressionType { get; private set; }
+        public bool isCompressed { get; private set; }
 
         public BlockRow6()
         {
+            isCompressed = false;
+            compressionType = 0x00;
         }
 
         internal void Read(ValidatingBinaryReader vbr)
@@ -33,6 +30,12 @@ namespace BundleBouncer.Format
 
             fieldName = $"blockrow6[{index}].flags";
             flags = vbr.GetU16(fieldName); // TODO: Get baseline
+
+            compressionType = (byte)(flags & 0x3F);
+            isCompressed = compressionType != 0;
+
+            if(compressionType < 0 || compressionType > 3)
+                throw new FailedValidation(fieldName, $"Invalid CompressionType {compressionType}");
         }
     }
 }
