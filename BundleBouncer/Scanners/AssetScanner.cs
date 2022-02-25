@@ -26,7 +26,7 @@
 
 //using AssetsTools.NET.Extra;
 using BundleBouncer.Data;
-using BundleBouncer.Format;
+using BundleBouncer.Validation;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,6 +52,22 @@ namespace BundleBouncer
         {
             AssetScanner.bb = bb;
             SetupYara();
+            SetupValidation();
+        }
+
+        private static void SetupValidation()
+        {
+            Validation.Logging.OnError_Obj = (x) => Logging.Error(x);
+            Validation.Logging.OnError_Str = (x) => Logging.Error(x);
+            Validation.Logging.OnError_StrObjA = (a, b) => Logging.Error(a, b);
+
+            Validation.Logging.OnInfo_Obj = (x) => Logging.Info(x);
+            Validation.Logging.OnInfo_Str = (x) => Logging.Info(x);
+            Validation.Logging.OnInfo_StrObjA = (a, b) => Logging.Info(a, b);
+
+            Validation.Logging.OnWarning_Obj = (a) => Logging.Warning(a);
+            Validation.Logging.OnWarning_Str = (a) => Logging.Warning(a);
+            Validation.Logging.OnWarning_StrObjA = (a, b) => Logging.Warning(a, b);
         }
 
         private static void SetupYara()
@@ -163,16 +179,13 @@ namespace BundleBouncer
                     {
                         var abf = new AssetBundleFile();
                         abf.OnBlockRead = (BlockRow6 block, byte[] bytes) => {
-                            var blockid = $"block{block.index}";
+                            var blockid = $"block[{block.index}]";
+                            Logging.Info($"Scanning {blockid} with YARA...");
                             using(var ms = new MemoryStream(bytes))
                                 if(MatchesYaraRules(filename, source, hash, hashstr, ms, EScanObjectType.UNKNOWNBLOCK, blockid))
                                     throw new FailedValidation(blockid, "YARA rule(s) matched.");
                         };
                         abf.Read(vbr, fileSize);
-                        Logging.Info($"Scanning {abf.blockTable.blocks.Length} blocks with YARA:");
-                        foreach(var block in abf.blockTable.blocks)
-                        {
-                        }
                     }
                 }
             }

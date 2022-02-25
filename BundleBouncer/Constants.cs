@@ -43,49 +43,11 @@ namespace BundleBouncer
         ///</summary>
         public const string VERSION_STRING = "1.3.0";
 
-        /// <summary>
-        /// Which minPlayer header values are permitted in AssetBundles
-        /// </summary>
-        public static readonly System.Collections.Generic.HashSet<string> ASSETBUNDLE_HEADER_ALLOWED_MIN_PLAYER_VERSIONS = new System.Collections.Generic.HashSet<string>()
-        {
-            "5.x.x",
-        };
-
-        /// <summary>
-        /// Which file engine versions are permitted in AssetBundles
-        /// </summary>
-        public static readonly System.Collections.Generic.HashSet<string> ASSETBUNDLE_HEADER_ALLOWED_CUR_PLAYER_VERSIONS = new System.Collections.Generic.HashSet<string>()
-        {
-            "2017.4.15f1",
-            "2017.4.28f1",
-            "2017.4.39f1",
-            "2018.4.12f1",
-            "2018.4.14f1",
-            "2018.4.17f1",
-            "2018.4.20f1",
-            "2018.4.9f1",
-            "2019.4.29f1",
-            "2019.4.30f1",
-            "2019.4.31f1",
-            "2019.4.31f1c1",
-            "5.6.3p1",
-        };
-        
-        public const uint MIN_PLAYER_VERSION_LENGTH_MIN = 5;
-        public const uint MIN_PLAYER_VERSION_LENGTH_MAX = 5;
-        public const uint CUR_PLAYER_VERSION_LENGTH_MIN = 7;
-        public const uint CUR_PLAYER_VERSION_LENGTH_MAX = 13;
-
         public static class Offsets {
             public static class UnityPlayer {
                 internal const int LOADFROMFILE = 0x002D7520;
                 internal const int LOADFROMFILEASYNC = 0x002D7620;
-                internal const int LOADFROMMEMORY = 0x002D7700;
-                internal const int ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL = 0x002E24B0;
-                internal const int ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG = 0x002E2640;
                 internal const int DOWNLOADHANDLERASSETBUNDLE_CREATECACHED = 0x0033ED30;
-                internal const int DOWNLOADHANDLERASSETBUNDLE_CREATE = 0x0033EBF0;
-                internal const int LOADFROMSTREAMASYNCINTERNAL = 0x002D7940;
                 internal const int CORE_BASICSTRING_CHAR_CSTR = 0x00089350;
                 internal const int CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN = 0x0008FD80;
                 internal const int DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA = 0x0033F400;

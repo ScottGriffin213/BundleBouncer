@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace BundleBouncer.Format
+﻿namespace BundleBouncer.Validation
 {
-    internal class FormatHeader6
+    public class FormatHeader6
     {
         private const int MIN_COMPRESSED_SIZE = 50;
         private const int MIN_DECOMPRESSED_SIZE = 50;
@@ -10,35 +8,35 @@ namespace BundleBouncer.Format
 
         public string minPlayerVersion;
         public string curPlayerVersion;
-        public ulong  totalFileSize;
-        public uint   compressedSize;
-        public uint   decompressedSize;
-        public uint   flags;
+        public ulong totalFileSize;
+        public uint compressedSize;
+        public uint decompressedSize;
+        public uint flags;
 
         public FormatHeader6()
         {
         }
 
-        public uint compressionType 
-        { 
-            get 
-            { 
-                return flags & 0x3F; 
-            } 
+        public uint compressionType
+        {
+            get
+            {
+                return flags & 0x3F;
+            }
         }
 
-        internal void Read(ValidatingBinaryReader vbr)
+        public void Read(ValidatingBinaryReader vbr)
         {
             string fieldName = "format_header.min_player_version";
-            minPlayerVersion = vbr.GetCString(fieldName, Constants.MIN_PLAYER_VERSION_LENGTH_MIN, Constants.MIN_PLAYER_VERSION_LENGTH_MAX);
-            if (!Constants.ASSETBUNDLE_HEADER_ALLOWED_MIN_PLAYER_VERSIONS.Contains(minPlayerVersion))
+            minPlayerVersion = vbr.GetCString(fieldName, ValidationConstants.MIN_PLAYER_VERSION_LENGTH_MIN, ValidationConstants.MIN_PLAYER_VERSION_LENGTH_MAX);
+            if (!ValidationConstants.ASSETBUNDLE_HEADER_ALLOWED_MIN_PLAYER_VERSIONS.Contains(minPlayerVersion))
             {
                 throw new FailedValidation(fieldName, $"Unrecognized min player version: {minPlayerVersion}");
             }
 
             fieldName = "format_header.cur_player_version";
-            curPlayerVersion = vbr.GetCString(fieldName, Constants.CUR_PLAYER_VERSION_LENGTH_MIN, Constants.CUR_PLAYER_VERSION_LENGTH_MAX);
-            if (!Constants.ASSETBUNDLE_HEADER_ALLOWED_CUR_PLAYER_VERSIONS.Contains(curPlayerVersion))
+            curPlayerVersion = vbr.GetCString(fieldName, ValidationConstants.CUR_PLAYER_VERSION_LENGTH_MIN, ValidationConstants.CUR_PLAYER_VERSION_LENGTH_MAX);
+            if (!ValidationConstants.ASSETBUNDLE_HEADER_ALLOWED_CUR_PLAYER_VERSIONS.Contains(curPlayerVersion))
             {
                 Logging.Warning($"{fieldName} - Unrecognized current player version: {curPlayerVersion}");
                 //throw new FailedValidation(fieldName, $"Unrecognized current player version: {curPlayerVersion}");
@@ -55,7 +53,7 @@ namespace BundleBouncer.Format
 
             fieldName = "format_header.flags";
             flags = vbr.GetU32(fieldName);
-            if(compressionType > 3)
+            if (compressionType > 3)
             {
                 throw new FailedValidation(fieldName, $"Invalid compression type {compressionType}");
             }

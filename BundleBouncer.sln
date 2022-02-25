@@ -18,6 +18,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dnYara4Core.Interop", "dnYa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssetsTools.NET", "lib\AssetTools.NET\AssetTools.NET\AssetsTools.NET.csproj", "{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BundleBouncer.Validation", "BundleBouncer.Validation\BundleBouncer.Validation.csproj", "{A78CB17C-C3AF-4137-B5F5-29703509A369}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD} = {EE19B43A-981C-447F-B9E3-B9D1CC581BAD}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +49,10 @@ Global
 		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE19B43A-981C-447F-B9E3-B9D1CC581BAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A78CB17C-C3AF-4137-B5F5-29703509A369}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A78CB17C-C3AF-4137-B5F5-29703509A369}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A78CB17C-C3AF-4137-B5F5-29703509A369}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A78CB17C-C3AF-4137-B5F5-29703509A369}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
