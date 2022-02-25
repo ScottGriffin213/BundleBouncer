@@ -15,8 +15,7 @@ namespace BundleBouncer.UI
         public static void OnApplicationStart()
         {
             Logging.Info("Initializing UIX...");
-            ClassInjector.RegisterTypeInIl2Cpp<QMShitlistButtonHandler>(logSuccess: true);
-
+            
             VRChatUtilityKit.Utilities.VRCUtils.OnUiManagerInit += VRCUtils_OnUiManagerInit;
         }
 
