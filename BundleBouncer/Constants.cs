@@ -152,7 +152,7 @@ namespace BundleBouncer
         ///<summary>
         /// Used throughout the code.
         ///</summary>
-        public const string VERSION_STRING = "1.3.0";
+        public const string VERSION_STRING = "1.3.1";
 
         public static class Offsets {
             public static class UnityPlayer {
