@@ -938,8 +938,8 @@ namespace BundleBouncer
                                     p[kvp.Key] = Serialize.FromIL2CPPToManaged<object>(kvp.Value);
                                 }
                                 string customProps = JsonConvert.SerializeObject(p);
-                                //if (!customProps.Contains("avtr_"))
-                                //    break;
+                                if (!customProps.Contains("avtr_"))
+                                    break;
 
                                 writtenPhotonSamples.Add(__0.Code);
                                 var path = Path.Combine("UserData", "BundleBouncer", $"{__0.Code}.json");
