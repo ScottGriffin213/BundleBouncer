@@ -23,6 +23,7 @@
  */
 
 using BundleBouncer.Data;
+using BundleBouncer.Model;
 using BundleBouncer.Utilities;
 using ExitGames.Client.Photon;
 using MelonLoader;
@@ -874,56 +875,63 @@ namespace BundleBouncer
             }
         }
 
+        internal static string params2JSON(ParameterDictionary paramDict)
+        {
+            var p = new Dictionary<byte, object>();
+            foreach (var kvp in paramDict)
+            {
+                p[kvp.Key] = Serialize.FromIL2CPPToManaged<object>(kvp.Value);
+            }
+            return JsonConvert.SerializeObject(p);
+        }
+        internal static dynamic params2dynamic(ParameterDictionary paramDict) => JsonConvert.DeserializeObject(params2JSON(paramDict));
+
         internal static bool OnEvent(ref EventData __0)
         {
             try
             {
+#if USING_PHOTON_SAMPLER
+                PhotonSampler.Sample(__0);
+#endif
                 switch (__0.Code)
                 {
                     case 255: // join
                         {
-                            var p249 = (dynamic)__0.Parameters[249].Cast<Il2CppSystem.Collections.Hashtable>();
-                            //Logging.Info($"249.Type: {p249.GetType().FullName} | {p249.GetIl2CppType().FullName}");
-                            var avdata = __0.Parameters[249].Cast<Il2CppSystem.Collections.Hashtable>();
-                            var userdata = avdata["user"].Cast<Il2CppSystem.Collections.Hashtable>();
-                            var userid = userdata["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
-                            
-                            if(avdata.ContainsKey("avatarDict"))
+                            // Fuck it, made a schema.
+                            var ev = JsonConvert.DeserializeObject<Photon255>(params2JSON(__0.Parameters));
+                            var avdata = ev._249;
+                            var userid = avdata.User.Id; // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
+
+                            if (avdata.AvatarDict != null)
                             {
-                                var avdict = avdata["avatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdict["id"].ToString());
-                                if (!CheckAvDict(avdict, userid, __0.Code, false))
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata.AvatarDict);
+                                if (!CheckAvDict(avdata.AvatarDict, userid, __0.Code, false))
                                     return false;
                             }
-                            if(avdata.ContainsKey("favatarDict"))
+                            if (avdata.FavatarDict != null)
                             {
-                                var avdict = avdata["favatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdict["id"].ToString());
-                                if (!CheckAvDict(avdict, userid, __0.Code, true))
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata.FavatarDict);
+                                if (!CheckAvDict(avdata.FavatarDict, userid, __0.Code, true))
                                     return false;
                             }
                         }
                         break;
                     case 253: // properties_changed
                         {
-                            var p251 = __0.Parameters[251];
-                            //Logging.Info($"251.Type: {p251.GetType().FullName} | {p251.GetIl2CppType().FullName}");
-                            var avdata = p251.Cast<Il2CppSystem.Collections.Generic.Dictionary<string, Il2CppObjectBase>>();
-                            var userdata = avdata["user"].Cast<Il2CppSystem.Collections.Generic.Dictionary<string, Il2CppObjectBase>>();
-                            var userid = userdata["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
-                            
-                            if(avdata.ContainsKey("avatarDict"))
+                            var ev = JsonConvert.DeserializeObject<Photon253>(params2JSON(__0.Parameters));
+                            var avdata = ev._251;
+                            var userid = avdata.User.Id; // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
+
+                            if (avdata.AvatarDict != null)
                             {
-                                var avdict = avdata["avatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdict["id"].ToString());
-                                if (!CheckAvDict(avdict, userid, __0.Code, false))
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata.AvatarDict);
+                                if (!CheckAvDict(avdata.AvatarDict, userid, __0.Code, false))
                                     return false;
                             }
-                            if(avdata.ContainsKey("favatarDict"))
+                            if (avdata.FavatarDict != null)
                             {
-                                var avdict = avdata["favatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdict["id"].ToString());
-                                if (!CheckAvDict(avdict, userid, __0.Code, true))
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata.FavatarDict);
+                                if (!CheckAvDict(avdata.FavatarDict, userid, __0.Code, true))
                                     return false;
                             }
                         }
@@ -932,18 +940,14 @@ namespace BundleBouncer
                         {
                             if (!writtenPhotonSamples.Contains(__0.Code))
                             {
-                                var p = new Dictionary<byte, object>();
-                                foreach(var kvp in __0.Parameters)
-                                {
-                                    p[kvp.Key] = Serialize.FromIL2CPPToManaged<object>(kvp.Value);
-                                }
-                                string customProps = JsonConvert.SerializeObject(p);
+                                var customProps = params2JSON(__0.Parameters);
                                 if (!customProps.Contains("avtr_"))
                                     break;
 
                                 writtenPhotonSamples.Add(__0.Code);
                                 var path = Path.Combine("UserData", "BundleBouncer", $"{__0.Code}.json");
                                 File.WriteAllText(path, customProps);
+                                path = Path.GetFullPath(path);
                                 Logging.Info($"Captured event {__0.Code} that appears to have sent an avatar ID.  Please notify the author via email, and attach {path}.");
                                 //dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
                             }
@@ -958,10 +962,10 @@ namespace BundleBouncer
             return true;
         }
 
-        private static bool CheckAvDict(dynamic avdata, string user, int code, bool is_fallback)
+        private static bool CheckAvDict(Model.Avatar avdata, string user, int code, bool is_fallback)
         {
-            string avID = avdata["id"];
-            string avName = avdata["name"];
+            string avID = avdata.Id;
+            string avName = avdata.Name;
             string fbstr = is_fallback ? "fallback" : "main";
             Logging.Info($"User changed {fbstr} avatar to {avID} ({avName}; via E{code})...");
             if (AvatarShitList.IsAvatarIDBlocked(avID))

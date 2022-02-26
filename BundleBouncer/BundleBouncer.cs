@@ -525,12 +525,14 @@ namespace BundleBouncer
             return true;
         }
 
-        internal static void SetUserAvatar(string userid, EAvatarType avType, dynamic avDict)
+        internal static void SetUserAvatar(string userid, EAvatarType avType, Model.Avatar avDict)
         {
+            //Logging.Info($"userid={userid}, avtype={avType}, avDict={avDict}");
             if(AvatarUsers.TryGetValue(userid, out UserAvatars currentAvs)) 
             {
                 var oldavID = currentAvs.Get(avType);
-                if(Avatars.ContainsKey(oldavID)) 
+                //Logging.Info($"oldavid={oldavID}");
+                if(oldavID != null && Avatars.ContainsKey(oldavID)) 
                 {
                     if(Avatars[oldavID].Users.Contains(userid)) 
                     {
@@ -542,12 +544,12 @@ namespace BundleBouncer
             {
                 Avatars.Remove(kvp.Key);
             }
-            string avID = avDict["id"];
+            string avID = avDict.Id;
             if (!Avatars.ContainsKey(avID))
             {
                 Avatars[avID] = new AvatarInfo();
             }
-            Avatars[avID].FromDynamic(avDict);
+            Avatars[avID].FromModel(avDict);
             if (!AvatarUsers.ContainsKey(userid))
             {
                 AvatarUsers[userid] = new UserAvatars();

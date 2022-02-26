@@ -35,13 +35,13 @@ namespace BundleBouncer.Data
         public HashSet<string> Users = new HashSet<string>();
         public HashSet<byte[]> Hashes = new HashSet<byte[]>();
 
-        internal void FromDynamic(dynamic avDict)
+        internal void FromModel(Model.Avatar avDict)
         {
-            ID = avDict["id"].ToString();
-            Name = avDict["name"].ToString();
-            foreach (dynamic pkg in avDict["unityPackages"])
+            ID = avDict.Id;
+            Name = avDict.Name;
+            foreach (var pkg in avDict.UnityPackages)
             {
-                if (ApiFile.TryParseFileIdAndVersionFromFileAPIUrl(pkg["assetUrl"].ToString(), out string fileID, out int _))
+                if (ApiFile.TryParseFileIdAndVersionFromFileAPIUrl(pkg.AssetUrl, out string fileID, out int _))
                 {
                     AssetIDs.Add(fileID);
                 }
