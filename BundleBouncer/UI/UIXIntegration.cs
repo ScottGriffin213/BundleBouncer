@@ -14,9 +14,9 @@ namespace BundleBouncer.UI
 
         public static void OnApplicationStart()
         {
-            Logging.Info("Initializing UIX...");
-            
-            VRChatUtilityKit.Utilities.VRCUtils.OnUiManagerInit += VRCUtils_OnUiManagerInit;
+            //Logging.Info("Initializing UIX...");
+
+            //VRChatUtilityKit.Utilities.VRCUtils.OnUiManagerInit += VRCUtils_OnUiManagerInit;
         }
 
         private static void VRCUtils_OnUiManagerInit()
@@ -54,6 +54,8 @@ namespace BundleBouncer.UI
 
         private static void updateUserShitlistButton(GameObject button)
         {
+            if (button == null)
+                return;
             var player = VRChatUtilityKit.Utilities.VRCUtils.ActivePlayerInUserSelectMenu?.prop_Player_0;
             if (player == null) return;
             var usrID = player.field_Private_APIUser_0.id;
