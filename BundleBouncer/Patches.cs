@@ -353,10 +353,12 @@ namespace BundleBouncer
                 //Logging.Info($"Assigned to [{o.ToInt64()}]");
                 return o;
             }
+            /*
             if (AssetScanner.ScanFile(cachedObjPath, "UnityPlayer::DownloadHandlerAssetBundle::CreateCached"))
             {
                 return IntPtr.Zero;
             }
+            */
             return origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
         }
 
@@ -880,42 +882,48 @@ namespace BundleBouncer
                 {
                     case 255: // join
                         {
-                            string customProps = JsonConvert.SerializeObject(Serialize.FromIL2CPPToManaged<object>(__0.Parameters));
-                            //Logging.Info(customProps);
-                            dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
-                            var avdata = playerHashtable["249"];
-                            var userid = avdata["user"]["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
-                            if (ReflectionUtils.HasProp(avdata, "avatarDict"))
+                            var p249 = (dynamic)__0.Parameters[249].Cast<Il2CppSystem.Collections.Hashtable>();
+                            //Logging.Info($"249.Type: {p249.GetType().FullName} | {p249.GetIl2CppType().FullName}");
+                            var avdata = __0.Parameters[249].Cast<Il2CppSystem.Collections.Hashtable>();
+                            var userdata = avdata["user"].Cast<Il2CppSystem.Collections.Hashtable>();
+                            var userid = userdata["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
+                            
+                            if(avdata.ContainsKey("avatarDict"))
                             {
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata["avatarDict"]["id"].ToString());
-                                if (!CheckAvDict(avdata["avatarDict"], userid, __0.Code, false))
+                                var avdict = avdata["avatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdict["id"].ToString());
+                                if (!CheckAvDict(avdict, userid, __0.Code, false))
                                     return false;
                             }
-                            if (ReflectionUtils.HasProp(avdata, "favatarDict"))
+                            if(avdata.ContainsKey("favatarDict"))
                             {
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata["favatarDict"]["id"].ToString());
-                                if (!CheckAvDict(avdata["favatarDict"], userid, __0.Code, true))
+                                var avdict = avdata["favatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdict["id"].ToString());
+                                if (!CheckAvDict(avdict, userid, __0.Code, true))
                                     return false;
                             }
                         }
                         break;
                     case 253: // properties_changed
                         {
-                            string customProps = JsonConvert.SerializeObject(Serialize.FromIL2CPPToManaged<object>(__0.Parameters));
-                            //Logging.Info(customProps);
-                            dynamic playerHashtable = JsonConvert.DeserializeObject(customProps);
-                            var avdata = playerHashtable["251"];
-                            var userid = avdata["user"]["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
-                            if (ReflectionUtils.HasProp(avdata, "avatarDict"))
+                            var p251 = __0.Parameters[251];
+                            //Logging.Info($"251.Type: {p251.GetType().FullName} | {p251.GetIl2CppType().FullName}");
+                            var avdata = p251.Cast<Il2CppSystem.Collections.Generic.Dictionary<string, Il2CppObjectBase>>();
+                            var userdata = avdata["user"].Cast<Il2CppSystem.Collections.Generic.Dictionary<string, Il2CppObjectBase>>();
+                            var userid = userdata["id"].ToString(); // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
+                            
+                            if(avdata.ContainsKey("avatarDict"))
                             {
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdata["avatarDict"]["id"].ToString());
-                                if (!CheckAvDict(avdata["avatarDict"], avdata["user"]["id"], __0.Code, false))
+                                var avdict = avdata["avatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.MAIN, avdict["id"].ToString());
+                                if (!CheckAvDict(avdict, userid, __0.Code, false))
                                     return false;
                             }
-                            if (ReflectionUtils.HasProp(avdata, "favatarDict"))
+                            if(avdata.ContainsKey("favatarDict"))
                             {
-                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdata["favatarDict"]["id"].ToString());
-                                if (!CheckAvDict(avdata["favatarDict"], avdata["user"]["id"], __0.Code, true))
+                                var avdict = avdata["favatarDict"].Cast<Il2CppSystem.Collections.Hashtable>();
+                                BundleBouncer.SetUserAvatar(userid, EAvatarType.FALLBACK, avdict["id"].ToString());
+                                if (!CheckAvDict(avdict, userid, __0.Code, true))
                                     return false;
                             }
                         }
@@ -924,7 +932,12 @@ namespace BundleBouncer
                         {
                             if (!writtenPhotonSamples.Contains(__0.Code))
                             {
-                                string customProps = JsonConvert.SerializeObject(Serialize.FromIL2CPPToManaged<object>(__0.Parameters));
+                                var p = new Dictionary<byte, object>();
+                                foreach(var kvp in __0.Parameters)
+                                {
+                                    p[kvp.Key] = Serialize.FromIL2CPPToManaged<object>(kvp.Value);
+                                }
+                                string customProps = JsonConvert.SerializeObject(p);
                                 if (!customProps.Contains("avtr_"))
                                     break;
 

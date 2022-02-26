@@ -1,14 +1,14 @@
-﻿namespace BundleBouncer.Format
+﻿namespace BundleBouncer.Validation
 {
-    internal class DirectoryTable6
+    public class DirectoryTable6
     {
-        internal DirectoryRow6[] rows;
+        public DirectoryRow6[] rows;
 
         public DirectoryTable6()
         {
         }
 
-        internal void Read(ValidatingBinaryReader vbr)
+        public void Read(ValidatingBinaryReader vbr)
         {
             string fieldName = "directorytable6.rows.len";
             var nrows = vbr.GetS32(fieldName, 0);

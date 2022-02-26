@@ -27,14 +27,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace BundleBouncer
+namespace BundleBouncer.Validation
 {
-    internal class ValidatingBinaryReader : IDisposable
+    public class ValidatingBinaryReader : IDisposable
     {
         private BinaryReader br;
-        internal Stream BaseStream { get; private set; }
+        public Stream BaseStream { get; private set; }
 
-        internal ValidatingBinaryReader(Stream s)
+        public ValidatingBinaryReader(Stream s)
         {
             BaseStream=s;
             this.br = new BinaryReader(s);
@@ -45,7 +45,7 @@ namespace BundleBouncer
             this.br.Dispose();
         }
 
-        internal string GetCString(string fieldName, ulong minlen = 0UL, ulong maxlen = int.MaxValue, Encoding encoding = null)
+        public string GetCString(string fieldName, ulong minlen = 0UL, ulong maxlen = int.MaxValue, Encoding encoding = null)
         {
             ulong len = 0;
             var origPos = br.BaseStream.Position;
@@ -63,7 +63,7 @@ namespace BundleBouncer
             return (encoding ?? Encoding.UTF8).GetString(GetBytes(fieldName, (int)len).Take((int)len-1).ToArray());
         }
 
-        internal string GetPascalString(string fieldName, byte minlen = 0, byte maxlen = byte.MaxValue, Encoding encoding = null)
+        public string GetPascalString(string fieldName, byte minlen = 0, byte maxlen = byte.MaxValue, Encoding encoding = null)
         {
             var len = GetBytes(fieldName, 1)[0];
             if (len < minlen)
@@ -74,7 +74,7 @@ namespace BundleBouncer
             return (encoding ?? Encoding.UTF8).GetString(buf.ToArray());
         }
 
-        internal ushort GetU16(string fieldName, ushort min = ushort.MinValue, ushort max = ushort.MaxValue)
+        public ushort GetU16(string fieldName, ushort min = ushort.MinValue, ushort max = ushort.MaxValue)
         {
             var value = ToUInt16(GetBytes(fieldName, 2));
             if (value < min)
@@ -84,7 +84,7 @@ namespace BundleBouncer
             return value;
         }
 
-        internal uint GetU32(string fieldName, uint min = uint.MinValue, uint max = uint.MaxValue)
+        public uint GetU32(string fieldName, uint min = uint.MinValue, uint max = uint.MaxValue)
         {
             var value = ToUInt32(GetBytes(fieldName, 4));
             if (value < min)
@@ -94,7 +94,7 @@ namespace BundleBouncer
             return value;
         }
 
-        internal ulong GetU64(string fieldName, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
+        public ulong GetU64(string fieldName, ulong min = ulong.MinValue, ulong max = ulong.MaxValue)
         {
             var value = ToUInt64(GetBytes(fieldName, 8));
             if (value < min)
@@ -160,12 +160,12 @@ namespace BundleBouncer
                  | ((long)b[0] << 56);
         }
 
-        internal void AlignTo(uint bytes)
+        public void AlignTo(uint bytes)
         {
             br.BaseStream.Position += bytes - (br.BaseStream.Position % bytes);
         }
 
-        internal int GetS32(string fieldName, int min = int.MinValue, int max = int.MaxValue)
+        public int GetS32(string fieldName, int min = int.MinValue, int max = int.MaxValue)
         {
             var value = ToInt32(GetBytes(fieldName, 4));
             if (value < min)
@@ -175,7 +175,7 @@ namespace BundleBouncer
             return value;
         }
 
-        internal long GetS64(string fieldName, long min = long.MinValue, long max = long.MaxValue)
+        public long GetS64(string fieldName, long min = long.MinValue, long max = long.MaxValue)
         {
             var value = ToInt64(GetBytes(fieldName, 8));
             if (value < min)
@@ -185,7 +185,7 @@ namespace BundleBouncer
             return value;
         }
 
-        internal byte[] GetBytes(string fieldName, int count)
+        public byte[] GetBytes(string fieldName, int count)
         {
             try
             {
@@ -200,7 +200,7 @@ namespace BundleBouncer
     }
 
     [Serializable]
-    internal class FailedValidation : Exception
+    public class FailedValidation : Exception
     {
         public FailedValidation(string fieldName, string why) : base($"{fieldName} - {why}")
         {

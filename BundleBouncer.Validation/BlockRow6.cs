@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace BundleBouncer.Format
+namespace BundleBouncer.Validation
 {
-    internal class BlockRow6
+    public class BlockRow6
     {
-        internal uint index = 0;
-        internal uint decompressedSize = 0;
-        internal uint compressedSize = 0;
-        internal ushort flags = 0;
+        public uint index = 0;
+        public uint decompressedSize = 0;
+        public uint compressedSize = 0;
+        public ushort flags = 0;
 
         public byte compressionType { get; private set; }
         public bool isCompressed { get; private set; }
@@ -18,7 +18,7 @@ namespace BundleBouncer.Format
             compressionType = 0x00;
         }
 
-        internal void Read(ValidatingBinaryReader vbr)
+        public void Read(ValidatingBinaryReader vbr)
         {
             string fieldName;
 
@@ -34,7 +34,7 @@ namespace BundleBouncer.Format
             compressionType = (byte)(flags & 0x3F);
             isCompressed = compressionType != 0;
 
-            if(compressionType < 0 || compressionType > 3)
+            if (compressionType < 0 || compressionType > 3)
                 throw new FailedValidation(fieldName, $"Invalid CompressionType {compressionType}");
         }
     }

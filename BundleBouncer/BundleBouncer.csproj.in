@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <OutputPath>dist</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="images\png\BundleBouncer-512.png"/>
+    <None Remove="libyara.dll"/>
+    <None Remove="_YARA-Rules-Readme.md"/>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="images\png\BundleBouncer-512.png"/>
+    <EmbeddedResource Include="_YARA-Rules-Readme.md"/>
+  </ItemGroup>
+  <ItemGroup/>
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\dnYara4Core\dnYara4Core.csproj"/>
+    <ProjectReference Include="..\lib\AssetTools.NET\AssetTools.NET\AssetsTools.NET.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="libyara.dll">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\lib\AssetTools.NET\AssetTools.NET\AssetsTools.NET.csproj" />
+  </ItemGroup>
+
+</Project>
