@@ -51,13 +51,79 @@ namespace BundleBouncer
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         internal delegate char CoreStringStorageDefault_Char_Assign_Delegate(ref IntPtr ustr, string input, ulong len);
         internal static CoreStringStorageDefault_Char_Assign_Delegate origNATIVECoreStringStorageDefault_Char_Assign;
-        public static unsafe CoreStringChar String2CoreBasicString(string input)
+
+        // core::StringStorageDefault<wchar_t>::deallocate
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        internal delegate char CoreStringStorageDefault_WCharT_Deallocate_Delegate(ref IntPtr ustr);
+        internal static CoreStringStorageDefault_WCharT_Deallocate_Delegate origNATIVECoreStringStorageDefault_WCharT_Deallocate;
+
+        public static UnityString String2CoreBasicString(string input)
         {
-            return new CoreStringChar(input);
+            return new UnityString(input);
         }
     }
 
-    public sealed class CoreStringChar// : IDisposable
+    /// <summary>
+    /// Unity has a string table for some reason.  We need to add and remove strings to it.
+    /// 
+    /// Use this class if you are making such a string from scratch.
+    /// If you are using a pre-existing string that is cleaned up in Unity, use ExistingUnityString.
+    /// </summary>
+    public sealed class UnityString : IDisposable
+    {
+        private IntPtr ptr;
+        private bool disposedValue;
+        public UnityString(string value)
+        {
+            UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Assign(ref ptr, value, (ulong)value.Length);
+        }
+
+        public string Value
+        {
+            get
+            {
+                return UnityCoreUtils.CoreBasicString2String(this.ptr);
+            }
+            set
+            {
+                // TODO: Realloc?
+                UnityCoreUtils.origNATIVECoreStringStorageDefault_WCharT_Deallocate(ref this.ptr);
+                UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Assign(ref this.ptr, value, (ulong)value.Length);
+            }
+        }
+
+        public IntPtr Pointer
+        {
+            get
+            {
+                return this.ptr;
+            }
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                UnityCoreUtils.origNATIVECoreStringStorageDefault_WCharT_Deallocate(ref this.ptr);
+                disposedValue = true;
+            }
+        }
+
+        ~UnityString()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
+        void IDisposable.Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+    }
+    public sealed class ExistingUnityString// : IDisposable
     {
         private IntPtr ptr;
         //private bool disposedValue;
@@ -68,13 +134,9 @@ namespace BundleBouncer
             { return ptr; }
         }
 
-        internal CoreStringChar(IntPtr ptr)
+        internal ExistingUnityString(IntPtr ptr)
         {
             this.ptr = ptr;
-        }
-        public CoreStringChar(string value)
-        {
-            UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Assign(ref ptr, value, (ulong)value.Length);
         }
         /*
 

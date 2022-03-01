@@ -56,7 +56,6 @@ namespace BundleBouncer
         // Mostly for logging and datastream tracking.
         static Dictionary<string, AssetInfo> assetInfo = new Dictionary<string, AssetInfo>();
         private static Dictionary<string, string> avIDsByFileSubURL = new Dictionary<string, string>();
-        private static Dictionary<IntPtr, AssetBundleDownload> assetBundleDownloadToFactory = new Dictionary<IntPtr, AssetBundleDownload>();
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private unsafe delegate IntPtr LoadFromFileAsync_InternalDelegate(IntPtr path, uint crc, ulong offset);
@@ -165,7 +164,7 @@ namespace BundleBouncer
             {
                 UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_BASICSTRING_CHAR_CSTR, out UnityCoreUtils.origNATIVECoreBasicString_CStr);
                 UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN, out UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Assign);
-                // There's a deallocator for wchar_t, but not char...? UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_STRINGSTORAGEDEFAULT_CHAR_DEALLOCATE, out UnityCoreUtils.origNATIVECoreStringStorageDefault_Char_Deallocate);
+                UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_STRINGSTORAGEDEFAULT_WCHART_DEALLOCATE, out UnityCoreUtils.origNATIVECoreStringStorageDefault_WCharT_Deallocate);
                 UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.HEADERMAP_FIND, out origNATIVEHeaderMap_find);
 
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILE, OnUnityPlayer_LoadFromFile_NATIVE, out origNATIVELoadFromFile);
@@ -446,14 +445,15 @@ namespace BundleBouncer
         private static unsafe long OnDownloadHandler_ProcessHeaders(IntPtr @this, IntPtr hdrmap)
         {
             // WORKING on 1160
+
             //Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}]");
             var o = origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
             if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
-                ulong clen = *(ulong*)(@this + 0x48);
-                //Logging.Info($"  Got Content-Length: {clen}");
+                ulong clen = *(ulong*)(@this + 9);
+                Logging.Info($"  Got Content-Length: {clen}");
                 var ctype = UnityCoreUtils.CoreBasicString2String(@this + 0x58);
-                //Logging.Info($"  Got Content-Length: {ctype}");
+                Logging.Info($"  Got Content-Type: {ctype}");
                 idhab.ProcessHeaders(clen, ctype);
                 //Logging.Info($"ProcessHeaders: ret {o} I");
             }
@@ -546,9 +546,9 @@ namespace BundleBouncer
                     if (File.Exists(bpath) && AvatarShitList.IsAssetBundleHashBlocked(IOTool.SHA256File(bpath)))
                     {
                         BundleBouncer.NotifyUserOfBlockedAvatar(__instance.field_Private_String_0, "OnGetGameObjectGetter", new Dictionary<string, string>(){
-                        {"URL", __instance.field_Private_String_1},
-                        {"BPath", bpath},
-                    });
+                            {"URL", __instance.field_Private_String_1},
+                            {"BPath", bpath},
+                        });
                         __instance.field_Private_String_0 = BundleBouncer.BLOCKED_AVTR_ID;
                         __instance.field_Private_String_1 = BundleBouncer.BLOCKED_FILE_URL;
                     }
@@ -875,7 +875,7 @@ namespace BundleBouncer
             }
         }
 
-        internal static string params2JSON(ParameterDictionary paramDict)
+        internal static string Params2JSON(ParameterDictionary paramDict)
         {
             var p = new Dictionary<byte, object>();
             foreach (var kvp in paramDict)
@@ -884,7 +884,7 @@ namespace BundleBouncer
             }
             return JsonConvert.SerializeObject(p);
         }
-        internal static dynamic params2dynamic(ParameterDictionary paramDict) => JsonConvert.DeserializeObject(params2JSON(paramDict));
+        internal static dynamic Params2Dynamic(ParameterDictionary paramDict) => JsonConvert.DeserializeObject(Params2JSON(paramDict));
 
         internal static bool OnEvent(ref EventData __0)
         {
@@ -898,7 +898,7 @@ namespace BundleBouncer
                     case 255: // join
                         {
                             // Fuck it, made a schema.
-                            var ev = JsonConvert.DeserializeObject<Photon255>(params2JSON(__0.Parameters));
+                            var ev = JsonConvert.DeserializeObject<Photon255>(Params2JSON(__0.Parameters));
                             var avdata = ev._249;
                             var userid = avdata.User.Id; // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
 
@@ -918,7 +918,7 @@ namespace BundleBouncer
                         break;
                     case 253: // properties_changed
                         {
-                            var ev = JsonConvert.DeserializeObject<Photon253>(params2JSON(__0.Parameters));
+                            var ev = JsonConvert.DeserializeObject<Photon253>(Params2JSON(__0.Parameters));
                             var avdata = ev._251;
                             var userid = avdata.User.Id; // Beware: In certain situations, this can be spoofed.  Because this is coming from an otherwise authorative source, we have to assume it's the actual user state.
 
@@ -940,7 +940,7 @@ namespace BundleBouncer
                         {
                             if (!writtenPhotonSamples.Contains(__0.Code))
                             {
-                                var customProps = params2JSON(__0.Parameters);
+                                var customProps = Params2JSON(__0.Parameters);
                                 if (!customProps.Contains("avtr_"))
                                     break;
 

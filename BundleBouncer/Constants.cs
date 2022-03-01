@@ -161,6 +161,7 @@ namespace BundleBouncer
                 internal const int DOWNLOADHANDLERASSETBUNDLE_CREATECACHED = 0x0033ED30;
                 internal const int CORE_BASICSTRING_CHAR_CSTR = 0x00089350;
                 internal const int CORE_STRINGSTORAGEDEFAULT_CHAR_ASSIGN = 0x0008FD80;
+                internal const int CORE_STRINGSTORAGEDEFAULT_WCHART_DEALLOCATE = 0x00089360;
                 internal const int DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA = 0x0033F400;
                 internal const int DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS = 0x0033F1A0;
                 internal const int DOWNLOADHANDLERASSETBUNDLE_ISDONE = 0x0033F1D0;

@@ -146,7 +146,6 @@ namespace BundleBouncer
                 this.file = File.OpenWrite(destfile);
             }
             bytesDownloaded += (ulong)data.LongLength;
-            // Godfucking
             HACK_InjectProgress(bytesDownloaded);
             this.file.Write(data, 0, data.Length);
             return (long)len;
