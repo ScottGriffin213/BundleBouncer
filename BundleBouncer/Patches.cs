@@ -139,8 +139,6 @@ namespace BundleBouncer
             HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0)), nameof(OnGetAssetBundleGetter));
             HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableGaObGaUnique_0)), nameof(OnGetGameObjectGetter));
 
-            HarmonyPatchMethod(typeof(InterfacePublicAbstractIDisposableAsObAsUnique).GetProperty("prop_AssetBundle_0").GetGetMethod(), postfix: nameof(OnIIDisposableAssetBundleContainer_GetAssetBundle));
-
             HarmonyPatchMethod(typeof(ApiFile).GetMethod(nameof(ApiFile.DownloadFile)), prefix: nameof(OnAPIFileDownloadFile));
 
             // AssetBundle.LoadFromFileAsync_InternalDelegateField = IL2CPP.ResolveICall<AssetBundle.LoadFromFileAsync_InternalDelegate>("UnityEngine.AssetBundle::LoadFromFileAsync_Internal");
@@ -167,8 +165,8 @@ namespace BundleBouncer
                 UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.CORE_STRINGSTORAGEDEFAULT_WCHART_DEALLOCATE, out UnityCoreUtils.origNATIVECoreStringStorageDefault_WCharT_Deallocate);
                 UsingFunctionInModule(modUnityPlayer, Constants.Offsets.UnityPlayer.HEADERMAP_FIND, out origNATIVEHeaderMap_find);
 
-                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILE, OnUnityPlayer_LoadFromFile_NATIVE, out origNATIVELoadFromFile);
-                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILEASYNC, OnUnityPlayer_LoadFromFileAsync_NATIVE, out origNATIVELoadFromFileAsync);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILE, OnUnityPlayer_LoadFromFile_NATIVE, out origNATIVELoadFromFile);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMFILEASYNC, OnUnityPlayer_LoadFromFileAsync_NATIVE, out origNATIVELoadFromFileAsync);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.LOADFROMMEMORY, OnUnityPlayer_LoadFromMemory_NATIVE, out origNATIVELoadFromMemory);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_FSEULONGBOOL, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_FSEUlongBool, out origNATIVEInitAssetBundleStorageFSEUlongBool);
                 //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.ASSETBUNDLELOADFROMASYNCOPERATION_INITIALIZEASSETBUNDLESTORAGE_STRULONG, OnAssetBundleLoadFromAsyncOperation_InitializeAssetBundleStorage_StrUlong, out origNATIVEInitAssetBundleStorageStrUlong);
@@ -182,6 +180,8 @@ namespace BundleBouncer
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA, OnDownloadHandlerAssetBundle_OnReceiveData, out origNATIVEDownloadHandlerAssetBundle_OnReceiveData);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLER_PROCESSHEADERS, OnDownloadHandler_ProcessHeaders, out origNATIVEDownloadHandler_ProcessHeaders);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLER_HASCONTENTLENGTH, OnDownloadHandler_HasContentLength, out origNATIVEDownloadHandler_HasContentLength);
+
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.UNITYWEBREQUEST_BEGINWEBREQUEST, OnUnityWebRequest_BeginWebRequest, out origNATIVEUnityWebRequest_BeginWebRequest);
             }
         }
 
@@ -291,6 +291,7 @@ namespace BundleBouncer
         #endregion
 
         #region UnityPlayer.dll Tomfoolery
+        /*
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void OnUnityPlayer_LoadFromFile_Delegate(IntPtr a1, IntPtr filenamePtr, int a3, uint crc);
         private static OnUnityPlayer_LoadFromFile_Delegate origNATIVELoadFromFile;
@@ -310,6 +311,7 @@ namespace BundleBouncer
             Logging.Info($"UnityPlayer::LoadFromFileAsync - {filename}");
             origNATIVELoadFromFileAsync(a1, filenamePtr, a3, crc);
         }
+        */
 
         /* Not really useful, but interesting.
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -480,6 +482,18 @@ namespace BundleBouncer
                 return origNATIVEDownloadHandlerAssetBundle_OnReceiveData(@this, data, len);
             }
         }
+
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate IntPtr UnityWebRequest_BeginWebRequestDelegate(IntPtr @this, IntPtr a2, IntPtr a3);
+        private static UnityWebRequest_BeginWebRequestDelegate origNATIVEUnityWebRequest_BeginWebRequest;
+        private static unsafe IntPtr OnUnityWebRequest_BeginWebRequest(IntPtr @this, IntPtr a2, IntPtr a3)
+        {
+            // TODO
+            var dnuwr = new UnityWebRequest(a2); //?
+            Logging.Info($"UnityWebRequest::BeginWebRequest(this=[{@this}], a2={dnuwr}, a3={a3})");
+            return origNATIVEUnityWebRequest_BeginWebRequest(@this, a3, a3);
+        }
         #endregion
 
         internal static void SendDelayedDHABSignals(IntPtr dhab, byte[] data, ulong dataLen)
@@ -554,12 +568,6 @@ namespace BundleBouncer
                     }
                 }
             }
-            return true;
-        }
-
-        private static bool OnIIDisposableAssetBundleContainer_GetAssetBundle()
-        {
-            // TODO?
             return true;
         }
 
@@ -967,7 +975,7 @@ namespace BundleBouncer
             string avID = avdata.Id;
             string avName = avdata.Name;
             string fbstr = is_fallback ? "fallback" : "main";
-            Logging.Info($"User changed {fbstr} avatar to {avID} ({avName}; via E{code})...");
+            Logging.Info($"User {user} changed {fbstr} avatar to {avID} ({avName}; via E{code})...");
             if (AvatarShitList.IsAvatarIDBlocked(avID))
             {
                 BundleBouncer.NotifyUserOfBlockedAvatar(avID, $"Photon Event {code}", new Dictionary<string, string> {
