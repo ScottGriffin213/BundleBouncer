@@ -108,25 +108,6 @@ namespace BundleBouncer
             this.contentLength = length;
         }
 
-        delegate void DownloadHandler_SendProgressReport_Callback(IntPtr @this);
-        internal unsafe void SendProgressReport()
-        {
-            // Goddammit Unity.
-            /*
-            v2 = *((_QWORD *)this + 16);
-            if ( v2 )
-              (*(void (__fastcall **)(__int64))(*(_QWORD *)v2 + 16i64))(v2);
-            else
-              return 0.0;
-            */
-            var idfk = *(IntPtr*)ptr + 16;
-            if (idfk != IntPtr.Zero)
-            {
-                var callback = Marshal.GetDelegateForFunctionPointer<DownloadHandler_SendProgressReport_Callback>(*(IntPtr*)idfk + 16);
-                callback(idfk);
-            }
-        }
-
         internal long OnReceiveData(byte[] data, ulong len)
         {
 #if ABI_DEBUG
@@ -159,7 +140,6 @@ namespace BundleBouncer
 
         internal double GetProgress()
         {
-            //SendProgressReport();
 #if ABI_DEBUG
             Logging.Info($"GetProgress: {bytesDownloaded}/{contentLength}B");
 #endif
