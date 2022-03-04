@@ -52,6 +52,7 @@ namespace BundleBouncer
 
         private static HashSet<string> writing = new HashSet<string>();
         internal UnityWebRequest webRequest;
+        internal IntPtr cpp_uwr;
 
         public AssetBundleInterceptor(string url, string method, string destfile, DownloadHandlerAssetBundle dhab, string cacheKey, Hash128 cacheHash, uint crc)
         {
@@ -144,7 +145,9 @@ namespace BundleBouncer
             Logging.Info($"GetProgress: {bytesDownloaded}/{contentLength}B");
 #endif
             if (contentLength == 0UL)
-                return 0f;
+                return 0d;
+            if(bytesDownloaded>contentLength)
+                return 1d;
 
             return bytesDownloaded / contentLength;
         }
@@ -160,6 +163,11 @@ namespace BundleBouncer
         internal bool HasContentLength()
         {
             return contentLength > 0UL;
+        }
+
+        internal void OnBeginWebRequest()
+        {
+            //this.webRequest.
         }
     }
 }

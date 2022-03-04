@@ -84,6 +84,7 @@ namespace BundleBouncer
         private static Dictionary<string, DateTime> scannedGameObjects = new Dictionary<string, DateTime>();
 
         private static Dictionary<IntPtr, AssetBundleInterceptor> intercepts = new Dictionary<IntPtr, AssetBundleInterceptor>();
+        private static Dictionary<IntPtr, AssetBundleInterceptor> uwrLookup = new Dictionary<IntPtr, AssetBundleInterceptor>();
 
         public Patches(BundleBouncer bundleBouncer)
         {
@@ -186,6 +187,8 @@ namespace BundleBouncer
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLER_HASCONTENTLENGTH, OnDownloadHandler_HasContentLength, out origNATIVEDownloadHandler_HasContentLength);
 
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.UNITYWEBREQUEST_BEGINWEBREQUEST, OnUnityWebRequest_BeginWebRequest, out origNATIVEUnityWebRequest_BeginWebRequest);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.UNITYWEBREQUEST_GETDOWNLOADEDBYTES, OnUnityWebRequest_GetDownloadedBytes, out origNATIVEUnityWebRequest_GetDownloadedBytes);
+                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.UNITYWEBREQUEST_GETDOWNLOADPROGRESS, OnUnityWebRequest_GetDownloadProgress, out origNATIVEUnityWebRequest_GetDownloadProgress);
             }
         }
 
@@ -489,9 +492,39 @@ namespace BundleBouncer
             Logging.Info($"UnityWebRequest::BeginWebRequest(this=[{@this}], a2={dnuwr}, a3={a3})");
             if (dnuwr.downloadHandler != null && intercepts.ContainsKey(dnuwr.downloadHandler.Pointer))
             {
-                intercepts[dnuwr.downloadHandler.Pointer].webRequest = dnuwr;
+                var abi =  intercepts[dnuwr.downloadHandler.Pointer];
+                abi.webRequest = dnuwr;
+                abi.cpp_uwr = @this;
+                abi.OnBeginWebRequest();
+                uwrLookup[@this] = abi;
             }
             return origNATIVEUnityWebRequest_BeginWebRequest(@this, a2, a3);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate ulong UnityWebRequest_GetDownloadedBytesDelegate(IntPtr @this);
+        private static UnityWebRequest_GetDownloadedBytesDelegate origNATIVEUnityWebRequest_GetDownloadedBytes;
+        private static unsafe ulong OnUnityWebRequest_GetDownloadedBytes(IntPtr @this)
+        {
+            Logging.Info($"UnityWebRequest::GetDownloadedBytes(this=[{@this}])");
+            if (uwrLookup.TryGetValue(@this, out AssetBundleInterceptor abi))
+            {
+                return abi.GetMemorySize();
+            }
+            return origNATIVEUnityWebRequest_GetDownloadedBytes(@this);
+        }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private unsafe delegate float UnityWebRequest_GetDownloadProgressDelegate(IntPtr @this);
+        private static UnityWebRequest_GetDownloadProgressDelegate origNATIVEUnityWebRequest_GetDownloadProgress;
+        private static unsafe float OnUnityWebRequest_GetDownloadProgress(IntPtr @this)
+        {
+            Logging.Info($"UnityWebRequest::GetDownloadProgress(this=[{@this}])");
+            if (uwrLookup.TryGetValue(@this, out AssetBundleInterceptor abi))
+            {
+                return (float)abi.GetProgress();
+            }
+            return origNATIVEUnityWebRequest_GetDownloadProgress(@this);
         }
         #endregion
 
@@ -519,11 +552,15 @@ namespace BundleBouncer
             }
             lock (intercepts)
             {
-                foreach (var intercept in new List<AssetBundleInterceptor>(intercepts.Values))
+                lock (uwrLookup)
                 {
-                    if (intercept.IsDone)
+                    foreach (var intercept in new List<AssetBundleInterceptor>(intercepts.Values))
                     {
-                        intercepts.Remove(intercept.ptr);
+                        if (intercept.IsDone)
+                        {
+                            intercepts.Remove(intercept.ptr);
+                            uwrLookup.Remove(intercept.cpp_uwr);
+                        }
                     }
                 }
             }
@@ -759,16 +796,7 @@ namespace BundleBouncer
         private static IntPtr OnLoadFromFileAsync_Internal(IntPtr pathPtr, uint crc, ulong offset)
         {
             var path = IL2CPP.Il2CppStringToManaged(pathPtr);
-
-            byte[] hash;
-            using (var sha256 = new SHA256Managed())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    stream.Position = 0;
-                    hash = sha256.ComputeHash(stream);
-                }
-            }
+            byte[] hash = IOTool.SHA256File(path);
             string hashstr = string.Concat(hash.Select(x => x.ToString("X2")));
             Logging.Info($"Attempting to load assetbundle {path} (CRC: {crc}, Offset: {offset}, SHA256: {hashstr}) via AssetBundle.LoadFromMemory_Internal...");
             if (AvatarShitList.IsAssetBundleHashBlocked(hash))

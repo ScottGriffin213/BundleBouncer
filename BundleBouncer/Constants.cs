@@ -172,6 +172,7 @@ namespace BundleBouncer
                 internal const int LOADFROMFILEASYNC = 0x002D7620;
                 internal const int UNITYWEBREQUEST_BEGINWEBREQUEST = 0x00C69A90;
                 internal const int UNITYWEBREQUEST_GETDOWNLOADPROGRESS = 0x00C69FA0;
+                internal const int UNITYWEBREQUEST_GETDOWNLOADEDBYTES = 0x00C69FD0;
             }
         }
     }
