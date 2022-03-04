@@ -134,6 +134,10 @@ namespace BundleBouncer
             // HarmonyPatchMethod(tUnityWebRequestAssetBundle.GetMethod(nGetAssetBundle, new Type[] { typeof(string) }), prefix: nameof(OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_Str));
             // HarmonyPatchMethod(tUnityWebRequestAssetBundle.GetMethod(nGetAssetBundle, new Type[] { typeof(string), typeof(CachedAssetBundle), typeof(uint) }), prefix: nameof(OnUnityWebRequestAssetBundle_Pre_GetAssetBundle_StrCabUi));
 
+            //HarmonyPatchMethod(typeof(UnityWebRequest).GetMethod(nameof(UnityWebRequest.GetDownloadProgress)), prefix: nameof(OnUnityWebRequest_GetDownloadProgress));
+            HarmonyPatchMethod(typeof(UnityWebRequest).GetProperty(nameof(UnityWebRequest.downloadProgress)).GetMethod, prefix: nameof(OnUnityWebRequest_get_DownloadProgress));
+            HarmonyPatchMethod(typeof(UnityWebRequest).GetProperty(nameof(UnityWebRequest.downloadedBytes)).GetMethod, prefix: nameof(OnUnityWebRequest_get_DownloadedBytes));
+
             HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_String_Int32_String_String_String_0)), nameof(OnCreateAssetBundleDownload));
             //PatchHarmony(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Private_Static_String_String_0), AccessTools.all), nameof(OnUnknownStringHook1_pre), nameof(OnUnknownStringHook1_post));
             HarmonyPatchMethod(typeof(AssetBundleDownload).GetMethod(nameof(AssetBundleDownload.Method_Public_InterfacePublicAbstractIDisposableAsObAsUnique_0)), nameof(OnGetAssetBundleGetter));
@@ -173,8 +177,8 @@ namespace BundleBouncer
 
                 // ABI shit
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_CREATECACHED, OnDownloadHandlerAssetBundle_CreateCached, out origNATIVEDownloadHandlerAssetBundle_CreateCached);
-                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS, OnDownloadHandlerAssetBundle_GetProgress, out origNATIVEDownloadHandlerAssetBundle_GetProgress);
-                PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETMEMORYSIZE, OnDownloadHandlerAssetBundle_GetMemorySize, out origNATIVEDownloadHandlerAssetBundle_GetMemorySize);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETPROGRESS, OnDownloadHandlerAssetBundle_GetProgress, out origNATIVEDownloadHandlerAssetBundle_GetProgress);
+                //PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_GETMEMORYSIZE, OnDownloadHandlerAssetBundle_GetMemorySize, out origNATIVEDownloadHandlerAssetBundle_GetMemorySize);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ISDONE, OnDownloadHandlerAssetBundle_IsDone, out origNATIVEDownloadHandlerAssetBundle_IsDone);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONCOMPLETECONTENT, OnDownloadHandlerAssetBundle_OnCompleteContent, out origNATIVEDownloadHandlerAssetBundle_OnCompleteContent);
                 PatchModule(modUnityPlayer, Constants.Offsets.UnityPlayer.DOWNLOADHANDLERASSETBUNDLE_ONRECEIVEDATA, OnDownloadHandlerAssetBundle_OnReceiveData, out origNATIVEDownloadHandlerAssetBundle_OnReceiveData);
@@ -268,21 +272,6 @@ namespace BundleBouncer
             }
         }
 
-        private void CtorHarmony(ConstructorInfo hookee, string hooker_postfix)
-        {
-            string sig = mkSigFromMethod(hookee);
-            try
-            {
-                BundleBouncer.Instance.HarmonyInstance.Patch(hookee, postfix: typeof(Patches).GetMethod(hooker_postfix, BindingFlags.Static | BindingFlags.NonPublic).ToNewHarmonyMethod());
-                Logging.Info($"Patched {sig} to {hooker_postfix} (.ctor postfix)");
-            }
-            catch (Exception e)
-            {
-                Logging.Error($"Unable to patch {sig} (.ctor):");
-                Logging.Error(e.ToString());
-            }
-        }
-
         private string mkSigFromMethod(MethodBase method)
         {
             string psig = String.Join(",", method.GetParameters().Select(x => x.ParameterType.ToString()));
@@ -363,7 +352,7 @@ namespace BundleBouncer
             */
             return origNATIVEDownloadHandlerAssetBundle_CreateCached(scriptingObjectPtr, urlPtr, keyPtr, hash, crc);
         }
-
+        /*
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate double OnDownloadHandlerAssetBundle_GetProgress_Delegate(IntPtr @this);
         private static OnDownloadHandlerAssetBundle_GetProgress_Delegate origNATIVEDownloadHandlerAssetBundle_GetProgress;
@@ -391,7 +380,7 @@ namespace BundleBouncer
             }
             return origNATIVEDownloadHandlerAssetBundle_GetMemorySize(@this);
         }
-
+        */
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate char OnDownloadHandlerAssetBundle_IsDone_Delegate(IntPtr @this);
         private static OnDownloadHandlerAssetBundle_IsDone_Delegate origNATIVEDownloadHandlerAssetBundle_IsDone;
@@ -446,16 +435,23 @@ namespace BundleBouncer
         private static OnDownloadHandler_ProcessHeaders_Delegate origNATIVEDownloadHandler_ProcessHeaders;
         private static unsafe long OnDownloadHandler_ProcessHeaders(IntPtr @this, IntPtr hdrmap)
         {
-            // WORKING on 1160
-
             //Logging.Info($"OnDownloadHandler_ProcessHeaders[{@this.ToInt64()}]");
+            /*
+            var arr1 = Marshal.PtrToStructure<IntPtr[]>(hdrmap);
+            Logging.Info(JsonConvert.SerializeObject(arr1));
+            var keys = Marshal.PtrToStructure<string[]>(arr1[0]);
+            Logging.Info(JsonConvert.SerializeObject(keys));
+            var values = Marshal.PtrToStructure<string[]>(arr1[2]);
+            Logging.Info(JsonConvert.SerializeObject(values));
+            */
+
             var o = origNATIVEDownloadHandler_ProcessHeaders(@this, hdrmap);
             if (intercepts.TryGetValue(@this, out AssetBundleInterceptor idhab))
             {
-                ulong clen = *(ulong*)(@this + 9);
-                Logging.Info($"  Got Content-Length: {clen}");
+                ulong clen = *(ulong*)(@this + 0x48);
+                //Logging.Info($"  Got Content-Length: {clen}");
                 var ctype = UnityCoreUtils.CoreBasicString2String(@this + 0x58);
-                Logging.Info($"  Got Content-Type: {ctype}");
+                //Logging.Info($"  Got Content-Type: {ctype}");
                 idhab.ProcessHeaders(clen, ctype);
                 //Logging.Info($"ProcessHeaders: ret {o} I");
             }
@@ -489,10 +485,13 @@ namespace BundleBouncer
         private static UnityWebRequest_BeginWebRequestDelegate origNATIVEUnityWebRequest_BeginWebRequest;
         private static unsafe IntPtr OnUnityWebRequest_BeginWebRequest(IntPtr @this, IntPtr a2, IntPtr a3)
         {
-            // TODO
-            var dnuwr = new UnityWebRequest(a2); //?
+            var dnuwr = new UnityWebRequest(a2);
             Logging.Info($"UnityWebRequest::BeginWebRequest(this=[{@this}], a2={dnuwr}, a3={a3})");
-            return origNATIVEUnityWebRequest_BeginWebRequest(@this, a3, a3);
+            if (dnuwr.downloadHandler != null && intercepts.ContainsKey(dnuwr.downloadHandler.Pointer))
+            {
+                intercepts[dnuwr.downloadHandler.Pointer].webRequest = dnuwr;
+            }
+            return origNATIVEUnityWebRequest_BeginWebRequest(@this, a2, a3);
         }
         #endregion
 
@@ -865,6 +864,30 @@ namespace BundleBouncer
                 }
                 return dgAttemptAvatarDownload(hiddenStructReturn, thisPtr, pApiAvatar, pMulticastDelegate, param_3, nativeMethodInfo);
             }
+        }
+
+        static unsafe bool OnUnityWebRequest_get_DownloadProgress(UnityWebRequest __instance, ref float __result)
+        {
+            var uwr = __instance;
+            if (intercepts.ContainsKey(uwr.downloadHandler.Pointer))
+            {
+                __result = (float)intercepts[uwr.downloadHandler.Pointer].GetProgress();
+                return true;
+            }
+            __result = 0f;
+            return false;
+        }
+
+        static unsafe bool OnUnityWebRequest_get_DownloadedBytes(UnityWebRequest __instance, ref ulong __result)
+        {
+            var uwr = __instance;
+            if (intercepts.ContainsKey(uwr.downloadHandler.Pointer))
+            {
+                __result = intercepts[uwr.downloadHandler.Pointer].GetMemorySize();
+                return true;
+            }
+            __result = 0UL;
+            return false;
         }
 
 

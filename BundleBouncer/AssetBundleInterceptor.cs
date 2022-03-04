@@ -51,6 +51,7 @@ namespace BundleBouncer
         private ulong contentLength = 0UL;
 
         private static HashSet<string> writing = new HashSet<string>();
+        internal UnityWebRequest webRequest;
 
         public AssetBundleInterceptor(string url, string method, string destfile, DownloadHandlerAssetBundle dhab, string cacheKey, Hash128 cacheHash, uint crc)
         {
@@ -153,12 +154,12 @@ namespace BundleBouncer
 
         private unsafe void HACK_InjectProgress(ulong bytesDownloaded)
         {
-            Marshal.WriteInt64(ptr + 8, (long)bytesDownloaded);
+            Marshal.WriteInt64(ptr + 0x40, (long)bytesDownloaded);
         }
 
         internal double GetProgress()
         {
-            SendProgressReport();
+            //SendProgressReport();
 #if ABI_DEBUG
             Logging.Info($"GetProgress: {bytesDownloaded}/{contentLength}B");
 #endif
