@@ -12,3 +12,5 @@ We provide the following external variables:
 |---|---|---|---|
 | `name` | `string` | TODO | Name of the object being scanned |
 | `type` | `EScanType` | `ASSETBUNDLE` | Type of the object being scanned |
+
+## Example

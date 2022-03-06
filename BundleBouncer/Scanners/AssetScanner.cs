@@ -182,7 +182,7 @@ namespace BundleBouncer
                             var blockid = $"block[{block.index}]";
                             Logging.Info($"Scanning {blockid} with YARA...");
                             using(var ms = new MemoryStream(bytes))
-                                if(MatchesYaraRules(filename, source, hash, hashstr, ms, EScanObjectType.UNKNOWNBLOCK, blockid))
+                                if(MatchesYaraRules(filename, source, hash, hashstr, ms, EScanObjectType.BLOCK, blockid))
                                     throw new FailedValidation(blockid, "YARA rule(s) matched.");
                         };
                         abf.Read(vbr, fileSize);

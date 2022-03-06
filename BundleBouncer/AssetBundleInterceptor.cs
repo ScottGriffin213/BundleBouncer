@@ -146,7 +146,8 @@ namespace BundleBouncer
 #endif
             if (contentLength == 0UL)
                 return 0d;
-            if(bytesDownloaded>contentLength)
+
+            if (bytesDownloaded > contentLength)
                 return 1d;
 
             return bytesDownloaded / contentLength;

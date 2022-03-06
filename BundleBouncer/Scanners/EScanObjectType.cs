@@ -3,8 +3,7 @@
     internal enum EScanObjectType
     {
         ASSETBUNDLE,
-        UNKNOWNASSET,
-        UNKNOWNRESOURCE,
-        UNKNOWNBLOCK
+        BLOCK,
+        DIRECTORY
     }
 }
