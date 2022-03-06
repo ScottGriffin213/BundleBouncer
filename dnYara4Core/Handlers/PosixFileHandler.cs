@@ -1,6 +1,6 @@
 ﻿using System;
-using dnYara.Exceptions;
 using Mono.Unix.Native;
+using dnYara.Exceptions;
 
 namespace dnYara
 {

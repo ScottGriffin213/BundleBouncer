@@ -1,6 +1,11 @@
 # Changelog
 
-## 1.3.0 - In Development
+## 1.3.1 - In Development
+
+* Fixes
+  * Public-access buildsystem updated for dnYara.
+  
+## 1.3.0
 
 * Updated for VRChat build 1169.
 * Core

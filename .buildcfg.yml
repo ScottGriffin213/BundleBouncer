@@ -1,0 +1,6 @@
+paths:
+  cmake: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe
+  dotnet: C:\Program Files\dotnet\dotnet.EXE
+  gradle: C:\ProgramData\chocolatey\bin\gradle.EXE
+  java: C:\Program Files\Eclipse Adoptium\jdk-17.0.2.8-hotspot\bin\java.EXE
+  vrchat: G:\SteamLibrary\steamapps\common\VRChat
